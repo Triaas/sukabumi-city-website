@@ -33,11 +33,12 @@ import {
   Phone,
   Play,
   Search,
+  X,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react'
 
 const profileCards = [
-  { title: 'Sejarah', description: 'Jejak perkembangan Kota Sukabumi dari masa ke masa.', image: 'https://images.unsplash.com/photo-1531058020387-3be344556be6?auto=format&fit=crop&w=900&q=80' },
+  { title: 'Sejarah', description: 'Jejak perkembangan Kota Sukabumi dari masa ke masa.', image: 'https://images.unsplash.com/photo-1531058020387-3be344556be6?auto=format&fit=crop&w=900&q=80'},
   { title: 'Visi Misi', description: 'Arah pembangunan dan tujuan yang ingin dicapai.', image: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=900&q=80' },
   { title: 'Lambang', description: 'Makna filosofis di balik lambang resmi daerah.', image: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=900&q=80' },
   { title: 'Geografi', description: 'Letak topografi, dan kondisi geografis wilayah.', image: 'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=900&q=80' },
@@ -258,12 +259,20 @@ function NewsList({ items, announcement = false }: { items: string[][]; announce
 
 function News() { return <section id="berita" className="bg-[#f6f8fa] px-4 py-20 md:px-8 lg:px-12"><div className="mx-auto max-w-[1400px]"><SectionHeading>Pengumuman &amp; Berita</SectionHeading><div className="grid gap-14 lg:grid-cols-2"><div><h3 className="mb-6 text-2xl font-bold text-[#263349]">Pengumuman</h3><div className="mb-7 h-1 w-14 rounded-full bg-[#f4c13b]" /><NewsList items={announcements} announcement /><a className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44]" href="#berita">Lihat Semua <ArrowRight size={18} /></a></div><div><h3 className="mb-6 text-2xl font-bold text-[#263349]">Berita</h3><div className="mb-7 h-1 w-14 rounded-full bg-[#f4c13b]" /><NewsList items={news} /><a className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44]" href="#berita">Lihat Semua <ArrowRight size={18} /></a></div></div></div></section> }
 
+interface SubItem {
+  id: string
+  title: string
+  subtitle: string
+  href: string
+}
+
 interface ServiceCard {
   id: string
   icon: React.ReactNode
   title: string
   subtitle: string
   href?: string
+  subItems?: SubItem[]
 }
 
 interface ServiceGroup {
@@ -284,7 +293,17 @@ const opdServices: { [key: string]: OpdCategory } = {
           { id: '1', icon: <FileText size={24} />, title: 'Dokumentasi Pimpinan', subtitle: 'KDP Kota Sukabumi', href: 'https://kdp.sukabumikota.go.id/' },
           { id: '2', icon: <Scale size={24} />, title: 'Bag. Hukum', subtitle: 'Jaringan Dokumentasi dan Informasi Hukum', href: 'https://jdih.sukabumikota.go.id/beranda' },
           { id: '3', icon: <BarChart3 size={24} />, title: 'Bag. Organisasi', subtitle: 'Halaman Informasi Penyelenggaraan Pelayanan Publik', href: 'https://bagianorganisasi.sukabumikota.go.id/' },
-          { id: '4', icon: <ShoppingCart size={24} />, title: 'Bag. Pengadaan Barang dan Jasa', subtitle: 'siCAMPERENIK, SiRUP, LPSE', href: '#' },
+          {
+            id: '4',
+            icon: <ShoppingCart size={24} />,
+            title: 'Bag. Pengadaan Barang dan Jasa',
+            subtitle: 'siCAMPERENIK, SiRUP, LPSE',
+            subItems: [
+              { id: 'm1', title: 'siCAMPERENIK', subtitle: 'Sistem Informasi Pengadaan', href: 'https://bpbj.sukabumikota.go.id' },
+              { id: 'm2', title: 'SiRUP', subtitle: 'Sistem Informasi Rencana Umum Pengadaan', href: 'https://sirup.inaproc.id/sirup/loginctr/index' },
+              { id: 'm3', title: 'LPSE', subtitle: 'Layanan Pengadaan Secara Elektronik', href: 'https://lpse.jabarprov.go.id/' },
+            ],
+          },
         ]
       },
       {
@@ -359,9 +378,23 @@ const opdServices: { [key: string]: OpdCategory } = {
         items: [
           { id: '1', icon: <MapPin size={24} />, title: 'Kecamatan Baros', subtitle: 'Website Kec. Baros', href: 'https://kecamatanbaros.sukabumikota.go.id' },
           { id: '2', icon: <MapPin size={24} />, title: 'Kecamatan Cibeureum', subtitle: 'Website Kec. Cibeureum', href: 'https://kecamatancibeureum.sukabumikota.go.id' },
-          { id: '3', icon: <MapPin size={24} />, title: 'Kecamatan Cikole', subtitle: 'Informasi Administrasi Kecamatan', href: '#' },
+          {
+            id: '3', icon: <MapPin size={24} />, title: 'Kecamatan Cikole', subtitle: 'Web kec. Cikole, Kel. Cisarua, Kel. Selabatu', subItems: [
+              { id: 'm1', title: 'Website Kec. Cikole', subtitle: 'Website Kec. Cikole', href: 'https://kecamatancikole.sukabumikota.go.id/' },
+              { id: 'm2', title: 'Kelurahan Cisarua', subtitle: 'web perpustakaan', href: 'https://perpuscisarua.sukabumikota.go.id/' },
+              { id: 'm3', title: 'Kelurahan Selabatu', subtitle: 'web Kel. Selabatu', href: 'https://kelurahanselabatu.sukabumikota.go.id' }
+            ]
+          },
           { id: '4', icon: <MapPin size={24} />, title: 'Kecamatan Citamiang', subtitle: 'Website Kec. Citamiang', href: 'https://kecamatancitamiang.sukabumikota.go.id/' },
-          { id: '5', icon: <MapPin size={24} />, title: 'Kecamatan Gunungpuyuh', subtitle: 'Informasi Administrasi Kecamatan', href: '#' },
+          {
+            id: '5', icon: <MapPin size={24} />, title: 'Kecamatan Gunungpuyuh', subtitle: 'Web Kec. Gunungpuyuh, Kel. Gunungpuyuh, Kel. Karamat, Kel. Karangtengah',
+            subItems: [
+              { id: 'm1', title: 'Website Kec. Gunungpuyuh', subtitle: 'Website Kec. Gunungpuyuh', href: 'https://kecamatangunungpuyuh.sukabumikota.go.id/' },
+              { id: 'm2', title: 'Kelurahan Gunungpuyuh', subtitle: 'web Kel. Gunungpuyuh', href: 'https://kelurahangunungpuyuh.sukabumikota.go.id/' },
+              { id: 'm3', title: 'Kelurahan Karamat', subtitle: 'web Kel. Karamat', href: 'https://kelurahankaramat.sukabumikota.go.id/' },
+              { id: 'm4', title: 'Kelurahan Karangtengah', subtitle: 'web Kel. Karangtengah', href: 'https://kelurahankarangtengah.sukabumikota.go.id/' }
+            ]
+          },
           { id: '6', icon: <MapPin size={24} />, title: 'Kecamatan Lembursitu', subtitle: 'Website Kec. Lembursitu', href: 'https://kecamatanlembursitu.sukabumikota.go.id/' },
           { id: '7', icon: <MapPin size={24} />, title: 'Kecamatan Warudoyong', subtitle: 'Website Kec. Warudoyong', href: 'https://kecamatanwarudoyong.sukabumikota.go.id' },
         ]
@@ -374,6 +407,13 @@ function Opd() {
   const [activeCategory, setActiveCategory] = useState('Pemerintahan')
   const [cardPage, setCardPage] = useState(0)
   const cardsPerPage = 6
+
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedModalData, setSelectedModalData] = useState<SubItem[]>([])
+  const [selectedModalTitle, setSelectedModalTitle] = useState('')
+  const [modalPage, setModalPage] = useState(0)
+  const cardsPerModalPage = 4
 
   const categoryData = opdServices[activeCategory]
 
@@ -416,113 +456,242 @@ function Opd() {
     setCardPage((prev) => Math.min(totalPages - 1, prev + 1))
   }
 
+  const openModal = (service: ServiceCard) => {
+    setSelectedModalData(service.subItems || [])
+    setSelectedModalTitle(service.title)
+    setModalPage(0)
+    setIsModalOpen(true)
+  }
+
+  const closeModal = () => {
+    setIsModalOpen(false)
+  }
+
+  // Modal pagination
+  const totalModalPages = Math.ceil(selectedModalData.length / cardsPerModalPage)
+  const currentModalItems = selectedModalData.slice(
+    modalPage * cardsPerModalPage,
+    (modalPage + 1) * cardsPerModalPage
+  )
+
   return (
-    <section id="opd" className="bg-white px-4 py-20 md:px-8 lg:px-12">
-      <div className="mx-auto max-w-[1400px]">
-        <SectionHeading subtitle="Akses langsung ke portal resmi Organisasi Perangkat Daerah (OPD) dan wilayah administratif Kecamatan di lingkungan Pemerintah Kota Sukabumi.">
-          Organisasi Perangkat Daerah
-        </SectionHeading>
-        <div className="flex min-h-[500px] overflow-hidden rounded-xl border border-[#e2e8ed] bg-white shadow-[0_24px_40px_-28px_rgba(15,23,42,0.5)]">
-          {/* Sidebar */}
-          <div className="flex w-full flex-col space-y-1 md:w-[28%] border-r border-[#e2e8ed]">
-            {Object.keys(opdServices).map((category) => (
-              <button
-                key={category}
-                onClick={() => handleCategoryChange(category)}
-                className={`flex flex-1 items-center border-l-4 px-6 py-3 text-left font-medium transition ${activeCategory === category
-                  ? 'border-[#16a34a] bg-[#edfff2] text-[#138d43]'
-                  : 'border-transparent text-[#53627a] hover:bg-[#f7faf8]'
-                  }`}
-                aria-pressed={activeCategory === category}
+    <>
+      <section id="opd" className="bg-white px-4 py-20 md:px-8 lg:px-12">
+        <div className="mx-auto max-w-[1400px]">
+          <SectionHeading subtitle="Akses langsung ke portal resmi Organisasi Perangkat Daerah (OPD) dan wilayah administratif Kecamatan di lingkungan Pemerintah Kota Sukabumi.">
+            Organisasi Perangkat Daerah
+          </SectionHeading>
+          <div className="flex min-h-[500px] overflow-hidden rounded-xl border border-[#e2e8ed] bg-white shadow-[0_24px_40px_-28px_rgba(15,23,42,0.5)]">
+            {/* Sidebar */}
+            <div className="flex w-full flex-col space-y-1 md:w-[28%] border-r border-[#e2e8ed]">
+              {Object.keys(opdServices).map((category) => (
+                <button
+                  key={category}
+                  onClick={() => handleCategoryChange(category)}
+                  className={`flex flex-1 items-center border-l-4 px-6 py-3 text-left font-medium transition ${activeCategory === category
+                    ? 'border-[#16a34a] bg-[#edfff2] text-[#138d43]'
+                    : 'border-transparent text-[#53627a] hover:bg-[#f7faf8]'
+                    }`}
+                  aria-pressed={activeCategory === category}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+
+            {/* Right Content - Service Cards */}
+            <div className="hidden flex-1 flex-col p-8 md:flex min-h-[520px]">
+              {/* Animated Content Wrapper */}
+              <div
+                key={`page-${activeCategory}-${cardPage}`}
+                className="flex flex-1 flex-col animate-[fadeInUp_0.5s_ease-out]"
               >
-                {category}
-              </button>
-            ))}
-          </div>
+                {/* Dynamic Heading */}
+                <div className="mb-4">
+                  <h3 className="text-2xl font-bold text-[#1b293c]">{currentPage.title}</h3>
+                  <p className="text-sm text-[#66758a] mt-1">{activeCategory}</p>
+                </div>
 
-          {/* Right Content - Service Cards */}
-          <div className="hidden flex-1 flex-col p-8 md:flex min-h-[520px]">
-            {/* Animated Content Wrapper — only cards + heading animate, not pagination */}
-            {/* flex-1 makes it fill available height so mt-auto on pagination works correctly */}
-            <div
-              key={`page-${activeCategory}-${cardPage}`}
-              className="flex flex-1 flex-col animate-[fadeInUp_0.5s_ease-out]"
-            >
-              {/* Dynamic Heading */}
-              <div className="mb-4">
-                <h3 className="text-2xl font-bold text-[#1b293c]">{currentPage.title}</h3>
-                <p className="text-sm text-[#66758a] mt-1">{activeCategory}</p>
-              </div>
+                {/* Service Cards Grid */}
+                <div className="flex-1">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 content-start">
+                    {currentPage.items.map((service: ServiceCard) => {
+                      const cardClasses = "flex cursor-pointer items-center gap-4 rounded-lg border border-[#e5ebf0] bg-white p-4 transition-all duration-200 hover:border-green-200 hover:bg-slate-50 hover:shadow-md w-full text-left"
+                      const inner = (
+                        <>
+                          {/* Icon */}
+                          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-[#f0fdf4] text-[#16a34a]">
+                            {service.icon}
+                          </div>
+                          {/* Title & Subtitle */}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-[#1b293c]">{service.title}</h4>
+                            <p className="text-sm text-[#66758a]">{service.subtitle}</p>
+                          </div>
+                          {/* Chevron */}
+                          <ChevronRight size={20} className="shrink-0 text-[#cbd5e1]" />
+                        </>
+                      )
 
-              {/* Service Cards Grid — content-start keeps cards top-aligned, no vertical stretching */}
-              <div className="flex-1">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 content-start">
-                  {currentPage.items.map((service) => (
-                    <a
-                      key={service.id}
-                      href={service.href || '#'}
-                      target={service.href && service.href !== '#' ? '_blank' : undefined}
-                      rel={service.href && service.href !== '#' ? 'noopener noreferrer' : undefined}
-                      className="flex cursor-pointer items-center gap-4 rounded-lg border border-[#e5ebf0] bg-white p-4 transition-all duration-200 hover:border-green-200 hover:bg-slate-50 hover:shadow-md"
+                      if (service.subItems && service.subItems.length > 0) {
+                        return (
+                          <button
+                            key={service.id}
+                            onClick={() => openModal(service)}
+                            className={cardClasses}
+                          >
+                            {inner}
+                          </button>
+                        )
+                      }
+
+                      return (
+                        <a
+                          key={service.id}
+                          href={service.href || '#'}
+                          target={service.href && service.href !== '#' ? '_blank' : undefined}
+                          rel={service.href && service.href !== '#' ? 'noopener noreferrer' : undefined}
+                          className={cardClasses}
+                        >
+                          {inner}
+                        </a>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="mt-auto pt-6 flex items-center justify-center gap-4">
+                    <button
+                      onClick={handlePrevPage}
+                      disabled={cardPage === 0}
+                      className="z-20 grid size-11 place-items-center rounded-full border border-[#d5dfe8] bg-white text-[#cbd5e1] hover:text-[#159447] disabled:opacity-50"
+                      aria-label="Halaman sebelumnya"
                     >
-                      {/* Icon */}
-                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-[#f0fdf4] text-[#16a34a]">
-                        {service.icon}
-                      </div>
+                      <ArrowLeft />
+                    </button>
+                    <div className="flex items-center gap-2">
+                      {Array.from({ length: totalPages }).map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setCardPage(index)}
+                          aria-label={`Go to page ${index + 1}`}
+                          className={`rounded-full transition-all duration-200 ${index === cardPage
+                            ? 'w-4 h-3 bg-[#159447] cursor-default'
+                            : 'size-3 bg-[#cbd5e1] cursor-pointer hover:bg-slate-400'
+                            }`}
+                        />
+                      ))}
+                    </div>
+                    <button
+                      onClick={handleNextPage}
+                      disabled={cardPage === totalPages - 1}
+                      className="z-20 grid size-11 place-items-center rounded-full border border-[#c4d2df] bg-white text-[#26354a] hover:text-[#159447] disabled:opacity-50"
+                      aria-label="Halaman berikutnya"
+                    >
+                      <ArrowRight />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-                      {/* Title & Subtitle */}
+      {/* Modal */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) closeModal() }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+        >
+          <div className="bg-white rounded-xl w-full max-w-3xl p-6 relative shadow-2xl animate-[fadeInUp_0.3s_ease-out]">
+            {/* Close button */}
+            <button
+              onClick={closeModal}
+              className="absolute top-4 right-4 grid size-9 place-items-center rounded-full border border-[#e5ebf0] text-[#66758a] hover:bg-slate-100 hover:text-[#1b293c] transition"
+              aria-label="Tutup modal"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Modal Header */}
+            <div className="mb-6 pr-10">
+              <div className="flex items-center gap-3 mb-1">
+                <span className="h-6 w-1 rounded-full bg-[#159447]" />
+                <h2 id="modal-title" className="text-xl font-bold text-[#1b293c]">{selectedModalTitle}</h2>
+              </div>
+              <p className="text-sm text-[#66758a] ml-4">Pilih layanan yang tersedia</p>
+            </div>
+
+            {/* Modal Cards Grid + Pagination — min-h keeps layout stable */}
+            <div className="flex flex-col min-h-[260px]">
+              <div className="flex-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 content-start">
+                  {currentModalItems.map((item) => (
+                    <a
+                      key={item.id}
+                      href={item.href}
+                      target={item.href !== '#' ? '_blank' : undefined}
+                      rel={item.href !== '#' ? 'noopener noreferrer' : undefined}
+                      className="flex items-center gap-4 rounded-lg border border-[#e5ebf0] bg-[#f8fafc] p-4 transition-all duration-200 hover:border-green-200 hover:bg-[#f0fdf4] hover:shadow-md"
+                    >
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white border border-[#e5ebf0] text-[#16a34a] shadow-sm">
+                        <ShoppingCart size={20} />
+                      </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-[#1b293c]">{service.title}</h4>
-                        <p className="text-sm text-[#66758a]">{service.subtitle}</p>
+                        <h4 className="font-bold text-[#1b293c]">{item.title}</h4>
+                        <p className="text-xs text-[#66758a] leading-snug mt-0.5">{item.subtitle}</p>
                       </div>
-
-                      {/* Chevron */}
-                      <ChevronRight size={20} className="shrink-0 text-[#cbd5e1]" />
+                      <ChevronRight size={18} className="shrink-0 text-[#cbd5e1]" />
                     </a>
                   ))}
                 </div>
               </div>
 
-              {/* Pagination Controls — mt-auto pins it to the bottom of the flex container */}
-              {totalPages > 1 && (
+              {/* Modal Pagination */}
+              {totalModalPages > 1 && (
                 <div className="mt-auto pt-6 flex items-center justify-center gap-4">
                   <button
-                    onClick={handlePrevPage}
-                    disabled={cardPage === 0}
-                    className="z-20 grid size-11 place-items-center rounded-full border border-[#d5dfe8] bg-white text-[#cbd5e1] hover:text-[#159447] disabled:opacity-50"
-                    aria-label="Halaman sebelumnya"
+                    onClick={() => setModalPage((p) => Math.max(0, p - 1))}
+                    disabled={modalPage === 0}
+                    className="grid size-11 place-items-center rounded-full border border-[#d5dfe8] bg-white text-[#cbd5e1] hover:text-[#159447] disabled:opacity-50"
+                    aria-label="Halaman modal sebelumnya"
                   >
-                    <ArrowLeft />
+                    <ArrowLeft size={18} />
                   </button>
                   <div className="flex items-center gap-2">
-                    {Array.from({ length: totalPages }).map((_, index) => (
+                    {Array.from({ length: totalModalPages }).map((_, index) => (
                       <button
                         key={index}
-                        onClick={() => setCardPage(index)}
-                        aria-label={`Go to page ${index + 1}`}
-                        className={`rounded-full transition-all duration-200 ${
-                          index === cardPage
-                            ? 'w-4 h-3 bg-[#159447] cursor-default'
-                            : 'size-3 bg-[#cbd5e1] cursor-pointer hover:bg-slate-400'
-                        }`}
+                        onClick={() => setModalPage(index)}
+                        aria-label={`Modal page ${index + 1}`}
+                        className={`rounded-full transition-all duration-200 ${index === modalPage
+                          ? 'w-4 h-3 bg-[#159447] cursor-default'
+                          : 'size-3 bg-[#cbd5e1] cursor-pointer hover:bg-slate-400'
+                          }`}
                       />
                     ))}
                   </div>
                   <button
-                    onClick={handleNextPage}
-                    disabled={cardPage === totalPages - 1}
-                    className="z-20 grid size-11 place-items-center rounded-full border border-[#c4d2df] bg-white text-[#26354a] hover:text-[#159447] disabled:opacity-50"
-                    aria-label="Halaman berikutnya"
+                    onClick={() => setModalPage((p) => Math.min(totalModalPages - 1, p + 1))}
+                    disabled={modalPage === totalModalPages - 1}
+                    className="grid size-11 place-items-center rounded-full border border-[#c4d2df] bg-white text-[#26354a] hover:text-[#159447] disabled:opacity-50"
+                    aria-label="Halaman modal berikutnya"
                   >
-                    <ArrowRight />
+                    <ArrowRight size={18} />
                   </button>
                 </div>
               )}
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      )}
+    </>
   )
 }
 
@@ -570,38 +739,107 @@ function Footer() {
         <div className="mx-auto grid max-w-[1400px] gap-12 md:grid-cols-4">
           <div>
             <h3 className="text-lg font-bold">KONTAK</h3>
-            <img src="/images/Diskominfo.webp" alt="Diskominfo Logo" className="mt-8 h-auto w-74" />
+            <a
+              href="https://diskominfo.sukabumikota.go.id"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block transition-opacity hover:opacity-80"
+            >
+              <img src="/images/Diskominfo.webp" alt="Diskominfo Logo" className="mt-8 h-auto w-74" />
+            </a>
             <div className="mt-8 flex flex-col gap-5 text-sm leading-relaxed text-white/80">
-              <p className="flex gap-3"><MapPin className="shrink-0 text-[#f04c71]" />Alamat : Jl. R. Syamsudin, SH No.25, Cikole, Kec. Cikole, Kota Sukabumi, Jawa Barat 43113</p>
-              <p className="flex gap-3"><Phone className="shrink-0 text-[#e8468a]" />Telp : +62 (266) 20229715</p>
-              <p className="flex gap-3"><Mail className="shrink-0 text-[#e9c9eb]" />Email : diskominfo@sukabumikota.go.id</p>
+              <a
+                href="https://maps.app.goo.gl/CmbbaNogyg1h8DBA7"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-start gap-3"
+              >
+                <MapPin className="shrink-0 text-[#f04c71] group-hover:text-green-400 transition-colors mt-1" />
+                <span>Alamat : Jl. R. Syamsudin, SH No.25, Cikole, Kec. Cikole, Kota Sukabumi, Jawa Barat 43113</span>
+              </a>
+              <a
+                href="tel:+6226620229715"
+                className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-center gap-3"
+              >
+                <Phone className="shrink-0 text-[#e8468a] group-hover:text-green-400 transition-colors" />
+                <span>Telp : +62 (266) 20229715</span>
+              </a>
+              <a
+                href="mailto:diskominfo@sukabumikota.go.id"
+                className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-center gap-3"
+              >
+                <Mail className="shrink-0 text-[#e9c9eb] group-hover:text-green-400 transition-colors" />
+                <span>Email : diskominfo@sukabumikota.go.id</span>
+              </a>
             </div>
           </div>
           <div>
             <h3 className="text-lg font-bold">TAUTAN TERKAIT</h3>
             <div className="mt-8 flex flex-col gap-5 text-white/80">
-              <a href="#footer">Layanan Pengadaan LPSE</a>
-              <a href="#footer">Layanan Informasi Publik (PPID)</a>
-              <a href="#footer">Layanan Informasi Hukum (JDIH)</a>
+              <a
+                href="https://lpse.jabarprov.go.id/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-center gap-3">Layanan Pengadaan LPSE</a>
+              <a href="https://ppid.sukabumikota.go.id/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-center gap-3"
+              >Layanan Informasi Publik (PPID)</a>
+              <a href="https://jdih.sukabumikota.go.id/beranda"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-center gap-3">Layanan Informasi Hukum (JDIH)</a>
             </div>
           </div>
           <div>
             <h3 className="text-lg font-bold">STANDAR PROTOKOL</h3>
-            <img src="/images/ImmuniWeb.webp" alt="ImmuniWeb Logo" className="mt-8 h-auto w-70" />
+            <a
+              href="https://www.immuniweb.com/ssl/diskominfo.sukabumikota.go.id/nZuRpnLm/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block transition-opacity hover:opacity-80"
+            >
+              <img src="/images/ImmuniWeb.webp" alt="ImmuniWeb Logo" className="mt-8 h-auto w-70" />
+            </a>
           </div>
           <div>
             <h3 className="text-lg font-bold">MEDIA SOSIAL</h3>
             <div className="mt-8 flex gap-4">
-              <a href="#footer" aria-label="Facebook" className="flex items-center justify-center w-12 h-12 rounded-full bg-[#159447] text-white hover:opacity-80 transition">
+              <a
+                href="https://www.facebook.com/kotasukabumi.id?locale=id_ID"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook"
+                className="flex items-center justify-center w-12 h-12 rounded-full bg-[#159447] text-white hover:opacity-80 transition"
+              >
                 <FacebookLogo />
               </a>
-              <a href="#footer" aria-label="X" className="flex items-center justify-center w-12 h-12 rounded-full bg-[#159447] text-white hover:opacity-80 transition">
+              <a
+                href="https://x.com/Pemkot_Sukabumi"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="X"
+                className="flex items-center justify-center w-12 h-12 rounded-full bg-[#159447] text-white hover:opacity-80 transition"
+              >
                 <XLogo />
               </a>
-              <a href="#footer" aria-label="Instagram" className="flex items-center justify-center w-12 h-12 rounded-full bg-[#159447] text-white hover:opacity-80 transition">
+              <a
+                href="https://www.instagram.com/pemkotsukabumi_/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="flex items-center justify-center w-12 h-12 rounded-full bg-[#159447] text-white hover:opacity-80 transition"
+              >
                 <InstagramLogo />
               </a>
-              <a href="#footer" aria-label="Youtube" className="flex items-center justify-center w-12 h-12 rounded-full bg-[#159447] text-white hover:opacity-80 transition">
+              <a
+                href="https://www.youtube.com/@pemerintahkotasukabumi"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Youtube"
+                className="flex items-center justify-center w-12 h-12 rounded-full bg-[#159447] text-white hover:opacity-80 transition"
+              >
                 <YoutubeLogo />
               </a>
             </div>
@@ -613,4 +851,34 @@ function Footer() {
   )
 }
 
-export default function Page() { return <main className="min-h-screen bg-white"><Navbar /><Hero /><Welcome /><Profile /><News /><Opd /><Footer /></main> }
+function Partners() {
+  return (
+    <section className="bg-[#F8F6F0] py-12 md:py-16 border-t border-[#e5ebf0]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-wrap justify-center md:justify-between items-center gap-8 md:gap-12">
+          <img
+            src="/images/Lambang_Kota_Sukabumi.png"
+            className="h-16 md:h-24 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
+          />
+          <img
+            src="/images/diskominfo-hitam.png"
+            className="h-16 md:h-24 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
+          />
+          <img
+            src="/images/Span-Lapor.png"
+            className="h-16 md:h-24 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
+          />
+
+          {/* TODO: Ganti src dengan path gambar Logo Partner 4 */}
+          <img
+            // src="/logo-4.png"
+            // alt="Logo Partner 4"
+            className="h-16 md:h-24 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
+          />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export default function Page() { return <main className="min-h-screen bg-white"><Navbar /><Hero /><Welcome /><Profile /><News /><Opd /><Partners /><Footer /></main> }
