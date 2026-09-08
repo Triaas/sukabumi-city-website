@@ -38,13 +38,13 @@ import {
 import { useState, useEffect, useRef } from 'react'
 
 const profileCards = [
-  { title: 'Sejarah', description: 'Jejak perkembangan Kota Sukabumi dari masa ke masa.', image: 'https://images.unsplash.com/photo-1531058020387-3be344556be6?auto=format&fit=crop&w=900&q=80'},
-  { title: 'Visi Misi', description: 'Arah pembangunan dan tujuan yang ingin dicapai.', image: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=900&q=80' },
-  { title: 'Lambang', description: 'Makna filosofis di balik lambang resmi daerah.', image: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=900&q=80' },
-  { title: 'Geografi', description: 'Letak topografi, dan kondisi geografis wilayah.', image: 'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=900&q=80' },
-  { title: 'Sosial Ekonomi', description: 'Kondisi demografi dan pergerakan ekonomi masyarakat.', image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=900&q=80' },
-  { title: 'Dalam Angka', description: 'Data statistik dan indikator kinerja daerah.', image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=900&q=80' },
-  { title: 'Unit Kesehatan Sekolah (UKS)', description: 'Program pembinaan kesehatan komprehensif di lingkungan sekolah.', image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=900&q=80' },
+  { title: 'Sejarah', description: 'Jejak perkembangan Kota Sukabumi dari masa ke masa.', image: '/images/sejarah-card.jpg', href: 'https://portal.sukabumikota.go.id/sejarah-kota-sukabumi/' },
+  { title: 'Visi Misi', description: 'Arah pembangunan dan tujuan yang ingin dicapai.', image: '/images/visi misi-card.jpg', href: 'https://portal.sukabumikota.go.id/visi-dan-misi/' },
+  { title: 'Lambang', description: 'Makna filosofis di balik lambang resmi daerah.', image: '/images/logo-pemkoot-sukabumi-card.jpg', href: 'https://portal.sukabumikota.go.id/lambang-kota-sukabumi/' },
+  { title: 'Geografi', description: 'Letak topografi, dan kondisi geografis wilayah.', image: '/images/geo-card.jpg', href: 'https://portal.sukabumikota.go.id/geografis/' },
+  { title: 'Sosial Ekonomi', description: 'Kondisi demografi dan pergerakan ekonomi masyarakat.', image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=900&q=80', href: 'https://portal.sukabumikota.go.id/sosial-ekonomi/' },
+  { title: 'Dalam Angka', description: 'Data statistik dan indikator kinerja daerah.', image: '/images/dalam angka-card.jpg', href: 'https://portal.sukabumikota.go.id/sukabumi-dalam-angka/' },
+  { title: 'Unit Kesehatan Sekolah (UKS)', description: 'Program pembinaan kesehatan komprehensif di lingkungan sekolah.', image: '/images/UKS-card.jpg', href: 'https://portal.sukabumikota.go.id/uks/' },
 ]
 
 const announcements = [
@@ -69,12 +69,12 @@ function Navbar() {
   const navRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({})
 
+  // Navigation items that correspond to page sections (tracked for active state)
   const navItems = [
     { id: 'beranda', label: 'Beranda' },
     { id: 'profil', label: 'Profil' },
     { id: 'berita', label: 'Pengumuman & Berita' },
     { id: 'opd', label: 'Situs OPD' },
-    { id: 'footer', label: 'Kebijakan Privasi' },
   ]
 
   useEffect(() => {
@@ -152,6 +152,17 @@ function Navbar() {
               </a>
             )
           })}
+
+          {/* Kebijakan Privasi - Standard link without active state */}
+          <a
+            href="https://sukabumikota.go.id/kebijakan-privasi/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="pb-1 text-slate-300 hover:text-white transition-colors duration-200"
+          >
+            Kebijakan Privasi
+          </a>
+
           <span
             className="absolute bottom-0 bg-[#f9c74f] h-[3px] rounded-full transition-all duration-300 ease-in-out pointer-events-none"
             style={{
@@ -216,38 +227,44 @@ function Profile() {
         </SectionHeading>
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-5">
           {profileCards.slice(0, 4).map((card) => (
-            <article
+            <a
               key={card.title}
+              href={card.href || '#'}
+              target="_blank"
+              rel="noopener noreferrer"
               className="group relative h-[160px] md:h-[180px] overflow-hidden rounded-2xl bg-[#172033] shadow-md md:col-span-3 cursor-pointer grayscale transition-all duration-500 ease-in-out hover:grayscale-0 hover:scale-[1.02] hover:shadow-xl"
             >
               <img
                 src={card.image}
                 alt={card.title}
-                className="absolute inset-0 size-full object-cover object-center opacity-60 transition-transform duration-500 group-hover:scale-105 group-hover:opacity-80"
+                className="absolute inset-0 size-full object-cover object-center opacity-60 transition-transform duration-500 group-hover:scale-105 group-hover:opacity-60"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
               <div className="relative flex h-full flex-col justify-end p-4 md:p-5 text-white z-10">
                 <h3 className="text-base md:text-lg font-bold">{card.title}</h3>
                 <p className="mt-1 text-xs md:text-sm leading-snug text-white/85">{card.description}</p>
               </div>
-            </article>
+            </a>
           ))}
           {profileCards.slice(4).map((card) => (
-            <article
+            <a
               key={card.title}
+              href={card.href || '#'}
+              target="_blank"
+              rel="noopener noreferrer"
               className="group relative h-[160px] md:h-[180px] overflow-hidden rounded-2xl bg-[#172033] shadow-md md:col-span-4 cursor-pointer grayscale transition-all duration-500 ease-in-out hover:grayscale-0 hover:scale-[1.02] hover:shadow-xl"
             >
               <img
                 src={card.image}
                 alt={card.title}
-                className="absolute inset-0 size-full object-cover object-center opacity-60 transition-transform duration-500 group-hover:scale-105 group-hover:opacity-80"
+                className="absolute inset-0 size-full object-cover object-center opacity-60 transition-transform duration-500 group-hover:scale-105 group-hover:opacity-60"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
               <div className="relative flex h-full flex-col justify-end p-4 md:p-5 text-white z-10">
                 <h3 className="text-base md:text-lg font-bold">{card.title}</h3>
                 <p className="mt-1 text-xs md:text-sm leading-snug text-white/85">{card.description}</p>
               </div>
-            </article>
+            </a>
           ))}
         </div>
       </div>
@@ -268,7 +285,8 @@ interface SubItem {
 
 interface ServiceCard {
   id: string
-  icon: React.ReactNode
+  icon?: React.ReactNode
+  image?: string
   title: string
   subtitle: string
   href?: string
@@ -290,12 +308,12 @@ const opdServices: { [key: string]: OpdCategory } = {
       {
         title: 'Sekretariat Daerah',
         items: [
-          { id: '1', icon: <FileText size={24} />, title: 'Dokumentasi Pimpinan', subtitle: 'KDP Kota Sukabumi', href: 'https://kdp.sukabumikota.go.id/' },
+          { id: '1', image: '/images/dokpim.png', title: 'Dokumentasi Pimpinan', subtitle: 'KDP Kota Sukabumi', href: 'https://kdp.sukabumikota.go.id/' },
           { id: '2', icon: <Scale size={24} />, title: 'Bag. Hukum', subtitle: 'Jaringan Dokumentasi dan Informasi Hukum', href: 'https://jdih.sukabumikota.go.id/beranda' },
-          { id: '3', icon: <BarChart3 size={24} />, title: 'Bag. Organisasi', subtitle: 'Halaman Informasi Penyelenggaraan Pelayanan Publik', href: 'https://bagianorganisasi.sukabumikota.go.id/' },
+          { id: '3', image: '/images/Logo_BagianOrganisasi.png', title: 'Bag. Organisasi', subtitle: 'Halaman Informasi Penyelenggaraan Pelayanan Publik', href: 'https://bagianorganisasi.sukabumikota.go.id/' },
           {
             id: '4',
-            icon: <ShoppingCart size={24} />,
+            image: '/images/pengadaan-logo.png',
             title: 'Bag. Pengadaan Barang dan Jasa',
             subtitle: 'siCAMPERENIK, SiRUP, LPSE',
             subItems: [
@@ -519,9 +537,13 @@ function Opd() {
                       const cardClasses = "flex cursor-pointer items-center gap-4 rounded-lg border border-[#e5ebf0] bg-white p-4 transition-all duration-200 hover:border-green-200 hover:bg-slate-50 hover:shadow-md w-full text-left"
                       const inner = (
                         <>
-                          {/* Icon */}
-                          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-[#f0fdf4] text-[#16a34a]">
-                            {service.icon}
+                          {/* Icon or Image */}
+                          <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-lg ${service.image ? '' : 'bg-[#f0fdf4] text-[#16a34a]'}`}>
+                            {service.image ? (
+                              <img src={service.image} alt={service.title} className="h-10 w-10 object-contain" />
+                            ) : (
+                              service.icon
+                            )}
                           </div>
                           {/* Title & Subtitle */}
                           <div className="flex-1 min-w-0">
