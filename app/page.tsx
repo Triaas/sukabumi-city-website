@@ -1,7 +1,28 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
 import {
+  FileText,
+  Scale,
+  BarChart3,
+  ShoppingCart,
+  Users,
+  CheckCircle,
+  Eye,
+  Shield,
+  HeartPulse,
+  Heart,
+  Activity,
+  Stethoscope,
+  AlertCircle,
+  GraduationCap,
+  BookOpen,
+  School,
+  Award,
+  Building,
+  Navigation,
+  Globe,
+  ChevronRight,
+  ChevronLeft,
   ArrowLeft,
   ArrowRight,
   Camera,
@@ -12,7 +33,8 @@ import {
   Phone,
   Play,
   Search,
-} from 'lucide-react'
+} from 'lucide-react';
+import { useState, useEffect, useRef } from 'react'
 
 const profileCards = [
   { title: 'Sejarah', description: 'Jejak perkembangan Kota Sukabumi dari masa ke masa.', image: 'https://images.unsplash.com/photo-1531058020387-3be344556be6?auto=format&fit=crop&w=900&q=80' },
@@ -35,8 +57,6 @@ const news = [
   ['WALIKOTA SUKABUMI APRESIASI GELAR BUDAYA DAN KULINER TRADISIONAL DI ALUN-ALUN', '22 Okt 2023', 'Disporapar Kota Sukabumi'],
   ['DINAS PEKERJAAN UMUM TINJAU PENYELESAIAN PROYEK DRAINASE DAN JALAN KOTA', '19 Okt 2023', 'DPUTR Kota Sukabumi'],
 ]
-
-const opd = ['Pemerintahan', 'Kependudukan & Perizinan', 'Hukum dan transparansi', 'Kesehatan', 'Pendidikan', 'Daerah Kecamatan']
 
 function SectionHeading({ children, subtitle }: { children: React.ReactNode; subtitle?: string }) {
   return <div className="mb-9"><h2 className="flex items-center gap-3 text-3xl font-bold tracking-tight text-[#172135] md:text-4xl"><span className="h-10 w-1.5 rounded-full bg-[#159447]" />{children}</h2>{subtitle && <p className="mt-3 max-w-5xl text-lg leading-relaxed text-[#566276]">{subtitle}</p>}</div>
@@ -184,7 +204,7 @@ function Hero() {
   )
 }
 
-function Welcome() { return <section className="bg-white px-4 py-20 md:px-8 lg:px-12 md:py-28"><div className="mx-auto flex max-w-[1400px] flex-col items-center gap-12 lg:flex-row lg:gap-16"><article className="max-w-[390px] rounded-3xl bg-[#eff4f8] p-8 shadow-sm md:p-10"><h2 className="text-3xl font-bold leading-tight text-[#ba8500]">Reugreug Pageuh Repeh Rapih</h2><p className="mt-6 text-lg leading-relaxed text-[#29364a]">Untuk mewujudkan masyarakat yang reugreug harinya, harus dipegang pageuh norma dan kebiasaan saling menghormati, tepa selira, dan toleran agar kehidupan masyarakat menjadi répeh, tidak dipenuhi oleh bentakan dan hentakkan, sebuah masyarakat yang mempertontonkan rapih dan saling memuliakan.</p></article><div className="flex flex-1 items-end justify-center gap-0"><div className="relative z-10 w-1/2 max-w-[300px] self-end"><img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=700&q=80" className="w-full grayscale" alt="Pemimpin daerah" /></div><div className="relative w-1/2 max-w-[300px] self-end"><img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=700&q=80&sat=-100" className="w-full scale-x-[-1] grayscale" alt="Wakil pemimpin daerah" /></div><div className="ml-10 hidden max-w-[270px] md:block"><p className="font-serif text-4xl italic text-[#516076]">Sukabumi</p><p className="text-5xl font-black tracking-tight text-[#18243b]"><span className="text-[#f29b10]">M</span>UBARAKAH</p><p className="mt-3 font-bold tracking-[0.22em] text-[#62738c]">MAJU, UNGGUL, BERBUDAYA &amp; BERKAH</p></div></div></div></section> }
+function Welcome() { return <section className="bg-white px-4 py-20 md:px-8 lg:px-12 md:py-28"><div className="mx-auto flex max-w-[1400px] flex-col items-center gap-12 lg:flex-row lg:gap-16"><article className="max-w-[390px] rounded-3xl bg-[#eff4f8] p-8 shadow-sm md:p-10"><h2 className="text-3xl font-bold leading-tight text-[#ba8500]">Reugreug Pageuh Repeh Rapih</h2><p className="mt-6 text-lg leading-relaxed text-[#29364a]">Untuk mewujudkan masyarakat yang reugreug harinya, harus dipegang pageuh norma dan kebiasaan saling menghormati, tepa selira, dan toleran agar kehidupan masyarakat menjadi répeh, tidak dipenuhi oleh bentakan dan hentakkan, sebuah masyarakat yang mempertontonkan rapih dan saling memuliakan.</p></article><div className="flex flex-1 items-end justify-center gap-0"><div className="relative z-10 w-full max-w-[500px] self-end"><img src="/images/foto walikota dan wakil walikota.webp" className="w-full" alt="Walikota dan Wakil Walikota Sukabumi" /></div><div className="ml-10 hidden max-w-[270px] md:block"><p className="font-serif text-4xl italic text-[#516076]">Sukabumi</p><p className="text-5xl font-black tracking-tight text-[#18243b]"><span className="text-[#f29b10]">M</span>UBARAKAH</p><p className="mt-3 font-bold tracking-[0.22em] text-[#62738c]">MAJU, UNGGUL, BERBUDAYA &amp; BERKAH</p></div></div></div></section> }
 
 function Profile() {
   return (
@@ -238,8 +258,359 @@ function NewsList({ items, announcement = false }: { items: string[][]; announce
 
 function News() { return <section id="berita" className="bg-[#f6f8fa] px-4 py-20 md:px-8 lg:px-12"><div className="mx-auto max-w-[1400px]"><SectionHeading>Pengumuman &amp; Berita</SectionHeading><div className="grid gap-14 lg:grid-cols-2"><div><h3 className="mb-6 text-2xl font-bold text-[#263349]">Pengumuman</h3><div className="mb-7 h-1 w-14 rounded-full bg-[#f4c13b]" /><NewsList items={announcements} announcement /><a className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44]" href="#berita">Lihat Semua <ArrowRight size={18} /></a></div><div><h3 className="mb-6 text-2xl font-bold text-[#263349]">Berita</h3><div className="mb-7 h-1 w-14 rounded-full bg-[#f4c13b]" /><NewsList items={news} /><a className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44]" href="#berita">Lihat Semua <ArrowRight size={18} /></a></div></div></div></section> }
 
-function Opd() { const [active, setActive] = useState(3); return <section id="opd" className="bg-white px-4 py-20 md:px-8 lg:px-12"><div className="mx-auto max-w-[1400px]"><SectionHeading subtitle="Akses langsung ke portal resmi Organisasi Perangkat Daerah (OPD) dan wilayah administratif Kecamatan di lingkungan Pemerintah Kota Sukabumi.">Organisasi Perangkat Daerah</SectionHeading><div className="flex min-h-[380px] overflow-hidden rounded-3xl border border-[#e2e8ed] bg-white shadow-[0_24px_40px_-28px_rgba(15,23,42,0.5)]"><div className="flex w-full flex-col md:w-[31%]">{opd.map((name, index) => <button key={name} onClick={() => setActive(index)} className={`flex flex-1 items-center border-l-4 px-8 text-left text-lg transition ${active === index ? 'border-[#16a34a] bg-[#edfff2] font-bold text-[#138d43]' : 'border-transparent text-[#53627a] hover:bg-[#f7faf8]'}`} aria-pressed={active === index}>{name}</button>)}</div><div className="relative hidden flex-1 flex-col justify-end border-l border-[#e8edf2] p-9 md:flex"><div className="mb-5 border-b border-[#e5ebf0] pb-8"><p className="text-sm font-bold uppercase tracking-[0.2em] text-[#159447]">Portal layanan</p><h3 className="mt-3 text-4xl font-bold text-[#1b293c]">{opd[active]}</h3><p className="mt-4 max-w-xl text-lg leading-relaxed text-[#66758a]">Temukan informasi, layanan, dan kanal resmi Pemerintah Kota Sukabumi untuk kebutuhan masyarakat.</p></div><div className="flex items-center justify-center gap-4"><button onClick={() => setActive((active - 1 + opd.length) % opd.length)} className="z-20 grid size-11 place-items-center rounded-full border border-[#d5dfe8] bg-white text-[#cbd5e1] hover:text-[#159447]" aria-label="OPD sebelumnya"><ArrowLeft /></button><div className="flex gap-2">{opd.slice(0, 2).map((_, index) => <span key={index} className={`size-3 rounded-full ${index === active % 2 ? 'bg-[#159447]' : 'bg-[#cbd5e1]'}`} />)}</div><button onClick={() => setActive((active + 1) % opd.length)} className="z-20 grid size-11 place-items-center rounded-full border border-[#c4d2df] bg-white text-[#26354a] hover:text-[#159447]" aria-label="OPD berikutnya"><ArrowRight /></button></div></div></div></div></section> }
+interface ServiceCard {
+  id: string
+  icon: React.ReactNode
+  title: string
+  subtitle: string
+  href?: string
+}
 
-function Footer() { return <footer id="footer" className="border-t-4 border-[#159447] bg-[#17253a] px-4 py-16 text-white md:px-8 lg:px-12"><div className="mx-auto grid max-w-[1400px] gap-12 md:grid-cols-4"><div><h3 className="text-lg font-bold">KONTAK</h3><p className="mt-8 text-4xl font-black italic text-[#f3911b]">diskominfo<span className="text-[#10a4d9]">_</span></p><div className="mt-8 flex flex-col gap-5 text-sm leading-relaxed text-white/80"><p className="flex gap-3"><MapPin className="shrink-0 text-[#f04c71]" />Alamat : Jl. R. Syamsudin, SH No.25, Cikole, Kec. Cikole, Kota Sukabumi, Jawa Barat 43113</p><p className="flex gap-3"><Phone className="shrink-0 text-[#e8468a]" />Telp : +62 (266) 20229715</p><p className="flex gap-3"><Mail className="shrink-0 text-[#e9c9eb]" />Email : diskominfo@sukabumikota.go.id</p></div></div><div><h3 className="text-lg font-bold">TAUTAN TERKAIT</h3><div className="mt-8 flex flex-col gap-5 text-white/80"><a href="#footer">Layanan Pengadaan LPSE</a><a href="#footer">Layanan Informasi Publik (PPID)</a><a href="#footer">Layanan Informasi Hukum (JDIH)</a></div></div><div><h3 className="text-lg font-bold">STANDAR PROTOKOL</h3><p className="mt-10 text-3xl font-black text-[#ef3030]">Immuni<span className="text-[#1593d4]">Web</span><sup>®</sup></p><p className="text-sm font-semibold text-white/50">AI for Application Security</p></div><div><h3 className="text-lg font-bold">MEDIA SOSIAL</h3><div className="mt-8 flex gap-4"><a href="#footer" aria-label="Facebook" className="grid size-12 place-items-center rounded-2xl bg-white text-[#12623d]"><CircleUserRound /></a><a href="#footer" aria-label="Instagram" className="grid size-12 place-items-center rounded-2xl bg-white text-[#12623d]"><Camera /></a><a href="#footer" aria-label="Youtube" className="grid size-12 place-items-center rounded-2xl bg-white text-[#12623d]"><Play /></a></div></div></div><div className="mx-auto mt-14 max-w-[1400px] border-t border-white/15 pt-8 text-center text-sm text-white/80">© 2026 Pemerintah Kota Sukabumi. Semua Hak Dilindungi.</div></footer> }
+interface ServiceGroup {
+  title: string
+  items: ServiceCard[]
+}
+
+interface OpdCategory {
+  groups: ServiceGroup[]
+}
+
+const opdServices: { [key: string]: OpdCategory } = {
+  'Pemerintahan': {
+    groups: [
+      {
+        title: 'Sekretariat Daerah',
+        items: [
+          { id: '1', icon: <FileText size={24} />, title: 'Dokumentasi Pimpinan', subtitle: 'KDP Kota Sukabumi', href: 'https://kdp.sukabumikota.go.id/' },
+          { id: '2', icon: <Scale size={24} />, title: 'Bag. Hukum', subtitle: 'Jaringan Dokumentasi dan Informasi Hukum', href: 'https://jdih.sukabumikota.go.id/beranda' },
+          { id: '3', icon: <BarChart3 size={24} />, title: 'Bag. Organisasi', subtitle: 'Halaman Informasi Penyelenggaraan Pelayanan Publik', href: 'https://bagianorganisasi.sukabumikota.go.id/' },
+          { id: '4', icon: <ShoppingCart size={24} />, title: 'Bag. Pengadaan Barang dan Jasa', subtitle: 'siCAMPERENIK, SiRUP, LPSE', href: '#' },
+        ]
+      },
+      {
+        title: 'Sekretariat Dewan',
+        items: [
+          { id: '7', icon: <Users size={24} />, title: 'Portal DPRD', subtitle: 'DPRD Kota Sukabumi', href: '#' },
+          { id: '8', icon: <FileText size={24} />, title: 'JDIH DPRD', subtitle: 'JDIH DPRD Kota Sukabumi', href: '#' },
+        ]
+      },
+      {
+        title: 'Perencanaan & Keuangan Daerah',
+        items: [
+          { id: '7', icon: <Users size={24} />, title: 'BAPPEDA', subtitle: 'Sipeka, E-Rida , SIVAKA, SIGENKO', href: '#' },
+          { id: '8', icon: <FileText size={24} />, title: 'BPKBD', subtitle: 'Website, Pantas, Smartelok, dll', href: '#' },
+        ]
+      },
+
+    ]
+  },
+  'Inspektorat': {
+    groups: [
+      {
+        title: 'Pengawasan & Pengaduan',
+        items: [
+          { id: '1', icon: <Users size={24} />, title: 'Portal Inspektorat', subtitle: 'Inspektorat Kota Sukabumi', href: 'https://inspektorat.sukabumikota.go.id' },
+          { id: '2', icon: <FileText size={24} />, title: 'WBS', subtitle: 'Layanan Pengaduan dan Konsultasi Aparatur dan Masyarakat', href: 'https://layanan.sukabumikota.go.id' },
+        ]
+      }
+    ]
+  },
+  'Kependudukan & Perizinan': {
+    groups: [
+      {
+        title: 'DISDUKCAPIL',
+        items: [
+          { id: '1', icon: <Scale size={24} />, title: 'JDIH Kota Sukabumi', subtitle: 'Jaringan Dokumentasi Hukum', href: '#' },
+          { id: '2', icon: <Eye size={24} />, title: 'Informasi Publik', subtitle: 'Portal Keterbukaan Informasi Publik', href: '#' },
+          { id: '3', icon: <FileText size={24} />, title: 'Konsultasi Hukum', subtitle: 'Layanan Konsultasi Legal', href: '#' },
+        ]
+      }
+    ]
+  },
+  'Kesehatan': {
+    groups: [
+      {
+        title: 'Kesehatan',
+        items: [
+          { id: '1', icon: <Heart size={24} />, title: 'Portal Kesehatan Sukabumi', subtitle: 'Informasi Layanan Kesehatan', href: '#' },
+          { id: '2', icon: <Activity size={24} />, title: 'Vaksinasi Online', subtitle: 'Pendaftaran dan Info Vaksinasi', href: '#' },
+          { id: '3', icon: <Stethoscope size={24} />, title: 'Puskesmas Digital', subtitle: 'Lokasi dan Layanan Puskesmas', href: '#' },
+          { id: '4', icon: <AlertCircle size={24} />, title: 'Monitoring Penyakit', subtitle: 'Data Epidemiologi Daerah', href: '#' },
+        ]
+      }
+    ]
+  },
+  'Pendidikan': {
+    groups: [
+      {
+        title: 'Pendidikan',
+        items: [
+          { id: '1', icon: <BookOpen size={24} />, title: 'Portal Pendidikan Sukabumi', subtitle: 'Informasi Layanan Pendidikan', href: '#' },
+          { id: '2', icon: <GraduationCap size={24} />, title: 'PPDB Online', subtitle: 'Penerimaan Peserta Didik Baru', href: '#' },
+          { id: '3', icon: <Users size={24} />, title: 'e-Learning Sukabumi', subtitle: 'Platform Pembelajaran Digital', href: '#' },
+        ]
+      }
+    ]
+  },
+  'Daerah Kecamatan': {
+    groups: [
+      {
+        title: 'Wilayah Administrasi Kecamatan',
+        items: [
+          { id: '1', icon: <MapPin size={24} />, title: 'Kecamatan Baros', subtitle: 'Website Kec. Baros', href: 'https://kecamatanbaros.sukabumikota.go.id' },
+          { id: '2', icon: <MapPin size={24} />, title: 'Kecamatan Cibeureum', subtitle: 'Website Kec. Cibeureum', href: 'https://kecamatancibeureum.sukabumikota.go.id' },
+          { id: '3', icon: <MapPin size={24} />, title: 'Kecamatan Cikole', subtitle: 'Informasi Administrasi Kecamatan', href: '#' },
+          { id: '4', icon: <MapPin size={24} />, title: 'Kecamatan Citamiang', subtitle: 'Website Kec. Citamiang', href: 'https://kecamatancitamiang.sukabumikota.go.id/' },
+          { id: '5', icon: <MapPin size={24} />, title: 'Kecamatan Gunungpuyuh', subtitle: 'Informasi Administrasi Kecamatan', href: '#' },
+          { id: '6', icon: <MapPin size={24} />, title: 'Kecamatan Lembursitu', subtitle: 'Website Kec. Lembursitu', href: 'https://kecamatanlembursitu.sukabumikota.go.id/' },
+          { id: '7', icon: <MapPin size={24} />, title: 'Kecamatan Warudoyong', subtitle: 'Website Kec. Warudoyong', href: 'https://kecamatanwarudoyong.sukabumikota.go.id' },
+        ]
+      }
+    ]
+  },
+}
+
+function Opd() {
+  const [activeCategory, setActiveCategory] = useState('Pemerintahan')
+  const [cardPage, setCardPage] = useState(0)
+  const cardsPerPage = 6
+
+  const categoryData = opdServices[activeCategory]
+
+  // Process groups into pages with strict subheading separation
+  const processedPages: Array<{
+    title: string
+    items: any[]
+    groupIndex: number
+  }> = []
+
+  if (categoryData?.groups) {
+    categoryData.groups.forEach((group, groupIndex) => {
+      const groupItems = group.items || []
+
+      // Chunk the group items into pages of max cardsPerPage
+      for (let i = 0; i < groupItems.length; i += cardsPerPage) {
+        const chunk = groupItems.slice(i, i + cardsPerPage)
+        processedPages.push({
+          title: group.title,
+          items: chunk,
+          groupIndex
+        })
+      }
+    })
+  }
+
+  const currentPage = processedPages[cardPage] || { title: '', items: [] }
+  const totalPages = processedPages.length
+
+  const handleCategoryChange = (category: string) => {
+    setActiveCategory(category)
+    setCardPage(0)
+  }
+
+  const handlePrevPage = () => {
+    setCardPage((prev) => Math.max(0, prev - 1))
+  }
+
+  const handleNextPage = () => {
+    setCardPage((prev) => Math.min(totalPages - 1, prev + 1))
+  }
+
+  return (
+    <section id="opd" className="bg-white px-4 py-20 md:px-8 lg:px-12">
+      <div className="mx-auto max-w-[1400px]">
+        <SectionHeading subtitle="Akses langsung ke portal resmi Organisasi Perangkat Daerah (OPD) dan wilayah administratif Kecamatan di lingkungan Pemerintah Kota Sukabumi.">
+          Organisasi Perangkat Daerah
+        </SectionHeading>
+        <div className="flex min-h-[500px] overflow-hidden rounded-xl border border-[#e2e8ed] bg-white shadow-[0_24px_40px_-28px_rgba(15,23,42,0.5)]">
+          {/* Sidebar */}
+          <div className="flex w-full flex-col space-y-1 md:w-[28%] border-r border-[#e2e8ed]">
+            {Object.keys(opdServices).map((category) => (
+              <button
+                key={category}
+                onClick={() => handleCategoryChange(category)}
+                className={`flex flex-1 items-center border-l-4 px-6 py-3 text-left font-medium transition ${activeCategory === category
+                  ? 'border-[#16a34a] bg-[#edfff2] text-[#138d43]'
+                  : 'border-transparent text-[#53627a] hover:bg-[#f7faf8]'
+                  }`}
+                aria-pressed={activeCategory === category}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+
+          {/* Right Content - Service Cards */}
+          <div className="hidden flex-1 flex-col p-8 md:flex min-h-[520px]">
+            {/* Animated Content Wrapper — only cards + heading animate, not pagination */}
+            {/* flex-1 makes it fill available height so mt-auto on pagination works correctly */}
+            <div
+              key={`page-${activeCategory}-${cardPage}`}
+              className="flex flex-1 flex-col animate-[fadeInUp_0.5s_ease-out]"
+            >
+              {/* Dynamic Heading */}
+              <div className="mb-4">
+                <h3 className="text-2xl font-bold text-[#1b293c]">{currentPage.title}</h3>
+                <p className="text-sm text-[#66758a] mt-1">{activeCategory}</p>
+              </div>
+
+              {/* Service Cards Grid — content-start keeps cards top-aligned, no vertical stretching */}
+              <div className="flex-1">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 content-start">
+                  {currentPage.items.map((service) => (
+                    <a
+                      key={service.id}
+                      href={service.href || '#'}
+                      target={service.href && service.href !== '#' ? '_blank' : undefined}
+                      rel={service.href && service.href !== '#' ? 'noopener noreferrer' : undefined}
+                      className="flex cursor-pointer items-center gap-4 rounded-lg border border-[#e5ebf0] bg-white p-4 transition-all duration-200 hover:border-green-200 hover:bg-slate-50 hover:shadow-md"
+                    >
+                      {/* Icon */}
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-[#f0fdf4] text-[#16a34a]">
+                        {service.icon}
+                      </div>
+
+                      {/* Title & Subtitle */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-[#1b293c]">{service.title}</h4>
+                        <p className="text-sm text-[#66758a]">{service.subtitle}</p>
+                      </div>
+
+                      {/* Chevron */}
+                      <ChevronRight size={20} className="shrink-0 text-[#cbd5e1]" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+              {/* Pagination Controls — mt-auto pins it to the bottom of the flex container */}
+              {totalPages > 1 && (
+                <div className="mt-auto pt-6 flex items-center justify-center gap-4">
+                  <button
+                    onClick={handlePrevPage}
+                    disabled={cardPage === 0}
+                    className="z-20 grid size-11 place-items-center rounded-full border border-[#d5dfe8] bg-white text-[#cbd5e1] hover:text-[#159447] disabled:opacity-50"
+                    aria-label="Halaman sebelumnya"
+                  >
+                    <ArrowLeft />
+                  </button>
+                  <div className="flex items-center gap-2">
+                    {Array.from({ length: totalPages }).map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCardPage(index)}
+                        aria-label={`Go to page ${index + 1}`}
+                        className={`rounded-full transition-all duration-200 ${
+                          index === cardPage
+                            ? 'w-4 h-3 bg-[#159447] cursor-default'
+                            : 'size-3 bg-[#cbd5e1] cursor-pointer hover:bg-slate-400'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <button
+                    onClick={handleNextPage}
+                    disabled={cardPage === totalPages - 1}
+                    className="z-20 grid size-11 place-items-center rounded-full border border-[#c4d2df] bg-white text-[#26354a] hover:text-[#159447] disabled:opacity-50"
+                    aria-label="Halaman berikutnya"
+                  >
+                    <ArrowRight />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Custom X (Twitter) Logo Component
+function FacebookLogo() {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+    </svg>
+  )
+}
+
+function XLogo() {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.207-6.807-5.974 6.807H2.882l7.73-8.835L1.08 2.25h6.82l4.713 6.231 5.45-6.231zM17.552 20.522h1.833L6.281 4.09H4.33l13.222 16.432z" />
+    </svg>
+  )
+}
+
+function InstagramLogo() {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+      <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.117.63c-.79.297-1.427.772-1.944 1.289-.517.517-.992 1.155-1.289 1.944-.297.788-.498 1.658-.56 2.936C.015 8.333 0 8.74 0 12s.015 3.667.072 4.947c.062 1.278.263 2.148.56 2.936.297.788.772 1.427 1.289 1.944.517.517 1.155.992 1.944 1.289.788.297 1.658.498 2.936.56 1.28.057 1.687.072 4.947.072s3.667-.015 4.947-.072c1.280-.062 2.149-.263 2.937-.56.788-.297 1.426-.772 1.944-1.289.517-.517.992-1.155 1.289-1.944.297-.788.498-1.658.56-2.936.057-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.062-1.280-.263-2.149-.56-2.937-.297-.788-.772-1.426-1.289-1.944-.517-.517-1.155-.992-1.944-1.289-.788-.297-1.658-.498-2.937-.56C15.667.015 15.26 0 12 0zm0 2.16c3.203 0 3.585.009 4.849.07 1.171.054 1.805.244 2.227.408.56.217.96.477 1.382.896.419.42.679.822.896 1.381.164.422.354 1.057.408 2.227.061 1.264.07 1.646.07 4.849 0 3.204-.009 3.586-.07 4.849-.054 1.171-.244 1.806-.408 2.228-.217.56-.477.96-.896 1.382-.42.419-.822.679-1.381.896-.422.164-1.057.354-2.227.408-1.264.061-1.646.07-4.849.07-3.204 0-3.586-.009-4.849-.07-1.171-.054-1.806-.244-2.228-.408-.56-.217-.96-.477-1.382-.896-.419-.42-.679-.822-.896-1.381-.164-.422-.354-1.057-.408-2.227-.061-1.264-.07-1.646-.07-4.849 0-3.204.009-3.586.07-4.849.054-1.171.244-1.806.408-2.228.217-.56.477-.96.896-1.382.42-.419.822-.679 1.381-.896.422-.164 1.057-.354 2.227-.408 1.264-.061 1.646-.07 4.849-.07zM5.838 12a6.162 6.162 0 1 1 12.324 0 6.162 6.162 0 0 1-12.324 0zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm4.965-10.322a1.44 1.44 0 1 1 2.881.001 1.44 1.44 0 0 1-2.881-.001z" />
+    </svg>
+  )
+}
+
+function YoutubeLogo() {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+    </svg>
+  )
+}
+
+function Footer() {
+  return (
+    <footer id="footer" className="border-t-4 border-[#159447] bg-[#17253a] px-4 py-16 text-white md:px-8 lg:px-12 relative overflow-hidden">
+      {/* Dotted background pattern */}
+      <div className="footer-dots absolute inset-0 pointer-events-none opacity-100" />
+
+      {/* Content wrapper with relative positioning */}
+      <div className="relative z-10">
+        <div className="mx-auto grid max-w-[1400px] gap-12 md:grid-cols-4">
+          <div>
+            <h3 className="text-lg font-bold">KONTAK</h3>
+            <img src="/images/Diskominfo.webp" alt="Diskominfo Logo" className="mt-8 h-auto w-74" />
+            <div className="mt-8 flex flex-col gap-5 text-sm leading-relaxed text-white/80">
+              <p className="flex gap-3"><MapPin className="shrink-0 text-[#f04c71]" />Alamat : Jl. R. Syamsudin, SH No.25, Cikole, Kec. Cikole, Kota Sukabumi, Jawa Barat 43113</p>
+              <p className="flex gap-3"><Phone className="shrink-0 text-[#e8468a]" />Telp : +62 (266) 20229715</p>
+              <p className="flex gap-3"><Mail className="shrink-0 text-[#e9c9eb]" />Email : diskominfo@sukabumikota.go.id</p>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-lg font-bold">TAUTAN TERKAIT</h3>
+            <div className="mt-8 flex flex-col gap-5 text-white/80">
+              <a href="#footer">Layanan Pengadaan LPSE</a>
+              <a href="#footer">Layanan Informasi Publik (PPID)</a>
+              <a href="#footer">Layanan Informasi Hukum (JDIH)</a>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-lg font-bold">STANDAR PROTOKOL</h3>
+            <img src="/images/ImmuniWeb.webp" alt="ImmuniWeb Logo" className="mt-8 h-auto w-70" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold">MEDIA SOSIAL</h3>
+            <div className="mt-8 flex gap-4">
+              <a href="#footer" aria-label="Facebook" className="flex items-center justify-center w-12 h-12 rounded-full bg-[#159447] text-white hover:opacity-80 transition">
+                <FacebookLogo />
+              </a>
+              <a href="#footer" aria-label="X" className="flex items-center justify-center w-12 h-12 rounded-full bg-[#159447] text-white hover:opacity-80 transition">
+                <XLogo />
+              </a>
+              <a href="#footer" aria-label="Instagram" className="flex items-center justify-center w-12 h-12 rounded-full bg-[#159447] text-white hover:opacity-80 transition">
+                <InstagramLogo />
+              </a>
+              <a href="#footer" aria-label="Youtube" className="flex items-center justify-center w-12 h-12 rounded-full bg-[#159447] text-white hover:opacity-80 transition">
+                <YoutubeLogo />
+              </a>
+            </div>
+          </div>
+        </div>
+        <div className="mx-auto mt-14 max-w-[1400px] border-t border-white/15 pt-8 text-center text-sm text-white/80">Copyright © 2026 Website Resmi Pemerintah Kota Sukabumi</div>
+      </div>
+    </footer>
+  )
+}
 
 export default function Page() { return <main className="min-h-screen bg-white"><Navbar /><Hero /><Welcome /><Profile /><News /><Opd /><Footer /></main> }
