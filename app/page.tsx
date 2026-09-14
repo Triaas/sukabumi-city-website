@@ -274,10 +274,32 @@ function Profile() {
 
 function NewsList({ items, announcement = false }: { items: string[][]; announcement?: boolean }) { return <div className="flex flex-col gap-6">{items.map(([title, date, category]) => <article key={title} className="flex gap-5"><div className={`grid size-20 shrink-0 place-items-center rounded-lg ${announcement ? 'bg-[#eff4f8] text-[#f29b10]' : 'bg-[#d6d6d6] text-xs text-black'}`}>{announcement ? <Megaphone /> : 'img'}</div><div><h3 className="text-base font-bold leading-tight text-[#1d293d]">{title}</h3><p className="mt-1 text-sm text-[#687991]">{date} <span className="text-[#159447]">•</span> {category}</p></div></article>)}</div> }
 
-function News() { return <section id="berita" className="bg-[#f6f8fa] px-4 py-20 md:px-8 lg:px-12"><div className="mx-auto max-w-[1400px]"><SectionHeading>Pengumuman &amp; Berita</SectionHeading><div className="grid gap-14 lg:grid-cols-2"><div><h3 className="mb-6 text-2xl font-bold text-[#263349]">Pengumuman</h3><div className="mb-7 h-1 w-14 rounded-full bg-[#f4c13b]" /><NewsList items={announcements} announcement /><a className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44]" href="#berita">Lihat Semua <ArrowRight size={18} /></a></div><div><h3 className="mb-6 text-2xl font-bold text-[#263349]">Berita</h3><div className="mb-7 h-1 w-14 rounded-full bg-[#f4c13b]" /><NewsList items={news} /><a className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44]" href="#berita">Lihat Semua <ArrowRight size={18} /></a></div></div></div></section> }
+function News() {
+  return <section id="berita" className="bg-[#f6f8fa] px-4 py-20 md:px-8 lg:px-12">
+    <div className="mx-auto max-w-[1400px]">
+      <SectionHeading>Pengumuman &amp; Berita</SectionHeading>
+      <div className="grid gap-14 lg:grid-cols-2">
+        <div>
+          <h3 className="mb-6 text-2xl font-bold text-[#263349]">Pengumuman</h3>
+          <div className="mb-7 h-1 w-14 rounded-full bg-[#f4c13b]" />
+          <NewsList items={announcements} announcement />
+          <a className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44]" 
+          href="https://portal.sukabumikota.go.id/category/pengumuman/">
+            Lihat Semua <ArrowRight size={18} /></a>
+        </div>
+        <div>
+          <h3 className="mb-6 text-2xl font-bold text-[#263349]">Berita</h3>
+          <div className="mb-7 h-1 w-14 rounded-full bg-[#f4c13b]" />
+          <NewsList items={news} /><a className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44]" href="https://portal.sukabumikota.go.id/category/berita-kota/">Lihat Semua <ArrowRight size={18} /></a>
+        </div>
+      </div>
+    </div>
+  </section>
+}
 
 interface SubItem {
   id: string
+  image?: string
   title: string
   subtitle: string
   href: string
@@ -303,88 +325,217 @@ interface OpdCategory {
 }
 
 const opdServices: { [key: string]: OpdCategory } = {
-  'Pemerintahan': {
+  'Sekretariat Daerah': {
     groups: [
       {
         title: 'Sekretariat Daerah',
         items: [
           { id: '1', image: '/images/dokpim.png', title: 'Dokumentasi Pimpinan', subtitle: 'KDP Kota Sukabumi', href: 'https://kdp.sukabumikota.go.id/' },
-          { id: '2', icon: <Scale size={24} />, title: 'Bag. Hukum', subtitle: 'Jaringan Dokumentasi dan Informasi Hukum', href: 'https://jdih.sukabumikota.go.id/beranda' },
+          { id: '2', image: '/images/JDIH-logo.png', title: 'Bag. Hukum', subtitle: 'Jaringan Dokumentasi dan Informasi Hukum', href: 'https://jdih.sukabumikota.go.id/beranda' },
           { id: '3', image: '/images/Logo_BagianOrganisasi.png', title: 'Bag. Organisasi', subtitle: 'Halaman Informasi Penyelenggaraan Pelayanan Publik', href: 'https://bagianorganisasi.sukabumikota.go.id/' },
           {
             id: '4',
-            image: '/images/pengadaan-logo.png',
+            image: '/images/Lambang_Kota_Sukabumi.png',
             title: 'Bag. Pengadaan Barang dan Jasa',
             subtitle: 'siCAMPERENIK, SiRUP, LPSE',
             subItems: [
-              { id: 'm1', title: 'siCAMPERENIK', subtitle: 'Sistem Informasi Pengadaan', href: 'https://bpbj.sukabumikota.go.id' },
-              { id: 'm2', title: 'SiRUP', subtitle: 'Sistem Informasi Rencana Umum Pengadaan', href: 'https://sirup.inaproc.id/sirup/loginctr/index' },
-              { id: 'm3', title: 'LPSE', subtitle: 'Layanan Pengadaan Secara Elektronik', href: 'https://lpse.jabarprov.go.id/' },
+              { id: 'm1', image: '/images/Lambang_Kota_Sukabumi.png', title: 'siCAMPERENIK', subtitle: 'Sistem Informasi Pengadaan', href: 'https://bpbj.sukabumikota.go.id' },
+              { id: 'm2', image: '/images/Sirup-logo.png', title: 'SiRUP', subtitle: 'Sistem Informasi Rencana Umum Pengadaan', href: 'https://sirup.inaproc.id/sirup/loginctr/index' },
+              { id: 'm3', image: '/images/LPSE-logo.png', title: 'LPSE', subtitle: 'Layanan Pengadaan Secara Elektronik', href: 'https://lpse.jabarprov.go.id/' },
             ],
           },
         ]
       },
+      // {
+      //   title: 'Perencanaan & Aparatur Daerah',
+      //   items: [
+      //     
+      //       ]
+      //     },
+      //   ]
+      // },
+      // {
+      //   title: 'Informasi & Kesatuan Bangsa',
+      //   items: [
+      //     {
+      //       id: '9', image: '/images/diskominfo-hitam.png', title: 'Diskominfo', subtitle: 'Layanan Diskominfo Sukabumi',
+      //       subItems: [
+      //         { id: 'm12', image: '/images/diskominfo-hitam.png', title: 'Portal Diskominfo', subtitle: 'Portal Dinas Komunikasi dan Informatika', href: 'https://diskominfo.sukabumikota.go.id/' },
+      //         { id: 'm13', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Simpan SPBE', subtitle: 'Sistem Manajemen Pengetahuan SPBE Kota Sukabumi', href: 'https://simpan-spbe.sukabumikota.go.id/' },
+      //         { id: 'm14', image: '/images/diskominfo-hitam.png', title: 'SKM-Diskominfo', subtitle: 'Survei Kepuasan Masyarakat', href: 'http://skm-diskominfo.sukabumikota.go.id/survey' },
+      //         { id: 'm15', image: '/images/diskominfo-hitam.png', title: 'Satu-Data', subtitle: 'pengelolaan dan berbagi pakai data antar Perangkat Daerah Kota Sukabumi', href: 'https://satudata.sukabumikota.go.id/login' },
+      //         { id: 'm16', image: '/images/opendata-logo.png', title: 'Open Data', subtitle: 'koleksi dataset terlengkap di Kota Sukabumi', href: 'https://opendata.sukabumikota.go.id/' },
+      //         { id: 'm17', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Data', subtitle: 'pengelolaan, perencanaan, dan pembagian data instansi', href: 'https://data.sukabumikota.go.id/login' },
+      //         { id: 'm18', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Simponi', subtitle: 'Sistem Informasi Manajemen Pemerintahan Online', href: 'https://simponi.sukabumikota.go.id/' },
+      //         { id: 'm19', image: '/images/PPID-logo.png', title: 'PPID', subtitle: 'Pejabat Pengelola Informasi dan Dokumentasi', href: 'https://ppid.sukabumikota.go.id/' },
+      //         { id: 'm20', image: '/images/diskominfo-hitam.png', title: 'Silantik', subtitle: 'Sistem Layanan TIK', href: 'https://diskominfo.sukabumikota.go.id/silantik/public/' },
+      //       ]
+      //     },
+      //     { id: '10', image: '/images/Bakesbangpol-logo.png', title: 'Bakesbangpol', subtitle: 'Portal Bakesbangpol Kota Sukabumi', href: 'https://kesbangpol.sukabumikota.go.id/' },
+      //   ]
+      // }
+    ]
+  },
+  'Sekretariat Dewan': {
+    groups: [
       {
         title: 'Sekretariat Dewan',
         items: [
-          { id: '7', icon: <Users size={24} />, title: 'Portal DPRD', subtitle: 'DPRD Kota Sukabumi', href: '#' },
-          { id: '8', icon: <FileText size={24} />, title: 'JDIH DPRD', subtitle: 'JDIH DPRD Kota Sukabumi', href: '#' },
+          { id: '5', image: '/images/LOGO-DPRD-KOTA-SUKABUMI.png', title: 'Portal DPRD', subtitle: 'DPRD Kota Sukabumi', href: 'https://dprd.sukabumikota.go.id/' },
+          { id: '6', image: '/images/LOGO-DPRD-KOTA-SUKABUMI.png', title: 'JDIH DPRD', subtitle: 'JDIH DPRD Kota Sukabumi', href: 'https://jdih-dprd.sukabumikota.go.id/' },
         ]
-      },
-      {
-        title: 'Perencanaan & Keuangan Daerah',
-        items: [
-          { id: '7', icon: <Users size={24} />, title: 'BAPPEDA', subtitle: 'Sipeka, E-Rida , SIVAKA, SIGENKO', href: '#' },
-          { id: '8', icon: <FileText size={24} />, title: 'BPKBD', subtitle: 'Website, Pantas, Smartelok, dll', href: '#' },
-        ]
-      },
-
+      }
+    
     ]
   },
   'Inspektorat': {
     groups: [
       {
-        title: 'Pengawasan & Pengaduan',
+        title: 'Inspektorat',
         items: [
-          { id: '1', icon: <Users size={24} />, title: 'Portal Inspektorat', subtitle: 'Inspektorat Kota Sukabumi', href: 'https://inspektorat.sukabumikota.go.id' },
-          { id: '2', icon: <FileText size={24} />, title: 'WBS', subtitle: 'Layanan Pengaduan dan Konsultasi Aparatur dan Masyarakat', href: 'https://layanan.sukabumikota.go.id' },
+          { id: '1', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Portal Inspektorat', subtitle: 'Inspektorat Kota Sukabumi', href: 'https://inspektorat.sukabumikota.go.id' },
+          { id: '2', image: '/images/Lambang_Kota_Sukabumi.png', title: 'WBS', subtitle: 'Layanan Pengaduan dan Konsultasi Aparatur dan Masyarakat', href: 'https://layanan.sukabumikota.go.id' },
+        ]
+      },
+      // {
+      //   title: 'Perizinan dan Kependudukan',
+      //   items: [
+      //     {
+      //       id: '1', image: '/images/DPMPTSP-logo.png', title: 'DPMPTSP', subtitle: 'MPP, Sakti',
+      //       subItems: [
+      //         { id: 'm1', image: '/images/DPMPTSP-logo.png', title: 'Portal MPP', subtitle: 'Mal Pelayanan Publik', href: 'https://mpp.sukabumikota.go.id/' },
+      //         { id: 'm2', image: '/images/DPMPTSP-logo.png', title: 'Sakti', subtitle: 'Sistem Aplikasi Kolaborasi Antar Instansi', href: 'https://mpp.sukabumikota.go.id/sakti' }
+      //       ]
+      //     },
+      //     {
+      //       id: '2', image: '/images/Disdukcapil-logo.png', title: 'Disdukcapil', subtitle: 'Portal Disdukcapil, Moci Legit',
+      //       subItems: [
+      //         { id: 'm3', image: '/images/Disdukcapil-logo.png', title: 'Portal Disdukcapil', subtitle: 'Dinas Kependudukan dan Pencatatan Sipil', href: 'https://disdukcapil.sukabumikota.go.id/' },
+      //         { id: 'm4', image: '/images/mocilegit-logo.png', title: 'Moci Legit', subtitle: 'Masyarakat kota Sukabumi Cepat, Terintegrasi, Lebih mudah, gratis, dan terpercaya', href: 'https://mocilegit.sukabumikota.go.id/login' }
+      //       ]
+      //     }
+      //   ]
+      // },
+
+    ]
+  },
+  'Badan': {
+    groups: [
+      {
+        title: 'Badan',
+        items: [
+          {
+            id: '7', image: '/images/BAPPEDA-logo.png', title: 'BAPPEDA', subtitle: 'SIPEKA, E-Rida , SIVAKA, SIGENKO',
+            subItems: [
+              { id: 'm4', image: '/images/BAPPEDA-logo.png', title: 'SIPEKA', subtitle: 'Sistem Informasi Pengendalian dan Evaluasi Kinerja', href: 'https://sipeka.sukabumikota.go.id/app/sampeu/login/' },
+              { id: 'm5', image: '/images/erida.png', title: 'E-Rida', subtitle: 'Elektronik Riset dan Inovasi Daerah', href: 'https://e-rida.sukabumikota.go.id/' },
+              { id: 'm6', image: '/images/sivaka-logo.png', title: 'SIVAKA', subtitle: 'Sistem Informasi Verifikasi Anggaran Kota Sukabumi', href: 'https://sivaka.sukabumikota.go.id/' },
+              { id: 'm7', image: '/images/BAPPEDA-logo.png', title: 'SIGENKO', subtitle: 'Sistem Informasi Geografis Kota', href: 'https://geoinfo.sukabumikota.go.id/' },
+            ]
+          },
+          { id: '10', image: '/images/Bakesbangpol-logo.png', title: 'Bakesbangpol', subtitle: 'Portal Bakesbangpol Kota Sukabumi', href: 'https://kesbangpol.sukabumikota.go.id/' },
+          {
+            id: '8', image: '/images/BKPSDM-logo.png', title: 'BKPSDM', subtitle: 'Portal BKPSDM, Simpeg, SimpegIntegrasi, SiCantik',
+            subItems: [
+              { id: 'm8', image: '/images/BKPSDM-logo.png', title: 'Portal BKPSDM', subtitle: 'Badan Kepegawaian dan Pengembangan Sumber Daya Manusia', href: 'https://bkpsdm.sukabumikota.go.id/' },
+              { id: 'm9', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Simpeg', subtitle: 'Sistem Informasi Kepegawaian', href: 'https://simpeg.sukabumikota.go.id/' },
+              { id: 'm10', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Simpegintegrasi', subtitle: 'Sistem Informasi Kepegawaian integrasi', href: 'https://simpegintegrasi.sukabumikota.go.id/login' },
+              { id: 'm11', image: '/images/Lambang_Kota_Sukabumi.png', title: 'SiCantik', subtitle: 'Sistem Catatan Kinerja Elektronik', href: 'https://sicantik.sukabumikota.go.id/'}
+            ]
+          }
+      //     // { id: '1', image:'/images/Lambang_Kota_Sukabumi.png', title: 'Dinas kesehatan', subtitle: 'Portal Dinkes Kota Sukabumi', href: 'https://dinkes.sukabumikota.go.id/' },
+          // {
+          //   id: '2', image:'/images/Lambang_Kota_Sukabumi.png', title: 'RSUD', subtitle: 'RSUD Syamsudin SH, RSUD Al-Mulk',
+          //   subItems: [
+          //     { id: 'm1', image:'/images/RSUD_Syamsudin-logo.png',title: 'RSUD Syamsudin SH', subtitle: 'Rumah Sakit Umum Daerah Syamsudin SH', href: 'https://rsudsyamsudin.co.id/' },
+          //     { id: 'm2', image:'/images/RSUD_Al-mulk-logo.png', title: 'RSUD Al-Mulk', subtitle: 'Rumah Sakit Umum Daerah Al-Mulk', href: 'https://rsud-almulk.sukabumikota.go.id/' }
+          //   ]
+          // },
+          // {
+          //   id: '3', image:'/images/puskesmas-logo.png', title: 'Puskesmas', subtitle: 'Lokasi dan Layanan Puskesmas',
+          //   subItems: [
+          //     { id: 'm3', image:'/images/puskesmas-logo.png', title: 'Puskesmas Baros', subtitle: 'Portal Puskesmas Baros', href: 'https://puskesmasbaros.sukabumikota.go.id/' },
+          //     { id: 'm4', image:'/images/puskesmas-logo.png', title: 'Puskesmas Benteng', subtitle: 'Portal Puskesmas Benteng', href: 'https://puskesmasbenteng.sukabumikota.go.id/' },
+          //     { id: 'm5', image:'/images/puskesmas-logo.png', title: 'Puskesmas Cibeureum Hilir', subtitle: 'Profil Puskesmas Cibeureum Hilir', href: 'https://dinkes.sukabumikota.go.id/upt_rs/read/puskesmas-cibeureum-hilir' },
+          //     { id: 'm6', image:'/images/puskesmas-logo.png', title: 'Puskesmas Cikundul', subtitle: 'Profil Puskesmas Cikundul', href: 'https://dinkes.sukabumikota.go.id/upt_rs/read/puskesmas-cikundul' },
+          //     { id: 'm7', image:'/images/puskesmas-logo.png', title: 'Puskesmas Cipelang', subtitle: 'Portal Puskesmas Cipelang', href: 'https://puskesmascipelang.sukabumikota.go.id/' },
+          //     { id: 'm8', image:'/images/puskesmas-logo.png', title: 'Puskesmas Gedongpanjang', subtitle: 'Profil Puskesmas Gedongpanjang', href: 'https://dinkes.sukabumikota.go.id/upt_rs/read/puskesmas-gedong-panjang' },
+          //     { id: 'm9', image:'/images/puskesmas-logo.png', title: 'Puskesmas Karangtengah', subtitle: 'Profil Puskesmas Karangtengah', href: 'https://dinkes.sukabumikota.go.id/upt_rs/read/puskesmas-karangtengah' },
+          //     { id: 'm10', image:'/images/puskesmas-logo.png', title: 'Puskesmas Lembursitu', subtitle: 'Profil Puskesmas Lembursitu', href: 'https://dinkes.sukabumikota.go.id/upt_rs/read/puskesmas-lembursitu' },
+          //     { id: 'm11', image:'/images/puskesmas-logo.png', title: 'Puskesmas Limusnunggal', subtitle: 'Profil Puskesmas Limusnunggal', href: 'https://dinkes.sukabumikota.go.id/upt_rs/read/puskesmas-limusnunggal' },
+          //     { id: 'm12', image:'/images/puskesmas-logo.png', title: 'Puskesmas Nanggeleng', subtitle: 'Profil Puskesmas Nanggeleng', href: 'https://dinkes.sukabumikota.go.id/upt_rs/read/puskesmas-nanggeleng' },
+          //     { id: 'm13', image:'/images/puskesmas-logo.png', title: 'Puskesmas Pabuaran', subtitle: 'Profil Puskesmas Pabuaran', href: 'https://dinkes.sukabumikota.go.id/upt_rs/read/puskesmas-pabuaran' },
+          //     { id: 'm14', image:'/images/puskesmas-logo.png', title: 'Puskesmas Selabatu', subtitle: 'Portal Puskesmas Selabatu', href: 'https://puskesmasselabatu.sukabumikota.go.id/' },
+          //     { id: 'm15', image:'/images/puskesmas-logo.png', title: 'Puskesmas Sukakarya', subtitle: 'Profil Puskesmas Sukakarya', href: 'https://dinkes.sukabumikota.go.id/upt_rs/read/puskesmas-sukakarya' },
+          //   ]
+          // },
+        ]
+      },
+      {
+        title: 'Sosial',
+        items: [
+          { id: '1', image:'/images/dinsos-logo.png', title: 'Dinas Sosial', subtitle: 'Portal Dinas Sosial Kota Sukabumi', href: 'https://dinsos.sukabumikota.go.id/' },
+          {
+            id: '2', image:'/images/BPBD-logo.png', title: 'BPBD', subtitle: 'portal BPBD Kota Sukabumi, SiEdan',
+            subItems: [
+              { id: 'm1', image:'/images/BPBD-logo.png', title: 'Portal BPBD Kota Sukabumi', subtitle: 'Badan Penanggulangan Bencana Daerah', href: 'https://bpbd.sukabumikota.go.id/' },
+              { id: 'm2', image:'/images/BPBD-logo.png', title: 'SiEdan', subtitle: 'Sistem Informasi Kedaruratan Kota Sukabumi', href: 'https://siedan.sukabumikota.go.id/' }
+            ]
+          },
         ]
       }
     ]
   },
-  'Kependudukan & Perizinan': {
+  'Dinas': {
     groups: [
       {
-        title: 'DISDUKCAPIL',
+        title: 'Usaha dan ketenagakerjaan',
         items: [
-          { id: '1', icon: <Scale size={24} />, title: 'JDIH Kota Sukabumi', subtitle: 'Jaringan Dokumentasi Hukum', href: '#' },
-          { id: '2', icon: <Eye size={24} />, title: 'Informasi Publik', subtitle: 'Portal Keterbukaan Informasi Publik', href: '#' },
-          { id: '3', icon: <FileText size={24} />, title: 'Konsultasi Hukum', subtitle: 'Layanan Konsultasi Legal', href: '#' },
+          { id: '1', image:'/images/disnaker-logo.png', title: 'Disnaker', subtitle: 'Portal Dinas Ketenagakerjaan Kota Sukabumi', href: 'https://disnaker.sukabumikota.go.id/' },
+          {
+            id: '2', image:'/images/Diskumindag-logo.png', title: 'Diskumindag', subtitle: 'Portal Diskumindag Kota Sukabumi, Simpan UMKM',
+            subItems: [
+              { id: 'm1', image:'/images/Diskumindag-logo.png',title: 'Portal Diskumindag', subtitle: 'Dinas Koperasi, Usaha Mikro, Perindustrian dan Perdagangan', href: 'https://diskumindag.sukabumikota.go.id/' },
+              { id: 'm2', image:'/images/Diskumindag-logo.png', title: 'Simpan UMKM', subtitle: 'Sistem Informasi Pendataan UMKM', href: 'https://dataumkm.sukabumikota.go.id/' }
+            ]
+          }
         ]
-      }
-    ]
-  },
-  'Kesehatan': {
-    groups: [
+      },
       {
-        title: 'Kesehatan',
+        title: 'Keuangan & Ketahanan pangan',
         items: [
-          { id: '1', icon: <Heart size={24} />, title: 'Portal Kesehatan Sukabumi', subtitle: 'Informasi Layanan Kesehatan', href: '#' },
-          { id: '2', icon: <Activity size={24} />, title: 'Vaksinasi Online', subtitle: 'Pendaftaran dan Info Vaksinasi', href: '#' },
-          { id: '3', icon: <Stethoscope size={24} />, title: 'Puskesmas Digital', subtitle: 'Lokasi dan Layanan Puskesmas', href: '#' },
-          { id: '4', icon: <AlertCircle size={24} />, title: 'Monitoring Penyakit', subtitle: 'Data Epidemiologi Daerah', href: '#' },
+          {
+            id: '1', image:'/images/bpkpd-logo.png', title: 'BPKPD', subtitle: 'Layanan BPKPD',
+            subItems: [
+              { id: 'm1', image:'/images/bpkpd-logo.png', title: 'Portal BPKPD', subtitle: 'Badan Pengelolaan Keuangan dan Pendapatan Daerah', href: 'https://bpkpd.sukabumikota.go.id/' },
+              { id: 'm2', image:'/images/bpkpd-logo.png', title: 'Pantas', subtitle: 'Portal Pelayanan Pajak & Retribusi Daerah', href: 'https://pantas.sukabumikota.go.id/login' },
+              { id: 'm3', image:'/images/smart_elok-logo.png', title: 'Smartelok', subtitle: 'Sistem Penerimaan Retribusi Elektronik', href: 'https://smartelok.sukabumikota.go.id/login' },
+              { id: 'm4', image:'/images/sispeck-logo.png', title: 'Sispeck', subtitle: 'Sistem Informasi SPPT Cetak Elektronik', href: 'https://sispeck.sukabumikota.go.id/auth' },
+              { id: 'm5', image:'/images/bpkpd-logo.png', title: 'BPHTB', subtitle: 'Bea Perolehan Hak atas Tanah dan Bangunan', href: 'https://bphtb.sukabumikota.go.id/bphtb/auth/login' },
+              { id: 'm6', image:'/images/Spada-santun-logo.png', title: 'Spada Santun', subtitle: 'Sistem Informasi Kedaruratan Kota Sukabumi', href: 'https://spadasantun.sukabumikota.go.id/login' },
+              { id: 'm7', image:'/images/bpkpd-logo.png', title: 'EIS', subtitle: 'Evaluasi Implementasi SIPP', href: 'https://eispantas.sukabumikota.go.id/' },
+              { id: 'm8', image:'/images/bpkpd-logo.png', title: 'SIMASJELI', subtitle: 'Sistem Informasi Kedaruratan Kota Sukabumi', href: 'https://sekrebpkpd.sukabumikota.go.id/admin/login' },
+              { id: 'm9', image:'/images/siadik-logo.png', title: 'SIADIK', subtitle: 'Sistem Arsip Digital Kuangan', href: 'https://siadik.sukabumikota.go.id/' },
+              { id: 'm10', image:'/images/simonet-logo.png', title: 'SIMONET', subtitle: 'Sistem Informasi Monitoring Dana (BPKPD) Kota Sukabumi', href: 'https://simonet.sukabumikota.go.id/' },
+              { id: 'm11', image:'/images/bpkpd-logo.png', title: 'SIMPPB', subtitle: ' Sistem Informasi Manajemen Pajak Bumi dan Bangunan', href: '#' },
+            ]
+          },
+          {
+            id: '2', image:'/images/dkp3-logo.png', title: 'DKP3', subtitle: 'Layanan Dinas Ketahanan Pangan, Pertanian, dan Perikanan',
+            subItems: [
+              { id: 'm12', image:'/images/dkp3-logo.png', title: 'Portal DKP3 Kota Sukabumi', subtitle: 'Dinas Ketahanan Pangan, Pertanian, dan Perikanan', href: 'https://distan.sukabumikota.go.id/' },
+              { id: 'm13', image:'/images/pikachu-logo.png', title: 'Pikachu', subtitle: 'Perencanaan Terintegrasi Kepegawaian, Catatan Harian dan Umum', href: 'https://pikachu.sukabumikota.go.id/login.php' },
+              { id: 'm14', image:'/images/Sipanda-logo.png', title: 'SIPANDA', subtitle: 'Sistem Informasi Pangan Daerah Kota Sukabumi', href: 'https://sipanda.sukabumikota.go.id/' },
+              { id: 'm15', image:'/images/simpelkesrawan-logo.png', title: 'Simpel Kesrawan', subtitle: 'Sistem Informasi Pelayanan Kesehatan & Kesejahteraan Hewan', href: 'https://simpelkesrawan.sukabumikota.go.id/' },
+              { id: 'm16', image:'/images/KAC-logo.png', title: 'KAC', subtitle: 'Kawasan Agroeduwisata Cikundul', href: 'https://kac.sukabumikota.go.id/' }
+            ]
+          },
         ]
-      }
-    ]
-  },
-  'Pendidikan': {
-    groups: [
+      },
       {
-        title: 'Pendidikan',
+        title: 'Keolahragaan',
         items: [
-          { id: '1', icon: <BookOpen size={24} />, title: 'Portal Pendidikan Sukabumi', subtitle: 'Informasi Layanan Pendidikan', href: '#' },
-          { id: '2', icon: <GraduationCap size={24} />, title: 'PPDB Online', subtitle: 'Penerimaan Peserta Didik Baru', href: '#' },
-          { id: '3', icon: <Users size={24} />, title: 'e-Learning Sukabumi', subtitle: 'Platform Pembelajaran Digital', href: '#' },
+          { id: '1', image:'/images/dispopapar-logo.png', title: 'Dispopapar', subtitle: 'Portal Dinas Olahraga dan Pariwisata Kota Sukabumi', href: 'https://disporapar.sukabumikota.go.id/' }
         ]
       }
     ]
@@ -392,29 +543,30 @@ const opdServices: { [key: string]: OpdCategory } = {
   'Daerah Kecamatan': {
     groups: [
       {
-        title: 'Wilayah Administrasi Kecamatan',
+        title: 'Wilayah Kecamatan',
         items: [
-          { id: '1', icon: <MapPin size={24} />, title: 'Kecamatan Baros', subtitle: 'Website Kec. Baros', href: 'https://kecamatanbaros.sukabumikota.go.id' },
-          { id: '2', icon: <MapPin size={24} />, title: 'Kecamatan Cibeureum', subtitle: 'Website Kec. Cibeureum', href: 'https://kecamatancibeureum.sukabumikota.go.id' },
+          { id: '3', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Kecamatan Baros', subtitle: 'Website Kec. Baros', href: 'https://kecamatanbaros.sukabumikota.go.id' },
+          { id: '4', image: '/images/CIBEUREUM-logo.png', title: 'Kecamatan Cibeureum', subtitle: 'Website Kec. Cibeureum', href: 'https://kecamatancibeureum.sukabumikota.go.id' },
           {
-            id: '3', icon: <MapPin size={24} />, title: 'Kecamatan Cikole', subtitle: 'Web kec. Cikole, Kel. Cisarua, Kel. Selabatu', subItems: [
-              { id: 'm1', title: 'Website Kec. Cikole', subtitle: 'Website Kec. Cikole', href: 'https://kecamatancikole.sukabumikota.go.id/' },
-              { id: 'm2', title: 'Kelurahan Cisarua', subtitle: 'web perpustakaan', href: 'https://perpuscisarua.sukabumikota.go.id/' },
-              { id: 'm3', title: 'Kelurahan Selabatu', subtitle: 'web Kel. Selabatu', href: 'https://kelurahanselabatu.sukabumikota.go.id' }
-            ]
-          },
-          { id: '4', icon: <MapPin size={24} />, title: 'Kecamatan Citamiang', subtitle: 'Website Kec. Citamiang', href: 'https://kecamatancitamiang.sukabumikota.go.id/' },
-          {
-            id: '5', icon: <MapPin size={24} />, title: 'Kecamatan Gunungpuyuh', subtitle: 'Web Kec. Gunungpuyuh, Kel. Gunungpuyuh, Kel. Karamat, Kel. Karangtengah',
+            id: '5', image: '/images/cikole-logo.png', title: 'Kecamatan Cikole', subtitle: 'Web kec. Cikole, Kel. Cisarua, Kel. Selabatu',
             subItems: [
-              { id: 'm1', title: 'Website Kec. Gunungpuyuh', subtitle: 'Website Kec. Gunungpuyuh', href: 'https://kecamatangunungpuyuh.sukabumikota.go.id/' },
-              { id: 'm2', title: 'Kelurahan Gunungpuyuh', subtitle: 'web Kel. Gunungpuyuh', href: 'https://kelurahangunungpuyuh.sukabumikota.go.id/' },
-              { id: 'm3', title: 'Kelurahan Karamat', subtitle: 'web Kel. Karamat', href: 'https://kelurahankaramat.sukabumikota.go.id/' },
-              { id: 'm4', title: 'Kelurahan Karangtengah', subtitle: 'web Kel. Karangtengah', href: 'https://kelurahankarangtengah.sukabumikota.go.id/' }
+              { id: 'm5', image: '/images/cikole-logo.png', title: 'Website Kec. Cikole', subtitle: 'Website Kec. Cikole', href: 'https://kecamatancikole.sukabumikota.go.id/' },
+              { id: 'm6', image: '/images/perpuscisarua-logo.png', title: 'Kelurahan Cisarua', subtitle: 'web perpustakaan', href: 'https://perpuscisarua.sukabumikota.go.id/' },
+              { id: 'm7', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Kelurahan Selabatu', subtitle: 'web Kel. Selabatu', href: 'https://kelurahanselabatu.sukabumikota.go.id' }
             ]
           },
-          { id: '6', icon: <MapPin size={24} />, title: 'Kecamatan Lembursitu', subtitle: 'Website Kec. Lembursitu', href: 'https://kecamatanlembursitu.sukabumikota.go.id/' },
-          { id: '7', icon: <MapPin size={24} />, title: 'Kecamatan Warudoyong', subtitle: 'Website Kec. Warudoyong', href: 'https://kecamatanwarudoyong.sukabumikota.go.id' },
+          { id: '6', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Kecamatan Citamiang', subtitle: 'Website Kec. Citamiang', href: 'https://kecamatancitamiang.sukabumikota.go.id/' },
+          {
+            id: '7', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Kecamatan Gunungpuyuh', subtitle: 'Web Kec. Gunungpuyuh, Kel. Gunungpuyuh, Kel. Karamat, Kel. Karangtengah',
+            subItems: [
+              { id: 'm8', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Website Kec. Gunungpuyuh', subtitle: 'Web Kec. Gunungpuyuh', href: 'https://kecamatangunungpuyuh.sukabumikota.go.id/' },
+              { id: 'm9', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Kelurahan Gunungpuyuh', subtitle: 'web Kel. Gunungpuyuh', href: 'https://kelurahangunungpuyuh.sukabumikota.go.id/' },
+              { id: 'm10', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Kelurahan Karamat', subtitle: 'web Kel. Karamat', href: 'https://kelurahankaramat.sukabumikota.go.id/' },
+              { id: 'm11', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Kelurahan Karangtengah', subtitle: 'web Kel. Karangtengah', href: 'https://kelurahankarangtengah.sukabumikota.go.id/' }
+            ]
+          },
+          { id: '8', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Kecamatan Lembursitu', subtitle: 'Website Kec. Lembursitu', href: 'https://kecamatanlembursitu.sukabumikota.go.id/' },
+          { id: '9', image: '/images/warudoyong-logo.png', title: 'Kecamatan Warudoyong', subtitle: 'Website Kec. Warudoyong', href: 'https://kecamatanwarudoyong.sukabumikota.go.id' },
         ]
       }
     ]
@@ -540,7 +692,7 @@ function Opd() {
                           {/* Icon or Image */}
                           <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-lg ${service.image ? '' : 'bg-[#f0fdf4] text-[#16a34a]'}`}>
                             {service.image ? (
-                              <img src={service.image} alt={service.title} className="h-10 w-10 object-contain" />
+                              <img src={service.image} alt={service.title} className="h-full w-full object-contain" />
                             ) : (
                               service.icon
                             )}
@@ -662,8 +814,12 @@ function Opd() {
                       rel={item.href !== '#' ? 'noopener noreferrer' : undefined}
                       className="flex items-center gap-4 rounded-lg border border-[#e5ebf0] bg-[#f8fafc] p-4 transition-all duration-200 hover:border-green-200 hover:bg-[#f0fdf4] hover:shadow-md"
                     >
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white border border-[#e5ebf0] text-[#16a34a] shadow-sm">
-                        <ShoppingCart size={20} />
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white border border-[#e5ebf0] text-[#16a34a] shadow-sm overflow-hidden">
+                        {item.image ? (
+                          <img src={item.image} alt={item.title} className="h-full w-full object-contain p-1" />
+                        ) : (
+                          <ShoppingCart size={20} />
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-bold text-[#1b293c]">{item.title}</h4>
