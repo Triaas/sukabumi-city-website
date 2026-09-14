@@ -35,7 +35,7 @@ import {
   Search,
   X,
 } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
 const profileCards = [
   { title: 'Sejarah', description: 'Jejak perkembangan Kota Sukabumi dari masa ke masa.', image: '/images/sejarah-card.jpg', href: 'https://portal.sukabumikota.go.id/sejarah-kota-sukabumi/' },
@@ -63,7 +63,9 @@ function SectionHeading({ children, subtitle }: { children: React.ReactNode; sub
   return <div className="mb-9"><h2 className="flex items-center gap-3 text-3xl font-bold tracking-tight text-[#172135] md:text-4xl"><span className="h-10 w-1.5 rounded-full bg-[#159447]" />{children}</h2>{subtitle && <p className="mt-3 max-w-5xl text-lg leading-relaxed text-[#566276]">{subtitle}</p>}</div>
 }
 
-function Navbar() {
+function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
+  if (isIframeOpen) return null
+
   const [activeSection, setActiveSection] = useState('beranda')
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 })
   const navRef = useRef<HTMLDivElement>(null)
@@ -75,6 +77,7 @@ function Navbar() {
     { id: 'profil', label: 'Profil' },
     { id: 'berita', label: 'Pengumuman & Berita' },
     { id: 'opd', label: 'Situs OPD' },
+    { id: 'transparansi', label: 'Transparansi Dokumen' },
   ]
 
   useEffect(() => {
@@ -97,7 +100,7 @@ function Navbar() {
 
   useEffect(() => {
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + 180
+      const scrollPosition = window.scrollY + 250
 
       for (let i = navItems.length - 1; i >= 0; i--) {
         const sectionEl = document.getElementById(navItems[i].id)
@@ -187,12 +190,12 @@ function Hero() {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length)
-    }, 5000)
+    }, 3000)
     return () => clearInterval(timer)
   }, [images.length])
 
   return (
-    <section id="beranda" className="relative flex h-[85vh] min-h-[650px] items-end overflow-hidden bg-[#0c1d26] pt-36 pb-20 md:pt-44 md:pb-28">
+    <section id="beranda" className="relative flex h-screen min-h-[650px] items-end overflow-hidden bg-[#0c1d26] pt-36 pb-20 md:pt-44 md:pb-28">
       {images.map((src, index) => (
         <img
           key={src}
@@ -208,7 +211,7 @@ function Hero() {
           <p className="mb-3 text-sm font-bold uppercase tracking-[0.24em] text-[#f3c338]">Selamat datang di</p>
           <h1 className="text-5xl font-bold leading-tight text-white md:text-7xl">Kota Sukabumi</h1>
           <p className="mt-5 text-lg leading-relaxed text-white/85 md:text-xl">
-            Reugreug Pageuh Repeh Rapih — bersama membangun kota yang maju, unggul, berbudaya, dan berkah.
+            Reugreug Pageuh Repeh Rapih, bersama membangun kota yang maju, unggul, berbudaya, dan berkah.
           </p>
         </div>
       </div>
@@ -220,7 +223,7 @@ function Welcome() { return <section className="bg-white px-4 py-20 md:px-8 lg:p
 
 function Profile() {
   return (
-    <section id="profil" className="bg-[#f6f8fa] px-4 py-20 md:px-8 lg:px-12">
+    <section id="profil" className="bg-transparent px-4 py-20 md:px-8 lg:px-12">
       <div className="mx-auto max-w-[1400px]">
         <SectionHeading subtitle="Mengenal lebih dekat sejarah, visi misi, dan berbagai aspek penting lainnya dari Kota Sukabumi.">
           Profil Kota Sukabumi
@@ -275,7 +278,7 @@ function Profile() {
 function NewsList({ items, announcement = false }: { items: string[][]; announcement?: boolean }) { return <div className="flex flex-col gap-6">{items.map(([title, date, category]) => <article key={title} className="flex gap-5"><div className={`grid size-20 shrink-0 place-items-center rounded-lg ${announcement ? 'bg-[#eff4f8] text-[#f29b10]' : 'bg-[#d6d6d6] text-xs text-black'}`}>{announcement ? <Megaphone /> : 'img'}</div><div><h3 className="text-base font-bold leading-tight text-[#1d293d]">{title}</h3><p className="mt-1 text-sm text-[#687991]">{date} <span className="text-[#159447]">•</span> {category}</p></div></article>)}</div> }
 
 function News() {
-  return <section id="berita" className="bg-[#f6f8fa] px-4 py-20 md:px-8 lg:px-12">
+  return <section id="berita" className="bg-transparent px-4 py-20 md:px-8 lg:px-12">
     <div className="mx-auto max-w-[1400px]">
       <SectionHeading>Pengumuman &amp; Berita</SectionHeading>
       <div className="grid gap-14 lg:grid-cols-2">
@@ -283,8 +286,8 @@ function News() {
           <h3 className="mb-6 text-2xl font-bold text-[#263349]">Pengumuman</h3>
           <div className="mb-7 h-1 w-14 rounded-full bg-[#f4c13b]" />
           <NewsList items={announcements} announcement />
-          <a className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44]" 
-          href="https://portal.sukabumikota.go.id/category/pengumuman/">
+          <a className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44]"
+            href="https://portal.sukabumikota.go.id/category/pengumuman/">
             Lihat Semua <ArrowRight size={18} /></a>
         </div>
         <div>
@@ -302,7 +305,8 @@ interface SubItem {
   image?: string
   title: string
   subtitle: string
-  href: string
+  href?: string
+  subItems?: SubItem[]
 }
 
 interface ServiceCard {
@@ -357,20 +361,7 @@ const opdServices: { [key: string]: OpdCategory } = {
       // {
       //   title: 'Informasi & Kesatuan Bangsa',
       //   items: [
-      //     {
-      //       id: '9', image: '/images/diskominfo-hitam.png', title: 'Diskominfo', subtitle: 'Layanan Diskominfo Sukabumi',
-      //       subItems: [
-      //         { id: 'm12', image: '/images/diskominfo-hitam.png', title: 'Portal Diskominfo', subtitle: 'Portal Dinas Komunikasi dan Informatika', href: 'https://diskominfo.sukabumikota.go.id/' },
-      //         { id: 'm13', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Simpan SPBE', subtitle: 'Sistem Manajemen Pengetahuan SPBE Kota Sukabumi', href: 'https://simpan-spbe.sukabumikota.go.id/' },
-      //         { id: 'm14', image: '/images/diskominfo-hitam.png', title: 'SKM-Diskominfo', subtitle: 'Survei Kepuasan Masyarakat', href: 'http://skm-diskominfo.sukabumikota.go.id/survey' },
-      //         { id: 'm15', image: '/images/diskominfo-hitam.png', title: 'Satu-Data', subtitle: 'pengelolaan dan berbagi pakai data antar Perangkat Daerah Kota Sukabumi', href: 'https://satudata.sukabumikota.go.id/login' },
-      //         { id: 'm16', image: '/images/opendata-logo.png', title: 'Open Data', subtitle: 'koleksi dataset terlengkap di Kota Sukabumi', href: 'https://opendata.sukabumikota.go.id/' },
-      //         { id: 'm17', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Data', subtitle: 'pengelolaan, perencanaan, dan pembagian data instansi', href: 'https://data.sukabumikota.go.id/login' },
-      //         { id: 'm18', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Simponi', subtitle: 'Sistem Informasi Manajemen Pemerintahan Online', href: 'https://simponi.sukabumikota.go.id/' },
-      //         { id: 'm19', image: '/images/PPID-logo.png', title: 'PPID', subtitle: 'Pejabat Pengelola Informasi dan Dokumentasi', href: 'https://ppid.sukabumikota.go.id/' },
-      //         { id: 'm20', image: '/images/diskominfo-hitam.png', title: 'Silantik', subtitle: 'Sistem Layanan TIK', href: 'https://diskominfo.sukabumikota.go.id/silantik/public/' },
-      //       ]
-      //     },
+      //     
       //     { id: '10', image: '/images/Bakesbangpol-logo.png', title: 'Bakesbangpol', subtitle: 'Portal Bakesbangpol Kota Sukabumi', href: 'https://kesbangpol.sukabumikota.go.id/' },
       //   ]
       // }
@@ -385,7 +376,7 @@ const opdServices: { [key: string]: OpdCategory } = {
           { id: '6', image: '/images/LOGO-DPRD-KOTA-SUKABUMI.png', title: 'JDIH DPRD', subtitle: 'JDIH DPRD Kota Sukabumi', href: 'https://jdih-dprd.sukabumikota.go.id/' },
         ]
       }
-    
+
     ]
   },
   'Inspektorat': {
@@ -397,26 +388,6 @@ const opdServices: { [key: string]: OpdCategory } = {
           { id: '2', image: '/images/Lambang_Kota_Sukabumi.png', title: 'WBS', subtitle: 'Layanan Pengaduan dan Konsultasi Aparatur dan Masyarakat', href: 'https://layanan.sukabumikota.go.id' },
         ]
       },
-      // {
-      //   title: 'Perizinan dan Kependudukan',
-      //   items: [
-      //     {
-      //       id: '1', image: '/images/DPMPTSP-logo.png', title: 'DPMPTSP', subtitle: 'MPP, Sakti',
-      //       subItems: [
-      //         { id: 'm1', image: '/images/DPMPTSP-logo.png', title: 'Portal MPP', subtitle: 'Mal Pelayanan Publik', href: 'https://mpp.sukabumikota.go.id/' },
-      //         { id: 'm2', image: '/images/DPMPTSP-logo.png', title: 'Sakti', subtitle: 'Sistem Aplikasi Kolaborasi Antar Instansi', href: 'https://mpp.sukabumikota.go.id/sakti' }
-      //       ]
-      //     },
-      //     {
-      //       id: '2', image: '/images/Disdukcapil-logo.png', title: 'Disdukcapil', subtitle: 'Portal Disdukcapil, Moci Legit',
-      //       subItems: [
-      //         { id: 'm3', image: '/images/Disdukcapil-logo.png', title: 'Portal Disdukcapil', subtitle: 'Dinas Kependudukan dan Pencatatan Sipil', href: 'https://disdukcapil.sukabumikota.go.id/' },
-      //         { id: 'm4', image: '/images/mocilegit-logo.png', title: 'Moci Legit', subtitle: 'Masyarakat kota Sukabumi Cepat, Terintegrasi, Lebih mudah, gratis, dan terpercaya', href: 'https://mocilegit.sukabumikota.go.id/login' }
-      //       ]
-      //     }
-      //   ]
-      // },
-
     ]
   },
   'Badan': {
@@ -440,17 +411,33 @@ const opdServices: { [key: string]: OpdCategory } = {
               { id: 'm8', image: '/images/BKPSDM-logo.png', title: 'Portal BKPSDM', subtitle: 'Badan Kepegawaian dan Pengembangan Sumber Daya Manusia', href: 'https://bkpsdm.sukabumikota.go.id/' },
               { id: 'm9', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Simpeg', subtitle: 'Sistem Informasi Kepegawaian', href: 'https://simpeg.sukabumikota.go.id/' },
               { id: 'm10', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Simpegintegrasi', subtitle: 'Sistem Informasi Kepegawaian integrasi', href: 'https://simpegintegrasi.sukabumikota.go.id/login' },
-              { id: 'm11', image: '/images/Lambang_Kota_Sukabumi.png', title: 'SiCantik', subtitle: 'Sistem Catatan Kinerja Elektronik', href: 'https://sicantik.sukabumikota.go.id/'}
+              { id: 'm11', image: '/images/Lambang_Kota_Sukabumi.png', title: 'SiCantik', subtitle: 'Sistem Catatan Kinerja Elektronik', href: 'https://sicantik.sukabumikota.go.id/' }
+            ]
+          },
+          {
+            id: '2', image: '/images/BPBD-logo.png', title: 'BPBD', subtitle: 'portal BPBD Kota Sukabumi, SiEdan',
+            subItems: [
+              { id: 'm1', image: '/images/BPBD-logo.png', title: 'Portal BPBD Kota Sukabumi', subtitle: 'Badan Penanggulangan Bencana Daerah', href: 'https://bpbd.sukabumikota.go.id/' },
+              { id: 'm2', image: '/images/BPBD-logo.png', title: 'SiEdan', subtitle: 'Sistem Informasi Kedaruratan Kota Sukabumi', href: 'https://siedan.sukabumikota.go.id/' }
+            ]
+          },
+          {
+            id: '1', image: '/images/bpkpd-logo.png', title: 'BPKPD', subtitle: 'Layanan BPKPD',
+            subItems: [
+              { id: 'm1', image: '/images/bpkpd-logo.png', title: 'Portal BPKPD', subtitle: 'Badan Pengelolaan Keuangan dan Pendapatan Daerah', href: 'https://bpkpd.sukabumikota.go.id/' },
+              { id: 'm2', image: '/images/bpkpd-logo.png', title: 'Pantas', subtitle: 'Portal Pelayanan Pajak & Retribusi Daerah', href: 'https://pantas.sukabumikota.go.id/login' },
+              { id: 'm3', image: '/images/smart_elok-logo.png', title: 'Smartelok', subtitle: 'Sistem Penerimaan Retribusi Elektronik', href: 'https://smartelok.sukabumikota.go.id/login' },
+              { id: 'm4', image: '/images/sispeck-logo.png', title: 'Sispeck', subtitle: 'Sistem Informasi SPPT Cetak Elektronik', href: 'https://sispeck.sukabumikota.go.id/auth' },
+              { id: 'm5', image: '/images/bpkpd-logo.png', title: 'BPHTB', subtitle: 'Bea Perolehan Hak atas Tanah dan Bangunan', href: 'https://bphtb.sukabumikota.go.id/bphtb/auth/login' },
+              { id: 'm6', image: '/images/Spada-santun-logo.png', title: 'Spada Santun', subtitle: 'Sistem Informasi Kedaruratan Kota Sukabumi', href: 'https://spadasantun.sukabumikota.go.id/login' },
+              { id: 'm7', image: '/images/bpkpd-logo.png', title: 'EIS', subtitle: 'Evaluasi Implementasi SIPP', href: 'https://eispantas.sukabumikota.go.id/' },
+              { id: 'm8', image: '/images/bpkpd-logo.png', title: 'SIMASJELI', subtitle: 'Sistem Informasi Kedaruratan Kota Sukabumi', href: 'https://sekrebpkpd.sukabumikota.go.id/admin/login' },
+              { id: 'm9', image: '/images/siadik-logo.png', title: 'SIADIK', subtitle: 'Sistem Arsip Digital Kuangan', href: 'https://siadik.sukabumikota.go.id/' },
+              { id: 'm10', image: '/images/simonet-logo.png', title: 'SIMONET', subtitle: 'Sistem Informasi Monitoring Dana (BPKPD) Kota Sukabumi', href: 'https://simonet.sukabumikota.go.id/' },
+              { id: 'm11', image: '/images/bpkpd-logo.png', title: 'SIMPPB', subtitle: ' Sistem Informasi Manajemen Pajak Bumi dan Bangunan', href: '#' }
             ]
           }
-      //     // { id: '1', image:'/images/Lambang_Kota_Sukabumi.png', title: 'Dinas kesehatan', subtitle: 'Portal Dinkes Kota Sukabumi', href: 'https://dinkes.sukabumikota.go.id/' },
-          // {
-          //   id: '2', image:'/images/Lambang_Kota_Sukabumi.png', title: 'RSUD', subtitle: 'RSUD Syamsudin SH, RSUD Al-Mulk',
-          //   subItems: [
-          //     { id: 'm1', image:'/images/RSUD_Syamsudin-logo.png',title: 'RSUD Syamsudin SH', subtitle: 'Rumah Sakit Umum Daerah Syamsudin SH', href: 'https://rsudsyamsudin.co.id/' },
-          //     { id: 'm2', image:'/images/RSUD_Al-mulk-logo.png', title: 'RSUD Al-Mulk', subtitle: 'Rumah Sakit Umum Daerah Al-Mulk', href: 'https://rsud-almulk.sukabumikota.go.id/' }
-          //   ]
-          // },
+
           // {
           //   id: '3', image:'/images/puskesmas-logo.png', title: 'Puskesmas', subtitle: 'Lokasi dan Layanan Puskesmas',
           //   subItems: [
@@ -462,7 +449,7 @@ const opdServices: { [key: string]: OpdCategory } = {
           //     { id: 'm8', image:'/images/puskesmas-logo.png', title: 'Puskesmas Gedongpanjang', subtitle: 'Profil Puskesmas Gedongpanjang', href: 'https://dinkes.sukabumikota.go.id/upt_rs/read/puskesmas-gedong-panjang' },
           //     { id: 'm9', image:'/images/puskesmas-logo.png', title: 'Puskesmas Karangtengah', subtitle: 'Profil Puskesmas Karangtengah', href: 'https://dinkes.sukabumikota.go.id/upt_rs/read/puskesmas-karangtengah' },
           //     { id: 'm10', image:'/images/puskesmas-logo.png', title: 'Puskesmas Lembursitu', subtitle: 'Profil Puskesmas Lembursitu', href: 'https://dinkes.sukabumikota.go.id/upt_rs/read/puskesmas-lembursitu' },
-          //     { id: 'm11', image:'/images/puskesmas-logo.png', title: 'Puskesmas Limusnunggal', subtitle: 'Profil Puskesmas Limusnunggal', href: 'https://dinkes.sukabumikota.go.id/upt_rs/read/puskesmas-limusnunggal' },
+          //     
           //     { id: 'm12', image:'/images/puskesmas-logo.png', title: 'Puskesmas Nanggeleng', subtitle: 'Profil Puskesmas Nanggeleng', href: 'https://dinkes.sukabumikota.go.id/upt_rs/read/puskesmas-nanggeleng' },
           //     { id: 'm13', image:'/images/puskesmas-logo.png', title: 'Puskesmas Pabuaran', subtitle: 'Profil Puskesmas Pabuaran', href: 'https://dinkes.sukabumikota.go.id/upt_rs/read/puskesmas-pabuaran' },
           //     { id: 'm14', image:'/images/puskesmas-logo.png', title: 'Puskesmas Selabatu', subtitle: 'Portal Puskesmas Selabatu', href: 'https://puskesmasselabatu.sukabumikota.go.id/' },
@@ -474,14 +461,7 @@ const opdServices: { [key: string]: OpdCategory } = {
       {
         title: 'Sosial',
         items: [
-          { id: '1', image:'/images/dinsos-logo.png', title: 'Dinas Sosial', subtitle: 'Portal Dinas Sosial Kota Sukabumi', href: 'https://dinsos.sukabumikota.go.id/' },
-          {
-            id: '2', image:'/images/BPBD-logo.png', title: 'BPBD', subtitle: 'portal BPBD Kota Sukabumi, SiEdan',
-            subItems: [
-              { id: 'm1', image:'/images/BPBD-logo.png', title: 'Portal BPBD Kota Sukabumi', subtitle: 'Badan Penanggulangan Bencana Daerah', href: 'https://bpbd.sukabumikota.go.id/' },
-              { id: 'm2', image:'/images/BPBD-logo.png', title: 'SiEdan', subtitle: 'Sistem Informasi Kedaruratan Kota Sukabumi', href: 'https://siedan.sukabumikota.go.id/' }
-            ]
-          },
+
         ]
       }
     ]
@@ -489,61 +469,84 @@ const opdServices: { [key: string]: OpdCategory } = {
   'Dinas': {
     groups: [
       {
-        title: 'Usaha dan ketenagakerjaan',
+        title: 'Dinas',
         items: [
-          { id: '1', image:'/images/disnaker-logo.png', title: 'Disnaker', subtitle: 'Portal Dinas Ketenagakerjaan Kota Sukabumi', href: 'https://disnaker.sukabumikota.go.id/' },
+          { id: '1', image: '/images/disnaker-logo.png', title: 'Disnaker', subtitle: 'Portal Dinas Ketenagakerjaan Kota Sukabumi', href: 'https://disnaker.sukabumikota.go.id/' },
           {
-            id: '2', image:'/images/Diskumindag-logo.png', title: 'Diskumindag', subtitle: 'Portal Diskumindag Kota Sukabumi, Simpan UMKM',
+            id: '2', image: '/images/Diskumindag-logo.png', title: 'Diskumindag', subtitle: 'Portal Diskumindag Kota Sukabumi, Simpan UMKM',
             subItems: [
-              { id: 'm1', image:'/images/Diskumindag-logo.png',title: 'Portal Diskumindag', subtitle: 'Dinas Koperasi, Usaha Mikro, Perindustrian dan Perdagangan', href: 'https://diskumindag.sukabumikota.go.id/' },
-              { id: 'm2', image:'/images/Diskumindag-logo.png', title: 'Simpan UMKM', subtitle: 'Sistem Informasi Pendataan UMKM', href: 'https://dataumkm.sukabumikota.go.id/' }
+              { id: 'm1', image: '/images/Diskumindag-logo.png', title: 'Portal Diskumindag', subtitle: 'Dinas Koperasi, Usaha Mikro, Perindustrian dan Perdagangan', href: 'https://diskumindag.sukabumikota.go.id/' },
+              { id: 'm2', image: '/images/Diskumindag-logo.png', title: 'Simpan UMKM', subtitle: 'Sistem Informasi Pendataan UMKM', href: 'https://dataumkm.sukabumikota.go.id/' }
             ]
-          }
-        ]
-      },
-      {
-        title: 'Keuangan & Ketahanan pangan',
-        items: [
+          },
+          { id: '3', image: '/images/dinsos-logo.png', title: 'Dinsos', subtitle: 'Portal Dinas Sosial Kota Sukabumi', href: 'https://dinsos.sukabumikota.go.id/' },
           {
-            id: '1', image:'/images/bpkpd-logo.png', title: 'BPKPD', subtitle: 'Layanan BPKPD',
+            id: '4', image: '/images/dkp3-logo.png', title: 'DKP3', subtitle: 'Layanan Dinas Ketahanan Pangan, Pertanian, dan Perikanan',
             subItems: [
-              { id: 'm1', image:'/images/bpkpd-logo.png', title: 'Portal BPKPD', subtitle: 'Badan Pengelolaan Keuangan dan Pendapatan Daerah', href: 'https://bpkpd.sukabumikota.go.id/' },
-              { id: 'm2', image:'/images/bpkpd-logo.png', title: 'Pantas', subtitle: 'Portal Pelayanan Pajak & Retribusi Daerah', href: 'https://pantas.sukabumikota.go.id/login' },
-              { id: 'm3', image:'/images/smart_elok-logo.png', title: 'Smartelok', subtitle: 'Sistem Penerimaan Retribusi Elektronik', href: 'https://smartelok.sukabumikota.go.id/login' },
-              { id: 'm4', image:'/images/sispeck-logo.png', title: 'Sispeck', subtitle: 'Sistem Informasi SPPT Cetak Elektronik', href: 'https://sispeck.sukabumikota.go.id/auth' },
-              { id: 'm5', image:'/images/bpkpd-logo.png', title: 'BPHTB', subtitle: 'Bea Perolehan Hak atas Tanah dan Bangunan', href: 'https://bphtb.sukabumikota.go.id/bphtb/auth/login' },
-              { id: 'm6', image:'/images/Spada-santun-logo.png', title: 'Spada Santun', subtitle: 'Sistem Informasi Kedaruratan Kota Sukabumi', href: 'https://spadasantun.sukabumikota.go.id/login' },
-              { id: 'm7', image:'/images/bpkpd-logo.png', title: 'EIS', subtitle: 'Evaluasi Implementasi SIPP', href: 'https://eispantas.sukabumikota.go.id/' },
-              { id: 'm8', image:'/images/bpkpd-logo.png', title: 'SIMASJELI', subtitle: 'Sistem Informasi Kedaruratan Kota Sukabumi', href: 'https://sekrebpkpd.sukabumikota.go.id/admin/login' },
-              { id: 'm9', image:'/images/siadik-logo.png', title: 'SIADIK', subtitle: 'Sistem Arsip Digital Kuangan', href: 'https://siadik.sukabumikota.go.id/' },
-              { id: 'm10', image:'/images/simonet-logo.png', title: 'SIMONET', subtitle: 'Sistem Informasi Monitoring Dana (BPKPD) Kota Sukabumi', href: 'https://simonet.sukabumikota.go.id/' },
-              { id: 'm11', image:'/images/bpkpd-logo.png', title: 'SIMPPB', subtitle: ' Sistem Informasi Manajemen Pajak Bumi dan Bangunan', href: '#' },
+              { id: 'm12', image: '/images/dkp3-logo.png', title: 'Portal DKP3 Kota Sukabumi', subtitle: 'Dinas Ketahanan Pangan, Pertanian, dan Perikanan', href: 'https://distan.sukabumikota.go.id/' },
+              { id: 'm13', image: '/images/pikachu-logo.png', title: 'Pikachu', subtitle: 'Perencanaan Terintegrasi Kepegawaian, Catatan Harian dan Umum', href: 'https://pikachu.sukabumikota.go.id/login.php' },
+              { id: 'm14', image: '/images/Sipanda-logo.png', title: 'SIPANDA', subtitle: 'Sistem Informasi Pangan Daerah Kota Sukabumi', href: 'https://sipanda.sukabumikota.go.id/' },
+              { id: 'm15', image: '/images/simpelkesrawan-logo.png', title: 'Simpel Kesrawan', subtitle: 'Sistem Informasi Pelayanan Kesehatan & Kesejahteraan Hewan', href: 'https://simpelkesrawan.sukabumikota.go.id/' },
+              { id: 'm16', image: '/images/KAC-logo.png', title: 'KAC', subtitle: 'Kawasan Agroeduwisata Cikundul', href: 'https://kac.sukabumikota.go.id/' },
+            ]
+          },
+          { id: '5', image: '/images/dispopapar-logo.png', title: 'Dispopapar', subtitle: 'Portal Dinas Olahraga dan Pariwisata Kota Sukabumi', href: 'https://disporapar.sukabumikota.go.id/' },
+          {
+            id: '1', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Dinkes', subtitle: 'Layanan Dinas Kesehatan Kota Sukabumi',
+            subItems: [
+              { id: 'm1', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Portal Dinkes Kota Sukabumi', subtitle: 'Dinas Kesehatan', href: 'https://dinkes.sukabumikota.go.id/' },
+              {
+                id: 'm2', image: '/images/puskesmas-logo.png', title: 'Puskesmas', subtitle: 'Daftar puskesmas di Kota Sukabumi', subItems: [
+                  { id: 'm21', image: '/images/puskesmas-logo.png', title: 'Puskesmas Baros', subtitle: 'Portal Puskesmas Baros', href: 'https://puskesmasbaros.sukabumikota.go.id/' },
+                  { id: 'm22', image: '/images/puskesmas-logo.png', title: 'Puskesmas Benteng', subtitle: 'Portal Puskesmas Benteng', href: 'https://puskesmasbenteng.sukabumikota.go.id/' },
+                  { id: 'm25', image: '/images/puskesmas-logo.png', title: 'Puskesmas Cibeureum Hilir', subtitle: 'Profil Puskesmas Cibeureum Hilir', href: 'https://dinkes.sukabumikota.go.id/upt_rs/read/puskesmas-cibeureum-hilir' },
+                  { id: 'm23', image: '/images/puskesmas-logo.png', title: 'Puskesmas Cipelang', subtitle: 'Portal Puskesmas Cipelang', href: 'https://puskesmascipelang.sukabumikota.go.id/' },
+                  { id: 'm24', image: '/images/puskesmas-logo.png', title: 'Puskesmas Selabatu', subtitle: 'Portal Puskesmas Selabatu', href: 'https://puskesmasselabatu.sukabumikota.go.id/' },
+                  { id: 'm26', image: '/images/puskesmas-logo.png', title: 'Puskesmas Cikole', subtitle: 'Profil Puskesmas Cikole', href: 'https://dinkes.sukabumikota.go.id/' },
+                  { id: 'm27', image: '/images/puskesmas-logo.png', title: 'Puskesmas Citamiang', subtitle: 'Profil Puskesmas Citamiang', href: 'https://dinkes.sukabumikota.go.id/' },
+                  { id: 'm28', image: '/images/puskesmas-logo.png', title: 'Puskesmas Lembursitu', subtitle: 'Profil Puskesmas Lembursitu', href: 'https://dinkes.sukabumikota.go.id/' },
+                  { id: 'm11', image: '/images/puskesmas-logo.png', title: 'Puskesmas Limusnunggal', subtitle: 'Profil Puskesmas Limusnunggal', href: 'https://dinkes.sukabumikota.go.id/upt_rs/read/puskesmas-limusnunggal' },
+                  { id: 'm29', image: '/images/puskesmas-logo.png', title: 'Puskesmas Sukakarya', subtitle: 'Profil Puskesmas Sukakarya', href: 'https://dinkes.sukabumikota.go.id/' },
+                ]
+              }
             ]
           },
           {
-            id: '2', image:'/images/dkp3-logo.png', title: 'DKP3', subtitle: 'Layanan Dinas Ketahanan Pangan, Pertanian, dan Perikanan',
+            id: '2', image: '/images/Disdukcapil-logo.png', title: 'Disdukcapil', subtitle: 'Portal Disdukcapil, Moci Legit',
             subItems: [
-              { id: 'm12', image:'/images/dkp3-logo.png', title: 'Portal DKP3 Kota Sukabumi', subtitle: 'Dinas Ketahanan Pangan, Pertanian, dan Perikanan', href: 'https://distan.sukabumikota.go.id/' },
-              { id: 'm13', image:'/images/pikachu-logo.png', title: 'Pikachu', subtitle: 'Perencanaan Terintegrasi Kepegawaian, Catatan Harian dan Umum', href: 'https://pikachu.sukabumikota.go.id/login.php' },
-              { id: 'm14', image:'/images/Sipanda-logo.png', title: 'SIPANDA', subtitle: 'Sistem Informasi Pangan Daerah Kota Sukabumi', href: 'https://sipanda.sukabumikota.go.id/' },
-              { id: 'm15', image:'/images/simpelkesrawan-logo.png', title: 'Simpel Kesrawan', subtitle: 'Sistem Informasi Pelayanan Kesehatan & Kesejahteraan Hewan', href: 'https://simpelkesrawan.sukabumikota.go.id/' },
-              { id: 'm16', image:'/images/KAC-logo.png', title: 'KAC', subtitle: 'Kawasan Agroeduwisata Cikundul', href: 'https://kac.sukabumikota.go.id/' }
+              { id: 'm3', image: '/images/Disdukcapil-logo.png', title: 'Portal Disdukcapil', subtitle: 'Dinas Kependudukan dan Pencatatan Sipil', href: 'https://disdukcapil.sukabumikota.go.id/' },
+              { id: 'm4', image: '/images/mocilegit-logo.png', title: 'Moci Legit', subtitle: 'Masyarakat kota Sukabumi Cepat, Terintegrasi, Lebih mudah, gratis, dan terpercaya', href: 'https://mocilegit.sukabumikota.go.id/login' }
+            ]
+          },
+          {
+            id: '9', image: '/images/diskominfo-hitam.png', title: 'Diskominfo', subtitle: 'Layanan Diskominfo Sukabumi',
+            subItems: [
+              { id: 'm12', image: '/images/diskominfo-hitam.png', title: 'Portal Diskominfo', subtitle: 'Portal Dinas Komunikasi dan Informatika', href: 'https://diskominfo.sukabumikota.go.id/' },
+              { id: 'm13', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Simpan SPBE', subtitle: 'Sistem Manajemen Pengetahuan SPBE Kota Sukabumi', href: 'https://simpan-spbe.sukabumikota.go.id/' },
+              { id: 'm14', image: '/images/diskominfo-hitam.png', title: 'SKM-Diskominfo', subtitle: 'Survei Kepuasan Masyarakat', href: 'http://skm-diskominfo.sukabumikota.go.id/survey' },
+              { id: 'm15', image: '/images/diskominfo-hitam.png', title: 'Satu-Data', subtitle: 'pengelolaan dan berbagi pakai data antar Perangkat Daerah Kota Sukabumi', href: 'https://satudata.sukabumikota.go.id/login' },
+              { id: 'm16', image: '/images/opendata-logo.png', title: 'Open Data', subtitle: 'koleksi dataset terlengkap di Kota Sukabumi', href: 'https://opendata.sukabumikota.go.id/' },
+              { id: 'm17', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Data', subtitle: 'pengelolaan, perencanaan, dan pembagian data instansi', href: 'https://data.sukabumikota.go.id/login' },
+              { id: 'm18', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Simponi', subtitle: 'Sistem Informasi Manajemen Pemerintahan Online', href: 'https://simponi.sukabumikota.go.id/' },
+              { id: 'm19', image: '/images/PPID-logo.png', title: 'PPID', subtitle: 'Pejabat Pengelola Informasi dan Dokumentasi', href: 'https://ppid.sukabumikota.go.id/' },
+              { id: 'm20', image: '/images/diskominfo-hitam.png', title: 'Silantik', subtitle: 'Sistem Layanan TIK', href: 'https://diskominfo.sukabumikota.go.id/silantik/public/' },
+            ]
+          },
+          {
+            id: '1', image: '/images/DPMPTSP-logo.png', title: 'DPMPTSP', subtitle: 'Layanan DPMPTSP Kota Sukabumi',
+            subItems: [
+              { id: 'm1', image: '/images/DPMPTSP-logo.png', title: 'Portal MPP', subtitle: 'Mal Pelayanan Publik', href: 'https://mpp.sukabumikota.go.id/' },
+              { id: 'm2', image: '/images/DPMPTSP-logo.png', title: 'Sakti', subtitle: 'Sistem Aplikasi Kolaborasi Antar Instansi', href: 'https://mpp.sukabumikota.go.id/sakti' }
             ]
           },
         ]
       },
-      {
-        title: 'Keolahragaan',
-        items: [
-          { id: '1', image:'/images/dispopapar-logo.png', title: 'Dispopapar', subtitle: 'Portal Dinas Olahraga dan Pariwisata Kota Sukabumi', href: 'https://disporapar.sukabumikota.go.id/' }
-        ]
-      }
     ]
   },
   'Daerah Kecamatan': {
     groups: [
       {
-        title: 'Wilayah Kecamatan',
+        title: 'Daerah Kecamatan',
         items: [
           { id: '3', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Kecamatan Baros', subtitle: 'Website Kec. Baros', href: 'https://kecamatanbaros.sukabumikota.go.id' },
           { id: '4', image: '/images/CIBEUREUM-logo.png', title: 'Kecamatan Cibeureum', subtitle: 'Website Kec. Cibeureum', href: 'https://kecamatancibeureum.sukabumikota.go.id' },
@@ -573,19 +576,42 @@ const opdServices: { [key: string]: OpdCategory } = {
   },
 }
 
-function Opd() {
-  const [activeCategory, setActiveCategory] = useState('Pemerintahan')
+function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void }) {
+  const [activeCategory, setActiveCategory] = useState('Sekretariat Daerah')
   const [cardPage, setCardPage] = useState(0)
   const cardsPerPage = 6
 
-  // Modal state
+  // Modal state (Stack navigation for multi-level nested subItems)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedModalData, setSelectedModalData] = useState<SubItem[]>([])
-  const [selectedModalTitle, setSelectedModalTitle] = useState('')
+  const [modalStack, setModalStack] = useState<Array<{ title: string; items: SubItem[] }>>([])
   const [modalPage, setModalPage] = useState(0)
   const cardsPerModalPage = 4
 
+  // iFrame Preview Modal state
+  const [iframeUrl, setIframeUrl] = useState<string | null>(null)
+  const [iframeTitle, setIframeTitle] = useState('')
+  const [iframeLoading, setIframeLoading] = useState(false)
+
+  const openIframeModal = (url: string, title: string) => {
+    setIframeUrl(url)
+    setIframeTitle(title)
+    setIframeLoading(true)
+    onIframeToggle?.(true)
+  }
+
+  const closeIframeModal = () => {
+    setIframeUrl(null)
+    setIframeTitle('')
+    setIframeLoading(false)
+    onIframeToggle?.(false)
+  }
+
   const categoryData = opdServices[activeCategory]
+
+  // Active modal level from stack
+  const currentModalLevel = modalStack[modalStack.length - 1] || { title: '', items: [] }
+  const selectedModalTitle = currentModalLevel.title
+  const selectedModalData = currentModalLevel.items
 
   // Process groups into pages with strict subheading separation
   const processedPages: Array<{
@@ -627,14 +653,28 @@ function Opd() {
   }
 
   const openModal = (service: ServiceCard) => {
-    setSelectedModalData(service.subItems || [])
-    setSelectedModalTitle(service.title)
+    setModalStack([{ title: service.title, items: service.subItems || [] }])
     setModalPage(0)
     setIsModalOpen(true)
   }
 
+  const openSubModal = (item: SubItem) => {
+    if (item.subItems && item.subItems.length > 0) {
+      setModalStack((prev) => [...prev, { title: item.title, items: item.subItems || [] }])
+      setModalPage(0)
+    }
+  }
+
+  const handleModalBack = () => {
+    if (modalStack.length > 1) {
+      setModalStack((prev) => prev.slice(0, prev.length - 1))
+      setModalPage(0)
+    }
+  }
+
   const closeModal = () => {
     setIsModalOpen(false)
+    setModalStack([])
   }
 
   // Modal pagination
@@ -646,21 +686,21 @@ function Opd() {
 
   return (
     <>
-      <section id="opd" className="bg-white px-4 py-20 md:px-8 lg:px-12">
+      <section id="opd" className="bg-transparent px-4 py-20 md:px-8 lg:px-12">
         <div className="mx-auto max-w-[1400px]">
           <SectionHeading subtitle="Akses langsung ke portal resmi Organisasi Perangkat Daerah (OPD) dan wilayah administratif Kecamatan di lingkungan Pemerintah Kota Sukabumi.">
             Organisasi Perangkat Daerah
           </SectionHeading>
           <div className="flex min-h-[500px] overflow-hidden rounded-xl border border-[#e2e8ed] bg-white shadow-[0_24px_40px_-28px_rgba(15,23,42,0.5)]">
             {/* Sidebar */}
-            <div className="flex w-full flex-col space-y-1 md:w-[28%] border-r border-[#e2e8ed]">
+            <div className="flex w-full flex-col gap-5 md:w-[28%] p-5 md:p-8 border-r border-[#e5e7eb]">
               {Object.keys(opdServices).map((category) => (
                 <button
                   key={category}
                   onClick={() => handleCategoryChange(category)}
-                  className={`flex flex-1 items-center border-l-4 px-6 py-3 text-left font-medium transition ${activeCategory === category
-                    ? 'border-[#16a34a] bg-[#edfff2] text-[#138d43]'
-                    : 'border-transparent text-[#53627a] hover:bg-[#f7faf8]'
+                  className={`px-6 py-4 text-base text-left font-medium transition-all duration-200 rounded-lg border ${activeCategory === category
+                    ? 'border-[#159447] bg-[#159447] text-white'
+                    : 'border-[#e5e7eb] bg-white text-[#4b5563] hover:border-[#d1d5db] hover:bg-[#f9fafb]'
                     }`}
                   aria-pressed={activeCategory === category}
                 >
@@ -685,7 +725,7 @@ function Opd() {
                 {/* Service Cards Grid */}
                 <div className="flex-1">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 content-start">
-                    {currentPage.items.map((service: ServiceCard) => {
+                    {currentPage.items.map((service: ServiceCard, index: number) => {
                       const cardClasses = "flex cursor-pointer items-center gap-4 rounded-lg border border-[#e5ebf0] bg-white p-4 transition-all duration-200 hover:border-green-200 hover:bg-slate-50 hover:shadow-md w-full text-left"
                       const inner = (
                         <>
@@ -707,10 +747,12 @@ function Opd() {
                         </>
                       )
 
+                      const itemKey = `${service.id || 'service'}-${index}`
+
                       if (service.subItems && service.subItems.length > 0) {
                         return (
                           <button
-                            key={service.id}
+                            key={itemKey}
                             onClick={() => openModal(service)}
                             className={cardClasses}
                           >
@@ -720,15 +762,13 @@ function Opd() {
                       }
 
                       return (
-                        <a
-                          key={service.id}
-                          href={service.href || '#'}
-                          target={service.href && service.href !== '#' ? '_blank' : undefined}
-                          rel={service.href && service.href !== '#' ? 'noopener noreferrer' : undefined}
+                        <button
+                          key={itemKey}
+                          onClick={() => service.href && service.href !== '#' ? openIframeModal(service.href, service.title) : undefined}
                           className={cardClasses}
                         >
                           {inner}
-                        </a>
+                        </button>
                       )
                     })}
                   </div>
@@ -795,6 +835,15 @@ function Opd() {
 
             {/* Modal Header */}
             <div className="mb-6 pr-10">
+              {modalStack.length > 1 && (
+                <button
+                  onClick={handleModalBack}
+                  className="flex items-center gap-1.5 text-xs font-medium text-[#159447] hover:underline mb-2 cursor-pointer transition-colors"
+                >
+                  <ArrowLeft size={14} />
+                  <span>Kembali ke {modalStack[modalStack.length - 2].title}</span>
+                </button>
+              )}
               <div className="flex items-center gap-3 mb-1">
                 <span className="h-6 w-1 rounded-full bg-[#159447]" />
                 <h2 id="modal-title" className="text-xl font-bold text-[#1b293c]">{selectedModalTitle}</h2>
@@ -806,28 +855,49 @@ function Opd() {
             <div className="flex flex-col min-h-[260px]">
               <div className="flex-1">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 content-start">
-                  {currentModalItems.map((item) => (
-                    <a
-                      key={item.id}
-                      href={item.href}
-                      target={item.href !== '#' ? '_blank' : undefined}
-                      rel={item.href !== '#' ? 'noopener noreferrer' : undefined}
-                      className="flex items-center gap-4 rounded-lg border border-[#e5ebf0] bg-[#f8fafc] p-4 transition-all duration-200 hover:border-green-200 hover:bg-[#f0fdf4] hover:shadow-md"
-                    >
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white border border-[#e5ebf0] text-[#16a34a] shadow-sm overflow-hidden">
-                        {item.image ? (
-                          <img src={item.image} alt={item.title} className="h-full w-full object-contain p-1" />
-                        ) : (
-                          <ShoppingCart size={20} />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-[#1b293c]">{item.title}</h4>
-                        <p className="text-xs text-[#66758a] leading-snug mt-0.5">{item.subtitle}</p>
-                      </div>
-                      <ChevronRight size={18} className="shrink-0 text-[#cbd5e1]" />
-                    </a>
-                  ))}
+                  {currentModalItems.map((item, index) => {
+                    const cardClasses = "flex items-center gap-4 rounded-lg border border-[#e5ebf0] bg-[#f8fafc] p-4 transition-all duration-200 hover:border-green-200 hover:bg-[#f0fdf4] hover:shadow-md w-full text-left cursor-pointer"
+                    const inner = (
+                      <>
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white border border-[#e5ebf0] text-[#16a34a] shadow-sm overflow-hidden">
+                          {item.image ? (
+                            <img src={item.image} alt={item.title} className="h-full w-full object-contain p-1" />
+                          ) : (
+                            <ShoppingCart size={20} />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-[#1b293c]">{item.title}</h4>
+                          <p className="text-xs text-[#66758a] leading-snug mt-0.5">{item.subtitle}</p>
+                        </div>
+                        <ChevronRight size={18} className="shrink-0 text-[#cbd5e1]" />
+                      </>
+                    )
+
+                    const itemKey = `${item.id || 'modal-item'}-${index}`
+
+                    if (item.subItems && item.subItems.length > 0) {
+                      return (
+                        <button
+                          key={itemKey}
+                          onClick={() => openSubModal(item)}
+                          className={cardClasses}
+                        >
+                          {inner}
+                        </button>
+                      )
+                    }
+
+                    return (
+                      <button
+                        key={itemKey}
+                        onClick={() => item.href && item.href !== '#' ? openIframeModal(item.href, item.title) : undefined}
+                        className={cardClasses}
+                      >
+                        {inner}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 
@@ -869,7 +939,253 @@ function Opd() {
           </div>
         </div>
       )}
+
+      {/* iFrame Preview Modal */}
+      {iframeUrl && (
+        <div
+          className="fixed inset-0 z-[60] flex flex-col bg-black/70 backdrop-blur-sm animate-[fadeIn_0.25s_ease-out]"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Preview: ${iframeTitle}`}
+        >
+          {/* Toolbar */}
+          <div className="flex items-center justify-between gap-3 bg-[#1b293c] px-4 py-3 shadow-lg">
+            {/* Left: icon + title */}
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#159447]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-white/60 leading-none mb-0.5">Pratinjau Situs OPD</p>
+                <p className="text-sm font-bold text-white truncate">{iframeTitle}</p>
+              </div>
+            </div>
+
+            {/* Center: URL bar */}
+            <div className="hidden md:flex flex-1 mx-4 items-center gap-2 rounded-full bg-white/10 border border-white/10 px-4 py-1.5 min-w-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#86efac" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+              <span className="text-xs text-white/70 truncate font-mono">{iframeUrl}</span>
+            </div>
+
+            {/* Right: actions */}
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href={iframeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 rounded-lg bg-[#159447] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#138d43] transition-colors"
+                title="Buka di tab baru"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
+                <span className="hidden sm:inline">Buka di Tab Baru</span>
+              </a>
+              <button
+                onClick={closeIframeModal}
+                className="grid size-9 place-items-center rounded-lg border border-white/10 text-white/60 hover:bg-white/10 hover:text-white transition"
+                aria-label="Tutup pratinjau"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* iFrame area */}
+          <div className="relative flex-1 bg-white">
+            {/* Loading overlay */}
+            {iframeLoading && (
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-white">
+                <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#e5ebf0] border-t-[#159447]" />
+                <p className="text-sm text-[#66758a]">Memuat halaman...</p>
+              </div>
+            )}
+            <iframe
+              src={iframeUrl}
+              title={iframeTitle}
+              className="h-full w-full border-0"
+              onLoad={() => setIframeLoading(false)}
+              onError={() => setIframeLoading(false)}
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+            />
+          </div>
+
+          {/* Blocked-site fallback banner */}
+          <div className="flex items-center justify-between gap-3 bg-[#1b293c]/90 px-4 py-2">
+            <p className="text-xs text-white/50">
+              Jika halaman tidak tampil, situs OPD mungkin memblokir tampilan dalam bingkai.
+            </p>
+            <a
+              href={iframeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 text-xs font-semibold text-[#4ade80] hover:underline"
+            >
+              Buka langsung →
+            </a>
+          </div>
+        </div>
+      )}
     </>
+  )
+}
+
+// Data untuk transparansi dokumen
+const transparansiDocuments = [
+  {
+    id: 1,
+    title: "11. Laporan Keuangan BUMN/Penyelenggaran Daerah",
+    type: "PDF",
+    views: "VIEW",
+    downloads: "DOWNLOAD",
+    url: 'https://www.rd.usda.gov/sites/default/files/pdf-sample_0.pdf'
+  },
+  {
+    id: 2,
+    title: "Kebijakan Umum Anggaran Pendapatan dan Belanja Daerah",
+    type: "PDF",
+    views: "VIEW",
+    downloads: "DOWNLOAD"
+  },
+  {
+    id: 3,
+    title: "13. Laporan Alokasi Belanja Wajib yang disusun dari Hasil Penerimaan Pajak Daerah",
+    type: "PDF",
+    views: "VIEW",
+    downloads: "DOWNLOAD"
+  },
+  {
+    id: 4,
+    title: "Rencana Umum Pengadaan Barang/Jasa Pemerintah Daerah untuk Optimum Pengadaan Barang/Jasa",
+    type: "PDF",
+    views: "VIEW",
+    downloads: "DOWNLOAD"
+  },
+  {
+    id: 5,
+    title: "13. Peraturan Daerah tentang Pertanggungjawaban Pelaksanaan APBD (Batang Tubuh dan Lampiran)",
+    type: "PDF",
+    views: "VIEW",
+    downloads: "DOWNLOAD"
+  }
+]
+
+function TransparansiDokumen() {
+  const [currentPage, setCurrentPage] = useState(0)
+  const itemsPerPage = 5
+  const totalPages = Math.ceil(transparansiDocuments.length / itemsPerPage)
+
+  const currentDocuments = transparansiDocuments.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
+  )
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(0, prev - 1))
+  }
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1))
+  }
+
+  return (
+    <section id="transparansi" className="bg-[#f8f9fa] px-4 py-20 md:px-8 lg:px-12 md:py-28">
+      <div className="mx-auto max-w-[1400px]">
+        <div className="mb-12 flex items-start justify-between">
+          <div>
+            <div className="mb-4 flex items-center gap-3">
+              <span className="h-8 w-1 rounded-full bg-[#159447]" />
+              <h2 className="text-3xl font-bold tracking-tight text-[#172135] md:text-4xl">
+                Transparansi Dokumen Daerah
+              </h2>
+            </div>
+            <p className="max-w-5xl text-lg leading-relaxed text-[#566276]">
+              Transparansi keuangan daerah adalah kunci pemerintahan yang bersih, akuntabel, dan dipercaya rakyat untuk membangun masa depan yang lebih baik.
+            </p>
+          </div>
+          <div className="hidden md:block">
+            <button className="rounded-lg bg-[#159447] px-4 py-2 font-medium text-white hover:bg-[#0f7a36] transition-colors">
+              Lihat Selengkapnya →
+            </button>
+          </div>
+        </div>
+
+        {/* Document Cards Grid */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {currentDocuments.map((doc) => (
+            <div
+              key={doc.id}
+              className="group cursor-pointer rounded-xl bg-white border border-[#e5e7eb] p-6 shadow-sm transition-all duration-200 hover:border-[#159447] hover:shadow-md"
+            >
+              {/* PDF Icon */}
+              <div className="mb-4 flex justify-center">
+                <div className="flex h-16 w-12 flex-col items-center justify-center rounded-lg bg-[#f0fdf4] border-2 border-[#159447]">
+                  <FileText className="h-6 w-6 text-[#159447]" />
+                  <span className="mt-1 text-xs font-bold text-[#159447]">{doc.type}</span>
+                </div>
+              </div>
+
+              {/* Document Title */}
+              <h3 className="mb-4 text-sm font-medium leading-tight text-[#1f2937] line-clamp-3">
+                {doc.title}
+              </h3>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <a
+                  href={doc.url || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 rounded-md bg-[#f8f9fa] px-3 py-2 text-center text-xs font-medium text-[#6b7280] hover:bg-[#e5e7eb] transition-colors"
+                >
+                  {doc.views}
+                </a>
+                <a
+                  href={doc.url || 'https://www.rd.usda.gov/sites/default/files/pdf-sample_0.pdf'}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 rounded-md bg-[#159447] px-3 py-2 text-center text-xs font-medium text-white hover:bg-[#0f7a36] transition-colors"
+                >
+                  {doc.downloads}
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Navigation Controls */}
+        {totalPages > 1 && (
+          <div className="mt-8 flex items-center justify-center gap-4">
+            <button
+              onClick={handlePrevPage}
+              disabled={currentPage === 0}
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors ${currentPage === 0
+                ? 'cursor-not-allowed bg-[#f1f3f4] text-[#9ca3af]'
+                : 'bg-white text-[#374151] hover:bg-[#f9fafb] border border-[#e5e7eb]'
+                }`}
+            >
+              <ArrowLeft size={16} />
+              Previous
+            </button>
+
+            <span className="text-sm text-[#6b7280]">
+              {currentPage + 1} of {totalPages}
+            </span>
+
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages - 1}
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors ${currentPage === totalPages - 1
+                ? 'cursor-not-allowed bg-[#f1f3f4] text-[#9ca3af]'
+                : 'bg-white text-[#374151] hover:bg-[#f9fafb] border border-[#e5e7eb]'
+                }`}
+            >
+              Next
+              <ArrowRight size={16} />
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
   )
 }
 
@@ -1030,33 +1346,103 @@ function Footer() {
 }
 
 function Partners() {
-  return (
-    <section className="bg-[#F8F6F0] py-12 md:py-16 border-t border-[#e5ebf0]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-wrap justify-center md:justify-between items-center gap-8 md:gap-12">
-          <img
-            src="/images/Lambang_Kota_Sukabumi.png"
-            className="h-16 md:h-24 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
-          />
-          <img
-            src="/images/diskominfo-hitam.png"
-            className="h-16 md:h-24 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
-          />
-          <img
-            src="/images/Span-Lapor.png"
-            className="h-16 md:h-24 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
-          />
 
-          {/* TODO: Ganti src dengan path gambar Logo Partner 4 */}
-          <img
-            // src="/logo-4.png"
-            // alt="Logo Partner 4"
-            className="h-16 md:h-24 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
-          />
+  const partners = [
+
+    { id: 1, image: '/images/Lambang_Kota_Sukabumi.png', href: 'https://portal.sukabumikota.go.id' },
+
+    { id: 2, image: '/images/diskominfo-hitam.png', href: 'https://diskominfo.sukabumikota.go.id' },
+
+    { id: 3, image: '/images/Span-Lapor.png', href: 'https://www.lapor.go.id/' },
+
+    { id: 4, image: '/images/JDIH-logo.png', href: 'https://jdih.sukabumikota.go.id/' },
+
+    { id: 5, image: '/images/Jabar_prov-logo.png', href: 'https://jabarprov.go.id/' },
+
+    { id: 6, image: '/images/Sirup-logo.png', href: 'https://sirup.inaproc.id/sirup/loginctr/index' },
+
+  ];
+
+
+
+  // We duplicate the array multiple times to ensure the marquee content is wide enough
+
+  const displayPartners = [...partners, ...partners, ...partners];
+
+
+
+  return (
+
+    <section className="bg-[#F8F9FA] py-12 md:py-16 border-t border-[#e5ebf0] overflow-hidden">
+
+      <div className="w-full relative">
+
+        <div className="relative flex overflow-hidden w-full before:absolute before:left-0 before:top-0 before:z-10 before:h-full before:w-[50px] md:before:w-[200px] before:bg-gradient-to-r before:from-[#F8F9FA] before:to-transparent before:content-[''] after:absolute after:right-0 after:top-0 after:z-10 after:h-full after:w-[50px] md:after:w-[200px] after:bg-gradient-to-l after:from-[#F8F9FA] after:to-transparent after:content-['']">
+
+          <div className="flex w-max animate-marquee items-center gap-16 md:gap-32 pr-16 md:pr-32">
+
+            {displayPartners.map((partner, idx) => (
+
+              <a
+
+                key={`${partner.id}-${idx}`}
+
+                href={partner.href}
+
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block transition-transform duration-500 hover:scale-110 flex-shrink-0"
+              >
+                <img
+
+                  src={partner.image}
+
+                  alt={`Partner ${partner.id}`}
+
+                  className="h-12 md:h-16 w-auto max-w-[150px] md:max-w-[200px] object-contain"
+
+                />
+              </a>
+            ))}
+
+          </div>
         </div>
       </div>
     </section>
-  )
+  );
 }
 
-export default function Page() { return <main className="min-h-screen bg-white"><Navbar /><Hero /><Welcome /><Profile /><News /><Opd /><Partners /><Footer /></main> }
+export default function Page() {
+  const [isIframeOpen, setIsIframeOpen] = useState(false)
+
+  return (
+    <main className="min-h-screen bg-white">
+      <Navbar isIframeOpen={isIframeOpen} />
+      <Hero />
+      <Welcome />
+
+      {/* Wrapper Background Image dari Section Profil sampai Situs OPD */}
+      <div
+        className="relative bg-cover bg-center bg-no-repeat bg-fixed"
+        style={{
+          // Ganti URL di bawah ini dengan path gambar yang Anda inginkan
+          backgroundImage: "url('/images/drone_view.webp')",
+        }}
+      >
+        {/* Overlay transparan opsional untuk menjaga keterbacaan teks/konten */}
+        <div className="absolute inset-0 bg-white/85 backdrop-blur-[1px] pointer-events-none" />
+
+        {/* Konten Section */}
+        <div className="relative z-10">
+          <Profile />
+          <News />
+          <Opd onIframeToggle={setIsIframeOpen} />
+        </div>
+      </div>
+
+      <TransparansiDokumen />
+      <Partners />
+      <Footer />
+    </main>
+  )
+}

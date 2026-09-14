@@ -2,9 +2,9 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 
-@custom-variant dark (&:is(.dark *));
 
-@theme inline {
+
+inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -92,6 +92,33 @@ button {
   }
 }
 
+/* Line clamp utilities */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Marquee animation for partners */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
 
 /* Dotted pattern for footer */
 .footer-dots {
@@ -105,4 +132,8 @@ button {
   background-image:
     radial-gradient(circle, rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px);
   background-size: 24px 24px;
+}
+
+.continuous-slider .swiper-wrapper {
+  transition-timing-function: linear !important;
 }
