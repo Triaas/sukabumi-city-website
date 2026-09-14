@@ -70,6 +70,7 @@ function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 })
   const navRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({})
+  const isScrollingRef = useRef(false)
 
   // Navigation items that correspond to page sections (tracked for active state)
   const navItems = [
@@ -99,20 +100,32 @@ function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
   }, [activeSection])
 
   useEffect(() => {
+    let lastActiveSection: string = 'beranda'
+
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + 250
+      // Skip scroll-spy during programmatic navigation
+      if (isScrollingRef.current) return
+      
+      const scrollPosition = window.scrollY + window.innerHeight * 0.4
 
       for (let i = navItems.length - 1; i >= 0; i--) {
         const sectionEl = document.getElementById(navItems[i].id)
         if (sectionEl) {
-          const top = sectionEl.offsetTop
-          if (scrollPosition >= top) {
+          // Use getBoundingClientRect for accurate position
+          const rect = sectionEl.getBoundingClientRect()
+          const absoluteTop = rect.top + window.scrollY
+          if (scrollPosition >= absoluteTop) {
             setActiveSection(navItems[i].id)
-            break
+            lastActiveSection = navItems[i].id
+            return
           }
         }
       }
     }
+
+      // If no section matches, keep the last active section
+      // This prevents jumping back to beranda after scrolling past transparansi
+      setActiveSection(lastActiveSection)
 
     window.addEventListener('scroll', handleScroll, { passive: true })
     handleScroll()
@@ -141,11 +154,21 @@ function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
                 href={`#${item.id}`}
                 onClick={(e) => {
                   e.preventDefault()
+                  
+                  // Disable scroll-spy during programmatic navigation
+                  isScrollingRef.current = true
                   setActiveSection(item.id)
+                  
                   const el = document.getElementById(item.id)
                   if (el) {
-                    const offsetTop = el.offsetTop - 100
+                    const rect = el.getBoundingClientRect()
+                    const offsetTop = rect.top + window.scrollY - 100
                     window.scrollTo({ top: offsetTop, behavior: 'smooth' })
+                    
+                    // Re-enable scroll-spy after animation completes
+                    setTimeout(() => {
+                      isScrollingRef.current = false
+                    }, 1000) // 1 second to allow smooth scroll to complete
                   }
                 }}
                 className={`pb-1 transition-colors duration-200 ${isActive ? 'text-white font-bold' : 'text-slate-300 hover:text-white'
@@ -1446,3 +1469,12 @@ export default function Page() {
     </main>
   )
 }
+
+
+
+
+
+
+
+
+

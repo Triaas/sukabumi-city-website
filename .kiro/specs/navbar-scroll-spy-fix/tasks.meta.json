@@ -1,0 +1,20 @@
+{
+  "pbtResults": {
+    "1. Write bug condition exploration test": {
+      "status": "passed",
+      "failingExample": "scrollY=1380 with innerHeight=500: unfixed handler (scrollY+250=1630 >= profil.offsetTop 1600) incorrectly returns \"profil\", fixed handler (scrollY+innerHeight*0.4=1580 < 1600) correctly returns \"beranda\"",
+      "lastRunTimestamp": 1789396484504
+    },
+    "3.2 Verify bug condition exploration test now passes": {
+      "status": "passed",
+      "failingExample": "",
+      "lastRunTimestamp": 1789396509177
+    },
+    "3.3 Verify preservation tests still pass": {
+      "status": "passed",
+      "failingExample": "",
+      "lastRunTimestamp": 1789396512307
+    }
+  },
+  "executionHistory": {}
+}
