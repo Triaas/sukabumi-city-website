@@ -137,3 +137,8 @@ button {
 .continuous-slider .swiper-wrapper {
   transition-timing-function: linear !important;
 }
+
+/* Hide navbar when modal iframe is open */
+body.hide-navbar #main-navbar {
+  display: none !important;
+}

@@ -1,6 +1,8 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { Navbar } from './components/Navbar'
+import { Footer } from './components/Footer'
 
 export const metadata: Metadata = {
   title: 'Pemerintah Kota Sukabumi | Website Resmi',
@@ -9,15 +11,15 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: '/icon-light-32x32.png',
+        url: '/logo.png',
         media: '(prefers-color-scheme: light)',
       },
       {
-        url: '/icon-dark-32x32.png',
+        url: '/logo.png',
         media: '(prefers-color-scheme: dark)',
       },
       {
-        url: '/icon.svg',
+        url: '/logo.png',
         type: 'image/svg+xml',
       },
     ],
@@ -41,7 +43,9 @@ export default function RootLayout({
   return (
     <html lang="id" className="bg-white">
       <body className="antialiased">
+        <Navbar />
         {children}
+        <Footer />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

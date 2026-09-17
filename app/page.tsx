@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import {
   FileText,
   Scale,
@@ -27,24 +28,20 @@ import {
   ArrowRight,
   Camera,
   CircleUserRound,
-  Mail,
-  MapPin,
   Megaphone,
-  Phone,
   Play,
-  Search,
   X,
 } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react'
 
 const profileCards = [
-  { title: 'Sejarah', description: 'Jejak perkembangan Kota Sukabumi dari masa ke masa.', image: '/images/sejarah-card.jpg', href: 'https://portal.sukabumikota.go.id/sejarah-kota-sukabumi/' },
-  { title: 'Visi Misi', description: 'Arah pembangunan dan tujuan yang ingin dicapai.', image: '/images/visi misi-card.jpg', href: 'https://portal.sukabumikota.go.id/visi-dan-misi/' },
-  { title: 'Lambang', description: 'Makna filosofis di balik lambang resmi daerah.', image: '/images/logo-pemkoot-sukabumi-card.jpg', href: 'https://portal.sukabumikota.go.id/lambang-kota-sukabumi/' },
-  { title: 'Geografi', description: 'Letak topografi, dan kondisi geografis wilayah.', image: '/images/geo-card.jpg', href: 'https://portal.sukabumikota.go.id/geografis/' },
-  { title: 'Sosial Ekonomi', description: 'Kondisi demografi dan pergerakan ekonomi masyarakat.', image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=900&q=80', href: 'https://portal.sukabumikota.go.id/sosial-ekonomi/' },
-  { title: 'Dalam Angka', description: 'Data statistik dan indikator kinerja daerah.', image: '/images/dalam angka-card.jpg', href: 'https://portal.sukabumikota.go.id/sukabumi-dalam-angka/' },
-  { title: 'Unit Kesehatan Sekolah (UKS)', description: 'Program pembinaan kesehatan komprehensif di lingkungan sekolah.', image: '/images/UKS-card.jpg', href: 'https://portal.sukabumikota.go.id/uks/' },
+  { title: 'Sejarah', description: 'Jejak perkembangan Kota Sukabumi dari masa ke masa.', image: '/images/sejarah-card.jpg', href: '/sejarah' },
+  { title: 'Visi Misi', description: 'Arah pembangunan dan tujuan yang ingin dicapai.', image: '/images/visi misi-card.jpg', href: '/visi-misi' },
+  { title: 'Lambang', description: 'Makna filosofis di balik lambang resmi daerah.', image: '/images/logo-pemkoot-sukabumi-card.jpg', href: '/lambang' },
+  { title: 'Geografi', description: 'Letak topografi, dan kondisi geografis wilayah.', image: '/images/geo-card.jpg', href: '/geografi' },
+  { title: 'Sosial Ekonomi', description: 'Kondisi demografi dan pergerakan ekonomi masyarakat.', image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=900&q=80', href: '/sosial-ekonomi' },
+  { title: 'Dalam Angka', description: 'Data statistik dan indikator kinerja daerah.', image: '/images/dalam angka-card.jpg', href: '/dalam-angka' },
+  { title: 'Unit Kesehatan Sekolah (UKS)', description: 'Program pembinaan kesehatan komprehensif di lingkungan sekolah.', image: '/images/UKS-card.jpg', href: '/uks' },
 ]
 
 const announcements = [
@@ -63,151 +60,8 @@ function SectionHeading({ children, subtitle }: { children: React.ReactNode; sub
   return <div className="mb-9"><h2 className="flex items-center gap-3 text-3xl font-bold tracking-tight text-[#172135] md:text-4xl"><span className="h-10 w-1.5 rounded-full bg-[#159447]" />{children}</h2>{subtitle && <p className="mt-3 max-w-5xl text-lg leading-relaxed text-[#566276]">{subtitle}</p>}</div>
 }
 
-function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
-  if (isIframeOpen) return null
-
-  const [activeSection, setActiveSection] = useState('beranda')
-  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 })
-  const navRef = useRef<HTMLDivElement>(null)
-  const itemRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({})
-  const isScrollingRef = useRef(false)
-
-  // Navigation items that correspond to page sections (tracked for active state)
-  const navItems = [
-    { id: 'beranda', label: 'Beranda' },
-    { id: 'profil', label: 'Profil' },
-    { id: 'berita', label: 'Pengumuman & Berita' },
-    { id: 'opd', label: 'Situs OPD' },
-    { id: 'transparansi', label: 'Transparansi Dokumen' },
-  ]
-
-  useEffect(() => {
-    const updateIndicator = () => {
-      const activeEl = itemRefs.current[activeSection]
-      if (activeEl && navRef.current) {
-        const navRect = navRef.current.getBoundingClientRect()
-        const itemRect = activeEl.getBoundingClientRect()
-        setIndicatorStyle({
-          left: itemRect.left - navRect.left,
-          width: itemRect.width,
-        })
-      }
-    }
-
-    updateIndicator()
-    window.addEventListener('resize', updateIndicator)
-    return () => window.removeEventListener('resize', updateIndicator)
-  }, [activeSection])
-
-  useEffect(() => {
-    let lastActiveSection: string = 'beranda'
-
-    const handleScroll = () => {
-      // Skip scroll-spy during programmatic navigation
-      if (isScrollingRef.current) return
-      
-      const scrollPosition = window.scrollY + window.innerHeight * 0.4
-
-      for (let i = navItems.length - 1; i >= 0; i--) {
-        const sectionEl = document.getElementById(navItems[i].id)
-        if (sectionEl) {
-          // Use getBoundingClientRect for accurate position
-          const rect = sectionEl.getBoundingClientRect()
-          const absoluteTop = rect.top + window.scrollY
-          if (scrollPosition >= absoluteTop) {
-            setActiveSection(navItems[i].id)
-            lastActiveSection = navItems[i].id
-            return
-          }
-        }
-      }
-    }
-
-      // If no section matches, keep the last active section
-      // This prevents jumping back to beranda after scrolling past transparansi
-      setActiveSection(lastActiveSection)
-
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    handleScroll()
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  return (
-    <header className="fixed top-4 left-0 right-0 z-50 px-4 md:px-8 lg:px-12 flex justify-center w-full">
-      <div className="w-full max-w-[1400px] bg-slate-900/70 backdrop-blur-md rounded-2xl md:rounded-3xl border border-white/10 px-6 py-3 shadow-xl transition-all duration-300 flex items-center justify-between gap-8 md:gap-12">
-        <div className="flex items-center gap-4">
-          <img src="/logo.png" alt="Logo Kota Sukabumi" className="h-12 w-auto object-contain shrink-0" />
-          <div>
-            <p className="text-xs font-semibold tracking-[0.12em] text-white/75">WEBSITE RESMI</p>
-            <p className="text-xl font-bold md:text-2xl text-white">Pemerintah Kota Sukabumi</p>
-            <p className="font-serif text-sm md:text-base italic text-[#f4ce4b]">Reugreug Pageuh Repeh Rapih</p>
-          </div>
-        </div>
-
-        <nav ref={navRef} className="relative hidden items-center gap-4 md:gap-6 lg:gap-8 text-base font-semibold lg:flex py-2">
-          {navItems.map((item) => {
-            const isActive = activeSection === item.id
-            return (
-              <a
-                key={item.id}
-                ref={(el) => { itemRefs.current[item.id] = el }}
-                href={`#${item.id}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  
-                  // Disable scroll-spy during programmatic navigation
-                  isScrollingRef.current = true
-                  setActiveSection(item.id)
-                  
-                  const el = document.getElementById(item.id)
-                  if (el) {
-                    const rect = el.getBoundingClientRect()
-                    const offsetTop = rect.top + window.scrollY - 100
-                    window.scrollTo({ top: offsetTop, behavior: 'smooth' })
-                    
-                    // Re-enable scroll-spy after animation completes
-                    setTimeout(() => {
-                      isScrollingRef.current = false
-                    }, 1000) // 1 second to allow smooth scroll to complete
-                  }
-                }}
-                className={`pb-1 transition-colors duration-200 ${isActive ? 'text-white font-bold' : 'text-slate-300 hover:text-white'
-                  }`}
-              >
-                {item.label}
-              </a>
-            )
-          })}
-
-          {/* Kebijakan Privasi - Standard link without active state */}
-          <a
-            href="https://sukabumikota.go.id/kebijakan-privasi/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="pb-1 text-slate-300 hover:text-white transition-colors duration-200"
-          >
-            Kebijakan Privasi
-          </a>
-
-          <span
-            className="absolute bottom-0 bg-[#f9c74f] h-[3px] rounded-full transition-all duration-300 ease-in-out pointer-events-none"
-            style={{
-              left: `${indicatorStyle.left}px`,
-              width: `${indicatorStyle.width}px`,
-            }}
-          />
-        </nav>
-
-        <button className="rounded-lg p-2 text-white lg:hidden" aria-label="Buka pencarian">
-          <Search />
-        </button>
-      </div>
-    </header>
-  )
-}
-
 function Hero() {
-  const images = ['/images/lapang-merdeka.webp', '/images/tugu-kota.webp']
+  const images = ['/images/lapang-merdeka.webp', '/images/tugu-kota.webp', '/images/gedung_juang.webp']
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
   useEffect(() => {
@@ -234,7 +88,7 @@ function Hero() {
           <p className="mb-3 text-sm font-bold uppercase tracking-[0.24em] text-[#f3c338]">Selamat datang di</p>
           <h1 className="text-5xl font-bold leading-tight text-white md:text-7xl">Kota Sukabumi</h1>
           <p className="mt-5 text-lg leading-relaxed text-white/85 md:text-xl">
-            Reugreug Pageuh Repeh Rapih, bersama membangun kota yang maju, unggul, berbudaya, dan berkah.
+            Bersama mewujudkan Masyarakat Kota Sukabumi yang Inovatif, Mandiri, Agamis, Nasionalis.
           </p>
         </div>
       </div>
@@ -253,31 +107,27 @@ function Profile() {
         </SectionHeading>
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-5">
           {profileCards.slice(0, 4).map((card) => (
-            <a
+            <Link
               key={card.title}
               href={card.href || '#'}
-              target="_blank"
-              rel="noopener noreferrer"
               className="group relative h-[160px] md:h-[180px] overflow-hidden rounded-2xl bg-[#172033] shadow-md md:col-span-3 cursor-pointer grayscale transition-all duration-500 ease-in-out hover:grayscale-0 hover:scale-[1.02] hover:shadow-xl"
             >
               <img
                 src={card.image}
                 alt={card.title}
-                className="absolute inset-0 size-full object-cover object-center opacity-60 transition-transform duration-500 group-hover:scale-105 group-hover:opacity-60"
+                className="absolute inset-0 size-full object-cover object-center opacity-60 transition-transform duration-500 group-hover:scale-105 group-hover:opacity-80"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
               <div className="relative flex h-full flex-col justify-end p-4 md:p-5 text-white z-10">
                 <h3 className="text-base md:text-lg font-bold">{card.title}</h3>
                 <p className="mt-1 text-xs md:text-sm leading-snug text-white/85">{card.description}</p>
               </div>
-            </a>
+            </Link>
           ))}
           {profileCards.slice(4).map((card) => (
-            <a
+            <Link
               key={card.title}
               href={card.href || '#'}
-              target="_blank"
-              rel="noopener noreferrer"
               className="group relative h-[160px] md:h-[180px] overflow-hidden rounded-2xl bg-[#172033] shadow-md md:col-span-4 cursor-pointer grayscale transition-all duration-500 ease-in-out hover:grayscale-0 hover:scale-[1.02] hover:shadow-xl"
             >
               <img
@@ -290,7 +140,7 @@ function Profile() {
                 <h3 className="text-base md:text-lg font-bold">{card.title}</h3>
                 <p className="mt-1 text-xs md:text-sm leading-snug text-white/85">{card.description}</p>
               </div>
-            </a>
+            </Link>
           ))}
         </div>
       </div>
@@ -303,7 +153,9 @@ function NewsList({ items, announcement = false }: { items: string[][]; announce
 function News() {
   return <section id="berita" className="bg-transparent px-4 py-20 md:px-8 lg:px-12">
     <div className="mx-auto max-w-[1400px]">
-      <SectionHeading>Pengumuman &amp; Berita</SectionHeading>
+      <SectionHeading subtitle="Pengumuman dan berita terbaru dari Kota Sukabumi.">
+        Pengumuman & Berita
+      </SectionHeading>
       <div className="grid gap-14 lg:grid-cols-2">
         <div>
           <h3 className="mb-6 text-2xl font-bold text-[#263349]">Pengumuman</h3>
@@ -629,6 +481,62 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
     onIframeToggle?.(false)
   }
 
+  // Effect to control body scroll when iframe is open
+  useEffect(() => {
+    if (iframeUrl) {
+      // Save current scroll position
+      const scrollY = window.scrollY
+
+      // Prevent scrolling on body
+      document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.width = '100%'
+      document.body.style.top = `-${scrollY}px`
+
+      // Hide navbar when iframe is open
+      document.body.classList.add('hide-navbar')
+
+      // Prevent scroll wheel and touch events
+      const preventScroll = (e: Event) => {
+        e.preventDefault()
+        e.stopPropagation()
+        return false
+      }
+
+      // Add event listeners to prevent all scroll-related events
+      document.addEventListener('wheel', preventScroll, { passive: false })
+      document.addEventListener('touchmove', preventScroll, { passive: false })
+      document.addEventListener('scroll', preventScroll, { passive: false })
+
+      // Cleanup function
+      return () => {
+        const scrollY = document.body.style.top
+        document.body.style.overflow = ''
+        document.body.style.position = ''
+        document.body.style.width = ''
+        document.body.style.top = ''
+
+        // Show navbar when iframe is closed
+        document.body.classList.remove('hide-navbar')
+
+        // Restore scroll position
+        window.scrollTo(0, parseInt(scrollY || '0') * -1)
+
+        document.removeEventListener('wheel', preventScroll)
+        document.removeEventListener('touchmove', preventScroll)
+        document.removeEventListener('scroll', preventScroll)
+      }
+    } else {
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.width = ''
+      document.body.style.top = ''
+
+      // Ensure navbar is shown when iframe is null
+      document.body.classList.remove('hide-navbar')
+    }
+  }, [iframeUrl])
+
   const categoryData = opdServices[activeCategory]
 
   // Active modal level from stack
@@ -699,6 +607,18 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
     setIsModalOpen(false)
     setModalStack([])
   }
+
+  // Mematikan scroll halaman utama saat pop-up menu OPD terbuka
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else if (!iframeUrl) {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      if (!iframeUrl) document.body.style.overflow = '';
+    };
+  }, [isModalOpen, iframeUrl]);
 
   // Modal pagination
   const totalModalPages = Math.ceil(selectedModalData.length / cardsPerModalPage)
@@ -971,44 +891,69 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
           aria-modal="true"
           aria-label={`Preview: ${iframeTitle}`}
         >
-          {/* Toolbar */}
-          <div className="flex items-center justify-between gap-3 bg-[#1b293c] px-4 py-3 shadow-lg">
-            {/* Left: icon + title */}
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#159447]">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-medium text-white/60 leading-none mb-0.5">Pratinjau Situs OPD</p>
-                <p className="text-sm font-bold text-white truncate">{iframeTitle}</p>
+          {/* Toolbar — always visible */}
+          <div className="flex items-center justify-between gap-4 bg-[#1b293c] px-5 py-4 shadow-lg">
+            {/* Left: Back button + icon + title */}
+            <div className="flex items-center gap-4 min-w-0">
+              {/* Back button */}
+              <button
+                onClick={closeIframeModal}
+                className="flex items-center gap-2 rounded-lg border border-white/15 px-4 py-2.5 text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors shrink-0"
+                aria-label="Kembali"
+              >
+                <ArrowLeft size={18} />
+                <span className="hidden sm:inline">Kembali</span>
+              </button>
+
+              {/* Divider */}
+              <div className="h-10 w-px bg-white/15 shrink-0" />
+
+              {/* Icon + title */}
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center">
+                  <img
+                    src="/images/Lambang_Kota_Sukabumi.png"
+                    alt="Lambang Kota Sukabumi"
+                    className="h-full w-full object-contain"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-white/60 leading-none mb-1">Pemerintah Kota Sukabumi</p>
+                  <p className="text-lg font-bold text-white truncate">{iframeTitle}</p>
+                </div>
               </div>
             </div>
 
             {/* Center: URL bar */}
-            <div className="hidden md:flex flex-1 mx-4 items-center gap-2 rounded-full bg-white/10 border border-white/10 px-4 py-1.5 min-w-0">
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#86efac" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
-              <span className="text-xs text-white/70 truncate font-mono">{iframeUrl}</span>
+            <div className="hidden md:flex flex-1 mx-6 items-center gap-3 rounded-full bg-white/10 border border-white/10 px-5 py-2.5 min-w-0">
+              <Shield size={16} className="text-[#86efac]" />
+              <span className="text-sm text-white/70 truncate font-mono">{iframeUrl}</span>
             </div>
 
-            {/* Right: actions */}
-            <div className="flex items-center gap-2 shrink-0">
+            {/* Right: Open in new tab & Security Status */}
+            <div className="flex items-center gap-4 shrink-0">
+              {/* Open in new tab */}
               <a
-                href={iframeUrl}
+                href={iframeUrl ?? ''}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 rounded-lg bg-[#159447] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#138d43] transition-colors"
+                className="flex items-center gap-2 rounded-lg border border-white/15 bg-transparent px-4 py-2.5 text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
                 title="Buka di tab baru"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
                 <span className="hidden sm:inline">Buka di Tab Baru</span>
               </a>
-              <button
-                onClick={closeIframeModal}
-                className="grid size-9 place-items-center rounded-lg border border-white/10 text-white/60 hover:bg-white/10 hover:text-white transition"
-                aria-label="Tutup pratinjau"
-              >
-                <X size={18} />
-              </button>
+
+              {/* Security Status (Visible on larger screens) */}
+              <div className="hidden xl:flex items-center gap-2 border-l border-white/15 pl-5">
+                <div className="flex flex-col items-end justify-center gap-0.5">
+                  <span className="text-[10px] font-bold text-white/40 tracking-wider">SECURITY STATUS</span>
+                  <span className="text-xs font-bold text-[#4ade80]">PROTECTED CONNECTION</span>
+                </div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#4ade80]/10 border border-[#4ade80]/20">
+                  <Shield size={20} className="text-[#4ade80] fill-[#4ade80]/20" />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1032,15 +977,15 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
           </div>
 
           {/* Blocked-site fallback banner */}
-          <div className="flex items-center justify-between gap-3 bg-[#1b293c]/90 px-4 py-2">
-            <p className="text-xs text-white/50">
+          <div className="flex items-center justify-between gap-4 bg-[#1b293c]/90 px-6 py-3.5">
+            <p className="text-sm md:text-base text-white/60 font-medium">
               Jika halaman tidak tampil, situs OPD mungkin memblokir tampilan dalam bingkai.
             </p>
             <a
               href={iframeUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="shrink-0 text-xs font-semibold text-[#4ade80] hover:underline"
+              className="shrink-0 text-sm md:text-base font-semibold text-[#4ade80] hover:underline"
             >
               Buka langsung →
             </a>
@@ -1057,42 +1002,79 @@ const transparansiDocuments = [
     id: 1,
     title: "11. Laporan Keuangan BUMN/Penyelenggaran Daerah",
     type: "PDF",
-    views: "VIEW",
-    downloads: "DOWNLOAD",
-    url: 'https://www.rd.usda.gov/sites/default/files/pdf-sample_0.pdf'
+    views: "Lihat",
+    downloads: "Unduh",
+    url: '/docs/pdf-sample_0.pdf',
+    previewUrl: '/docs/pdf-sample_0.pdf',
+    category: 'Transparansi Pengelolaan Keuangan Daerah',
+    description: 'Laporan Keuangan BUMN/Penyelenggaraan Daerah',
+    publishedDate: '-'
   },
   {
     id: 2,
     title: "Kebijakan Umum Anggaran Pendapatan dan Belanja Daerah",
     type: "PDF",
-    views: "VIEW",
-    downloads: "DOWNLOAD"
+    views: "Lihat",
+    downloads: "Unduh",
+    url: '/docs/pdf-sample_0.pdf',
+    previewUrl: '/docs/pdf-sample_0.pdf',
+    category: 'Transparansi Pengelolaan Keuangan Daerah',
+    description: 'Kebijakan Umum Anggaran Pendapatan dan Belanja Daerah',
+    publishedDate: '-'
   },
   {
     id: 3,
     title: "13. Laporan Alokasi Belanja Wajib yang disusun dari Hasil Penerimaan Pajak Daerah",
     type: "PDF",
-    views: "VIEW",
-    downloads: "DOWNLOAD"
+    views: "Lihat",
+    downloads: "Unduh",
+    url: '/docs/pdf-sample_0.pdf',
+    previewUrl: '/docs/pdf-sample_0.pdf',
+    category: 'Transparansi Pengelolaan Keuangan Daerah',
+    description: '13. Laporan Alokasi Belanja Wajib yang disusun dari Hasil Penerimaan Pajak Daerah',
+    publishedDate: '-'
   },
   {
     id: 4,
     title: "Rencana Umum Pengadaan Barang/Jasa Pemerintah Daerah untuk Optimum Pengadaan Barang/Jasa",
     type: "PDF",
-    views: "VIEW",
-    downloads: "DOWNLOAD"
+    views: "Lihat",
+    downloads: "Unduh",
+    url: '/docs/pdf-sample_0.pdf',
+    previewUrl: '/docs/pdf-sample_0.pdf',
+    category: 'Transparansi Pengelolaan Keuangan Daerah',
+    description: 'Rencana Umum Pengadaan Barang/Jasa Pemerintah Daerah untuk Optimum Pengadaan Barang/Jasa',
+    publishedDate: '-'
   },
   {
     id: 5,
     title: "13. Peraturan Daerah tentang Pertanggungjawaban Pelaksanaan APBD (Batang Tubuh dan Lampiran)",
     type: "PDF",
-    views: "VIEW",
-    downloads: "DOWNLOAD"
+    views: "Lihat",
+    downloads: "Unduh",
+    url: '/docs/pdf-sample_0.pdf',
+    previewUrl: '/docs/pdf-sample_0.pdf',
+    category: 'Transparansi Pengelolaan Keuangan Daerah',
+    description: '13. Peraturan Daerah tentang Pertanggungjawaban Pelaksanaan APBD (Batang Tubuh dan Lampiran)',
+    publishedDate: '-'
+  },
+  {
+    id: 6,
+    title: "RKA PPKD Tahun Anggaran 2026",
+    type: "PDF",
+    views: "Lihat",
+    downloads: "Unduh",
+    url: '/docs/pdf-sample_0.pdf',
+    previewUrl: '/docs/pdf-sample_0.pdf',
+    category: 'Transparansi Pengelolaan Keuangan Daerah',
+    description: 'RKA PPKD Tahun Anggaran 2026',
+    publishedDate: '-'
   }
 ]
 
 function TransparansiDokumen() {
   const [currentPage, setCurrentPage] = useState(0)
+  const [selectedDocument, setSelectedDocument] = useState<typeof transparansiDocuments[0] | null>(null)
   const itemsPerPage = 5
   const totalPages = Math.ceil(transparansiDocuments.length / itemsPerPage)
 
@@ -1109,102 +1091,272 @@ function TransparansiDokumen() {
     setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1))
   }
 
+  const handleViewClick = (doc: typeof transparansiDocuments[0]) => {
+    setSelectedDocument(doc)
+  }
+
+  const handleCloseModal = () => {
+    setSelectedDocument(null)
+  }
+
+  const handlePrevDocument = () => {
+    if (selectedDocument) {
+      const currentIndex = transparansiDocuments.findIndex(doc => doc.id === selectedDocument.id)
+      if (currentIndex > 0) {
+        setSelectedDocument(transparansiDocuments[currentIndex - 1])
+      }
+    }
+  }
+
+  const handleNextDocument = () => {
+    if (selectedDocument) {
+      const currentIndex = transparansiDocuments.findIndex(doc => doc.id === selectedDocument.id)
+      if (currentIndex < transparansiDocuments.length - 1) {
+        setSelectedDocument(transparansiDocuments[currentIndex + 1])
+      }
+    }
+  }
+
+  const getCurrentDocumentIndex = () => {
+    if (selectedDocument) {
+      return transparansiDocuments.findIndex(doc => doc.id === selectedDocument.id) + 1
+    }
+    return 0
+  }
+
+  // Mematikan scroll halaman utama saat pop-up dokumen terbuka
+  useEffect(() => {
+    if (selectedDocument) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedDocument]);
+
   return (
-    <section id="transparansi" className="bg-[#f8f9fa] px-4 py-20 md:px-8 lg:px-12 md:py-28">
+    <section id="transparansi" className="bg-transparent px-4 py-20 md:px-8 lg:px-12 md:py-28">
       <div className="mx-auto max-w-[1400px]">
         <div className="mb-12 flex items-start justify-between">
-          <div>
-            <div className="mb-4 flex items-center gap-3">
-              <span className="h-8 w-1 rounded-full bg-[#159447]" />
-              <h2 className="text-3xl font-bold tracking-tight text-[#172135] md:text-4xl">
-                Transparansi Dokumen Daerah
-              </h2>
-            </div>
-            <p className="max-w-5xl text-lg leading-relaxed text-[#566276]">
-              Transparansi keuangan daerah adalah kunci pemerintahan yang bersih, akuntabel, dan dipercaya rakyat untuk membangun masa depan yang lebih baik.
-            </p>
-          </div>
-          <div className="hidden md:block">
+          <SectionHeading subtitle="Transparansi keuangan daerah adalah kunci pemerintahan yang bersih, akuntabel, dan dipercaya rakyat untuk membangun masa depan yang lebih baik.">
+            Transparansi Keuangan Daerah
+          </SectionHeading>
+          {/* <div className="hidden md:block">
             <button className="rounded-lg bg-[#159447] px-4 py-2 font-medium text-white hover:bg-[#0f7a36] transition-colors">
               Lihat Selengkapnya →
             </button>
-          </div>
+          </div> */}
         </div>
 
-        {/* Document Cards Grid */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {currentDocuments.map((doc) => (
+        {/* Document Cards Grid + Pagination — flex-col with min-h keeps pagination position stable */}
+        <div className="flex flex-col" style={{ minHeight: '320px' }}>
+          {/* Document Cards Grid */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 flex-1">
+            {currentDocuments.map((doc) => (
+              <div
+                key={doc.id}
+                className="group flex flex-col rounded-xl bg-white border border-[#e5e7eb] p-6 shadow-sm transition-all duration-200 hover:border-[#159447] hover:shadow-md"
+              >
+                {/* PDF Icon */}
+                <div className="mb-4 flex justify-center">
+                  <div className="flex h-16 w-16 flex-col items-center justify-center rounded-lg bg-[#f0fdf4] border-2 border-[#159447]">
+                    <FileText className="h-6 w-6 text-[#159447]" />
+                    <span className="mt-1 text-xs font-bold text-[#159447]">{doc.type}</span>
+                  </div>
+                </div>
+
+                {/* Document Title — flex-grow pushes buttons to bottom */}
+                <h3 className="flex-grow mb-4 text-sm font-medium leading-tight text-[#1f2937] line-clamp-3">
+                  {doc.title}
+                </h3>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2 mt-auto">
+                  <button
+                    onClick={() => handleViewClick(doc)}
+                    className="flex-1 rounded-md bg-[#f8f9fa] px-3 py-2 text-center text-xs font-medium text-[#6b7280] hover:bg-[#e5e7eb] transition-colors"
+                  >
+                    {doc.views}
+                  </button>
+                  <a
+                    href={doc.url || 'https://www.rd.usda.gov/sites/default/files/pdf-sample_0.pdf'}
+                    download
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 rounded-md bg-[#159447] px-3 py-2 text-center text-xs font-medium text-white hover:bg-[#0f7a36] transition-colors"
+                  >
+                    {doc.downloads}
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Navigation Controls — always at bottom of the fixed-height container */}
+          {totalPages > 1 && (
+            <div className="mt-8 flex items-center justify-center gap-4">
+              <button
+                onClick={handlePrevPage}
+                disabled={currentPage === 0}
+                className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors ${currentPage === 0
+                  ? 'cursor-not-allowed bg-[#f1f3f4] text-[#9ca3af]'
+                  : 'bg-white text-[#374151] hover:bg-[#f9fafb] border border-[#e5e7eb]'
+                  }`}
+              >
+                <ArrowLeft size={16} />
+              </button>
+
+              <span className="text-sm text-[#6b7280]">
+                {currentPage + 1} of {totalPages}
+              </span>
+
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages - 1}
+                className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors ${currentPage === totalPages - 1
+                  ? 'cursor-not-allowed bg-[#f1f3f4] text-[#9ca3af]'
+                  : 'bg-white text-[#374151] hover:bg-[#f9fafb] border border-[#e5e7eb]'
+                  }`}
+              >
+                <ArrowRight size={16} />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Modal Pop-up */}
+        {selectedDocument && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 pt-16"
+            onClick={handleCloseModal}
+          >
             <div
-              key={doc.id}
-              className="group cursor-pointer rounded-xl bg-white border border-[#e5e7eb] p-6 shadow-sm transition-all duration-200 hover:border-[#159447] hover:shadow-md"
+              className="bg-[#fafafa] rounded-2xl shadow-2xl max-w-5xl w-full flex flex-col overflow-hidden animate-[fadeInUp_0.3s_ease-out]"
+              onClick={(e) => e.stopPropagation()}
             >
-              {/* PDF Icon */}
-              <div className="mb-4 flex justify-center">
-                <div className="flex h-16 w-12 flex-col items-center justify-center rounded-lg bg-[#f0fdf4] border-2 border-[#159447]">
-                  <FileText className="h-6 w-6 text-[#159447]" />
-                  <span className="mt-1 text-xs font-bold text-[#159447]">{doc.type}</span>
+              {/* Content Wrapper */}
+              <div className="p-5 md:p-8 flex flex-col h-full max-h-[60vh] overflow-y-auto">
+                {/* Category Badge */}
+                <div className="mb-3">
+                  <span className="inline-block bg-[#f1f5f9] text-[#475569] text-xs font-medium px-4 py-1.5 rounded-md">
+                    {selectedDocument.category}
+                  </span>
+                </div>
+
+                {/* Title */}
+                <h2 className="text-xl md:text-2xl font-bold text-[#159447] mb-6">
+                  {selectedDocument.title}
+                </h2>
+
+                {/* Grid Layout for Details & PDF Preview */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+
+                  {/* Left Column: Details */}
+                  <div className="lg:col-span-5 flex flex-col gap-5">
+                    {/* Deskripsi Program */}
+                    <div>
+                      <div className="flex items-center gap-2 text-[#159447] mb-1">
+                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="text-xs text-[#94a3b8] font-medium">Deskripsi Program</span>
+                      </div>
+                      <p className="text-[#334155] text-sm md:text-sm pl-6 leading-relaxed">
+                        {selectedDocument.description}
+                      </p>
+                    </div>
+
+                    {/* Tanggal Publikasi */}
+                    <div>
+                      <div className="flex items-center gap-2 text-[#159447] mb-1">
+                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                        <span className="text-xs text-[#94a3b8] font-medium">Tanggal Publikasi</span>
+                      </div>
+                      <p className="text-[#334155] text-sm md:text-sm pl-6">
+                        {selectedDocument.publishedDate}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right Column: PDF Preview (Red Box Area) */}
+                  <div className="lg:col-span-7 h-[350px] md:h-[420px] bg-white border-2 border-gray-100 rounded-xl overflow-hidden shadow-sm">
+                    <embed
+                      src={selectedDocument.previewUrl}
+                      type="application/pdf"
+                      width="100%"
+                      height="100%"
+                      className="w-full h-full"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Document Title */}
-              <h3 className="mb-4 text-sm font-medium leading-tight text-[#1f2937] line-clamp-3">
-                {doc.title}
-              </h3>
+              {/* Footer: Buttons */}
+              <div className="border-t border-gray-200 px-5 py-3.5 bg-white">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  
+                  {/* Navigation Buttons (Left) */}
+                  <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+                    <button
+                      onClick={handlePrevDocument}
+                      disabled={getCurrentDocumentIndex() === 1}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors ${
+                        getCurrentDocumentIndex() === 1
+                          ? 'cursor-not-allowed bg-gray-100 text-gray-400'
+                          : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <ChevronLeft size={16} />
+                      <span className="hidden sm:inline">Sebelumnya</span>
+                    </button>
+                    
+                    <span className="text-xs text-[#94a3b8] font-semibold mx-1">
+                      {getCurrentDocumentIndex()} / {transparansiDocuments.length}
+                    </span>
 
-              {/* Action Buttons */}
-              <div className="flex gap-2">
-                <a
-                  href={doc.url || '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 rounded-md bg-[#f8f9fa] px-3 py-2 text-center text-xs font-medium text-[#6b7280] hover:bg-[#e5e7eb] transition-colors"
-                >
-                  {doc.views}
-                </a>
-                <a
-                  href={doc.url || 'https://www.rd.usda.gov/sites/default/files/pdf-sample_0.pdf'}
-                  download
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 rounded-md bg-[#159447] px-3 py-2 text-center text-xs font-medium text-white hover:bg-[#0f7a36] transition-colors"
-                >
-                  {doc.downloads}
-                </a>
+                    <button
+                      onClick={handleNextDocument}
+                      disabled={getCurrentDocumentIndex() === transparansiDocuments.length}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors ${
+                        getCurrentDocumentIndex() === transparansiDocuments.length
+                          ? 'cursor-not-allowed bg-gray-100 text-gray-400'
+                          : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="hidden sm:inline">Selanjutnya</span>
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+
+                  {/* Action Buttons (Right) */}
+                  <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                    <button
+                      onClick={handleCloseModal}
+                      className="px-4 py-2 text-xs md:text-sm rounded-lg border-2 border-[#159447] text-[#159447] font-bold hover:bg-[#159447]/5 transition-colors"
+                    >
+                      Tutup
+                    </button>
+                    <a
+                      href={selectedDocument.url}
+                      download
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 text-xs md:text-sm rounded-lg bg-[#159447] text-white font-bold hover:bg-[#0f7a36] shadow-md transition-all flex items-center gap-1.5"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      Unduh
+                    </a>
+                  </div>
+
+                </div>
               </div>
             </div>
-          ))}
-        </div>
-
-        {/* Navigation Controls */}
-        {totalPages > 1 && (
-          <div className="mt-8 flex items-center justify-center gap-4">
-            <button
-              onClick={handlePrevPage}
-              disabled={currentPage === 0}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors ${currentPage === 0
-                ? 'cursor-not-allowed bg-[#f1f3f4] text-[#9ca3af]'
-                : 'bg-white text-[#374151] hover:bg-[#f9fafb] border border-[#e5e7eb]'
-                }`}
-            >
-              <ArrowLeft size={16} />
-              Previous
-            </button>
-
-            <span className="text-sm text-[#6b7280]">
-              {currentPage + 1} of {totalPages}
-            </span>
-
-            <button
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages - 1}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors ${currentPage === totalPages - 1
-                ? 'cursor-not-allowed bg-[#f1f3f4] text-[#9ca3af]'
-                : 'bg-white text-[#374151] hover:bg-[#f9fafb] border border-[#e5e7eb]'
-                }`}
-            >
-              Next
-              <ArrowRight size={16} />
-            </button>
           </div>
         )}
       </div>
@@ -1212,175 +1364,19 @@ function TransparansiDokumen() {
   )
 }
 
-// Custom X (Twitter) Logo Component
-function FacebookLogo() {
-  return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-    </svg>
-  )
-}
-
-function XLogo() {
-  return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.207-6.807-5.974 6.807H2.882l7.73-8.835L1.08 2.25h6.82l4.713 6.231 5.45-6.231zM17.552 20.522h1.833L6.281 4.09H4.33l13.222 16.432z" />
-    </svg>
-  )
-}
-
-function InstagramLogo() {
-  return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-      <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.117.63c-.79.297-1.427.772-1.944 1.289-.517.517-.992 1.155-1.289 1.944-.297.788-.498 1.658-.56 2.936C.015 8.333 0 8.74 0 12s.015 3.667.072 4.947c.062 1.278.263 2.148.56 2.936.297.788.772 1.427 1.289 1.944.517.517 1.155.992 1.944 1.289.788.297 1.658.498 2.936.56 1.28.057 1.687.072 4.947.072s3.667-.015 4.947-.072c1.280-.062 2.149-.263 2.937-.56.788-.297 1.426-.772 1.944-1.289.517-.517.992-1.155 1.289-1.944.297-.788.498-1.658.56-2.936.057-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.062-1.280-.263-2.149-.56-2.937-.297-.788-.772-1.426-1.289-1.944-.517-.517-1.155-.992-1.944-1.289-.788-.297-1.658-.498-2.937-.56C15.667.015 15.26 0 12 0zm0 2.16c3.203 0 3.585.009 4.849.07 1.171.054 1.805.244 2.227.408.56.217.96.477 1.382.896.419.42.679.822.896 1.381.164.422.354 1.057.408 2.227.061 1.264.07 1.646.07 4.849 0 3.204-.009 3.586-.07 4.849-.054 1.171-.244 1.806-.408 2.228-.217.56-.477.96-.896 1.382-.42.419-.822.679-1.381.896-.422.164-1.057.354-2.227.408-1.264.061-1.646.07-4.849.07-3.204 0-3.586-.009-4.849-.07-1.171-.054-1.806-.244-2.228-.408-.56-.217-.96-.477-1.382-.896-.419-.42-.679-.822-.896-1.381-.164-.422-.354-1.057-.408-2.227-.061-1.264-.07-1.646-.07-4.849 0-3.204.009-3.586.07-4.849.054-1.171.244-1.806.408-2.228.217-.56.477-.96.896-1.382.42-.419.822-.679 1.381-.896.422-.164 1.057-.354 2.227-.408 1.264-.061 1.646-.07 4.849-.07zM5.838 12a6.162 6.162 0 1 1 12.324 0 6.162 6.162 0 0 1-12.324 0zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm4.965-10.322a1.44 1.44 0 1 1 2.881.001 1.44 1.44 0 0 1-2.881-.001z" />
-    </svg>
-  )
-}
-
-function YoutubeLogo() {
-  return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-    </svg>
-  )
-}
-
-function Footer() {
-  return (
-    <footer id="footer" className="border-t-4 border-[#159447] bg-[#17253a] px-4 py-16 text-white md:px-8 lg:px-12 relative overflow-hidden">
-      {/* Dotted background pattern */}
-      <div className="footer-dots absolute inset-0 pointer-events-none opacity-100" />
-
-      {/* Content wrapper with relative positioning */}
-      <div className="relative z-10">
-        <div className="mx-auto grid max-w-[1400px] gap-12 md:grid-cols-4">
-          <div>
-            <h3 className="text-lg font-bold">KONTAK</h3>
-            <a
-              href="https://diskominfo.sukabumikota.go.id"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block transition-opacity hover:opacity-80"
-            >
-              <img src="/images/Diskominfo.webp" alt="Diskominfo Logo" className="mt-8 h-auto w-74" />
-            </a>
-            <div className="mt-8 flex flex-col gap-5 text-sm leading-relaxed text-white/80">
-              <a
-                href="https://maps.app.goo.gl/CmbbaNogyg1h8DBA7"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-start gap-3"
-              >
-                <MapPin className="shrink-0 text-[#f04c71] group-hover:text-green-400 transition-colors mt-1" />
-                <span>Alamat : Jl. R. Syamsudin, SH No.25, Cikole, Kec. Cikole, Kota Sukabumi, Jawa Barat 43113</span>
-              </a>
-              <a
-                href="tel:+6226620229715"
-                className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-center gap-3"
-              >
-                <Phone className="shrink-0 text-[#e8468a] group-hover:text-green-400 transition-colors" />
-                <span>Telp : +62 (266) 20229715</span>
-              </a>
-              <a
-                href="mailto:diskominfo@sukabumikota.go.id"
-                className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-center gap-3"
-              >
-                <Mail className="shrink-0 text-[#e9c9eb] group-hover:text-green-400 transition-colors" />
-                <span>Email : diskominfo@sukabumikota.go.id</span>
-              </a>
-            </div>
-          </div>
-          <div>
-            <h3 className="text-lg font-bold">TAUTAN TERKAIT</h3>
-            <div className="mt-8 flex flex-col gap-5 text-white/80">
-              <a
-                href="https://lpse.jabarprov.go.id/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-center gap-3">Layanan Pengadaan LPSE</a>
-              <a href="https://ppid.sukabumikota.go.id/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-center gap-3"
-              >Layanan Informasi Publik (PPID)</a>
-              <a href="https://jdih.sukabumikota.go.id/beranda"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-center gap-3">Layanan Informasi Hukum (JDIH)</a>
-            </div>
-          </div>
-          <div>
-            <h3 className="text-lg font-bold">STANDAR PROTOKOL</h3>
-            <a
-              href="https://www.immuniweb.com/ssl/diskominfo.sukabumikota.go.id/nZuRpnLm/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block transition-opacity hover:opacity-80"
-            >
-              <img src="/images/ImmuniWeb.webp" alt="ImmuniWeb Logo" className="mt-8 h-auto w-70" />
-            </a>
-          </div>
-          <div>
-            <h3 className="text-lg font-bold">MEDIA SOSIAL</h3>
-            <div className="mt-8 flex gap-4">
-              <a
-                href="https://www.facebook.com/kotasukabumi.id?locale=id_ID"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Facebook"
-                className="flex items-center justify-center w-12 h-12 rounded-full bg-[#159447] text-white hover:opacity-80 transition"
-              >
-                <FacebookLogo />
-              </a>
-              <a
-                href="https://x.com/Pemkot_Sukabumi"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="X"
-                className="flex items-center justify-center w-12 h-12 rounded-full bg-[#159447] text-white hover:opacity-80 transition"
-              >
-                <XLogo />
-              </a>
-              <a
-                href="https://www.instagram.com/pemkotsukabumi_/"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Instagram"
-                className="flex items-center justify-center w-12 h-12 rounded-full bg-[#159447] text-white hover:opacity-80 transition"
-              >
-                <InstagramLogo />
-              </a>
-              <a
-                href="https://www.youtube.com/@pemerintahkotasukabumi"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Youtube"
-                className="flex items-center justify-center w-12 h-12 rounded-full bg-[#159447] text-white hover:opacity-80 transition"
-              >
-                <YoutubeLogo />
-              </a>
-            </div>
-          </div>
-        </div>
-        <div className="mx-auto mt-14 max-w-[1400px] border-t border-white/15 pt-8 text-center text-sm text-white/80">Copyright © 2026 Website Resmi Pemerintah Kota Sukabumi</div>
-      </div>
-    </footer>
-  )
-}
-
 function Partners() {
 
   const partners = [
 
-    { id: 1, image: '/images/Lambang_Kota_Sukabumi.png', href: 'https://portal.sukabumikota.go.id' },
+    { id: 1, image: '/images/Jabar_prov-logo.png', href: 'https://jabarprov.go.id/' },
 
-    { id: 2, image: '/images/diskominfo-hitam.png', href: 'https://diskominfo.sukabumikota.go.id' },
+    { id: 2, image: '/images/Lambang_Kota_Sukabumi.png', href: 'https://portal.sukabumikota.go.id' },
 
-    { id: 3, image: '/images/Span-Lapor.png', href: 'https://www.lapor.go.id/' },
+    { id: 3, image: '/images/diskominfo-hitam.png', href: 'https://diskominfo.sukabumikota.go.id' },
 
     { id: 4, image: '/images/JDIH-logo.png', href: 'https://jdih.sukabumikota.go.id/' },
 
-    { id: 5, image: '/images/Jabar_prov-logo.png', href: 'https://jabarprov.go.id/' },
+    { id: 5, image: '/images/Span-Lapor.png', href: 'https://www.lapor.go.id/' },
 
     { id: 6, image: '/images/Sirup-logo.png', href: 'https://sirup.inaproc.id/sirup/loginctr/index' },
 
@@ -1440,7 +1436,6 @@ export default function Page() {
 
   return (
     <main className="min-h-screen bg-white">
-      <Navbar isIframeOpen={isIframeOpen} />
       <Hero />
       <Welcome />
 
@@ -1449,23 +1444,21 @@ export default function Page() {
         className="relative bg-cover bg-center bg-no-repeat bg-fixed"
         style={{
           // Ganti URL di bawah ini dengan path gambar yang Anda inginkan
-          backgroundImage: "url('/images/drone_view.webp')",
+          backgroundImage: "url('/images/drone-view.webp')",
         }}
       >
         {/* Overlay transparan opsional untuk menjaga keterbacaan teks/konten */}
-        <div className="absolute inset-0 bg-white/85 backdrop-blur-[1px] pointer-events-none" />
+        <div className="absolute inset-0 bg-white/75 pointer-events-none backdrop-blur-[2px]" />
 
         {/* Konten Section */}
         <div className="relative z-10">
           <Profile />
           <News />
           <Opd onIframeToggle={setIsIframeOpen} />
+          <TransparansiDokumen />
         </div>
       </div>
-
-      <TransparansiDokumen />
       <Partners />
-      <Footer />
     </main>
   )
 }
