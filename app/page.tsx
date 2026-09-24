@@ -38,7 +38,7 @@ const profileCards = [
   { title: 'Sejarah', description: 'Jejak perkembangan Kota Sukabumi dari masa ke masa.', image: '/images/sejarah-card.jpg', href: '/sejarah' },
   { title: 'Visi Misi', description: 'Arah pembangunan dan tujuan yang ingin dicapai.', image: '/images/visi misi-card.jpg', href: '/visi-misi' },
   { title: 'Lambang', description: 'Makna filosofis di balik lambang resmi daerah.', image: '/images/logo-pemkoot-sukabumi-card.jpg', href: '/lambang' },
-  { title: 'Geografi', description: 'Letak topografi, dan kondisi geografis wilayah.', image: '/images/geo-card.jpg', href: '/geografi' },
+  { title: 'Geografi dan Demografi', description: 'Letak wilayah, kondisi geografis, serta demografi Kota Sukabumi.', image: '/images/geo-card.jpg', href: '/geografi' },
   { title: 'Sosial Ekonomi', description: 'Kondisi demografi dan pergerakan ekonomi masyarakat.', image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=900&q=80', href: '/sosial-ekonomi' },
   { title: 'Dalam Angka', description: 'Data statistik dan indikator kinerja daerah.', image: '/images/dalam angka-card.jpg', href: '/dalam-angka' },
   { title: 'Unit Kesehatan Sekolah (UKS)', description: 'Program pembinaan kesehatan komprehensif di lingkungan sekolah.', image: '/images/UKS-card.jpg', href: '/uks' },
@@ -96,11 +96,45 @@ function Hero() {
   )
 }
 
-function Welcome() { return <section className="bg-white px-4 py-20 md:px-8 lg:px-12 md:py-28"><div className="mx-auto flex max-w-[1400px] flex-col items-center gap-12 lg:flex-row lg:gap-16"><article className="max-w-[390px] rounded-3xl bg-[#eff4f8] p-8 shadow-sm md:p-10"><h2 className="text-3xl font-bold leading-tight text-[#ba8500]">Reugreug Pageuh Repeh Rapih</h2><p className="mt-6 text-lg leading-relaxed text-[#29364a]">Untuk mewujudkan masyarakat yang reugreug harinya, harus dipegang pageuh norma dan kebiasaan saling menghormati, tepa selira, dan toleran agar kehidupan masyarakat menjadi répeh, tidak dipenuhi oleh bentakan dan hentakkan, sebuah masyarakat yang mempertontonkan rapih dan saling memuliakan.</p></article><div className="flex flex-1 items-end justify-center gap-0"><div className="relative z-10 w-full max-w-[500px] self-end"><img src="/images/foto walikota dan wakil walikota.webp" className="w-full" alt="Walikota dan Wakil Walikota Sukabumi" /></div><div className="ml-10 hidden max-w-[270px] md:block"><p className="font-serif text-4xl italic text-[#516076]">Sukabumi</p><p className="text-5xl font-black tracking-tight text-[#18243b]"><span className="text-[#f29b10]">M</span>UBARAKAH</p><p className="mt-3 font-bold tracking-[0.22em] text-[#62738c]">MAJU, UNGGUL, BERBUDAYA &amp; BERKAH</p></div></div></div></section> }
+function Welcome() {
+  return (
+    <section className="bg-white px-4 py-20 md:px-8 lg:px-12 md:py-28">
+      <div className="mx-auto flex max-w-[1400px] flex-col items-center gap-12 lg:flex-row lg:gap-16">
+        <article className="max-w-[390px] rounded-3xl bg-[#eff4f8] p-8 shadow-sm md:p-10">
+          <h2 className="text-3xl font-bold leading-tight text-[#ba8500]">
+            Reugreug Pageuh Repeh Rapih
+          </h2>
+          <p className="mt-6 text-lg leading-relaxed text-[#29364a]">
+            Untuk mewujudkan masyarakat yang reugreug harinya, harus dipegang pageuh norma dan kebiasaan saling menghormati, tepa selira, dan toleran agar kehidupan masyarakat menjadi répeh, tidak dipenuhi oleh bentakan dan hentakkan, sebuah masyarakat yang mempertontonkan rapih dan saling memuliakan.
+          </p>
+        </article>
+
+        <div className="flex flex-1 items-end justify-center gap-0">
+          <div className="relative z-10 w-full max-w-[500px] self-end">
+            <img
+              src="/images/foto walikota dan wakil walikota.webp"
+              className="w-full"
+              alt="Walikota dan Wakil Walikota Sukabumi"
+            />
+          </div>
+          <div className="ml-10 hidden max-w-[270px] md:block">
+            <p className="font-serif text-4xl italic text-[#516076]">Sukabumi</p>
+            <p className="text-5xl font-black tracking-tight text-[#18243b]">
+              <span className="text-[#f29b10]">M</span>UBARAKAH
+            </p>
+            <p className="mt-3 font-bold tracking-[0.22em] text-[#62738c]">
+              MAJU, UNGGUL, BERBUDAYA &amp; BERKAH
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
 
 function Profile() {
   return (
-    <section id="profil" className="bg-transparent px-4 py-20 md:px-8 lg:px-12">
+    <section id="profil" className="bg-slate-50 px-4 py-20 md:px-8 lg:px-12">
       <div className="mx-auto max-w-[1400px]">
         <SectionHeading subtitle="Mengenal lebih dekat sejarah, visi misi, dan berbagai aspek penting lainnya dari Kota Sukabumi.">
           Profil Kota Sukabumi
@@ -151,7 +185,7 @@ function Profile() {
 function NewsList({ items, announcement = false }: { items: string[][]; announcement?: boolean }) { return <div className="flex flex-col gap-6">{items.map(([title, date, category]) => <article key={title} className="flex gap-5"><div className={`grid size-20 shrink-0 place-items-center rounded-lg ${announcement ? 'bg-[#eff4f8] text-[#f29b10]' : 'bg-[#d6d6d6] text-xs text-black'}`}>{announcement ? <Megaphone /> : 'img'}</div><div><h3 className="text-base font-bold leading-tight text-[#1d293d]">{title}</h3><p className="mt-1 text-sm text-[#687991]">{date} <span className="text-[#159447]">•</span> {category}</p></div></article>)}</div> }
 
 function News() {
-  return <section id="berita" className="bg-transparent px-4 py-20 md:px-8 lg:px-12">
+  return <section id="berita" className="bg-white px-4 py-20 md:px-8 lg:px-12">
     <div className="mx-auto max-w-[1400px]">
       <SectionHeading subtitle="Pengumuman dan berita terbaru dari Kota Sukabumi.">
         Pengumuman & Berita
@@ -629,7 +663,7 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
 
   return (
     <>
-      <section id="opd" className="bg-transparent px-4 py-20 md:px-8 lg:px-12">
+      <section id="opd" className="bg-slate-50 px-4 py-20 md:px-8 lg:px-12">
         <div className="mx-auto max-w-[1400px]">
           <SectionHeading subtitle="Akses langsung ke portal resmi Organisasi Perangkat Daerah (OPD) dan wilayah administratif Kecamatan di lingkungan Pemerintah Kota Sukabumi.">
             Organisasi Perangkat Daerah
@@ -892,25 +926,25 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
           aria-label={`Preview: ${iframeTitle}`}
         >
           {/* Toolbar — always visible */}
-          <div className="flex items-center justify-between gap-4 bg-[#1b293c] px-5 py-4 shadow-lg">
+          <div className="flex items-center justify-between gap-3 bg-[#1b293c] px-4 py-2.5 shadow-lg">
             {/* Left: Back button + icon + title */}
-            <div className="flex items-center gap-4 min-w-0">
+            <div className="flex items-center gap-3 min-w-0">
               {/* Back button */}
               <button
                 onClick={closeIframeModal}
-                className="flex items-center gap-2 rounded-lg border border-white/15 px-4 py-2.5 text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors shrink-0"
+                className="flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors shrink-0"
                 aria-label="Kembali"
               >
-                <ArrowLeft size={18} />
+                <ArrowLeft size={16} />
                 <span className="hidden sm:inline">Kembali</span>
               </button>
 
               {/* Divider */}
-              <div className="h-10 w-px bg-white/15 shrink-0" />
+              <div className="h-8 w-px bg-white/15 shrink-0" />
 
               {/* Icon + title */}
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center">
                   <img
                     src="/images/Lambang_Kota_Sukabumi.png"
                     alt="Lambang Kota Sukabumi"
@@ -918,40 +952,40 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
                   />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-white/60 leading-none mb-1">Pemerintah Kota Sukabumi</p>
-                  <p className="text-lg font-bold text-white truncate">{iframeTitle}</p>
+                  <p className="text-xs font-medium text-white/60 leading-none mb-0.5">Pemerintah Kota Sukabumi</p>
+                  <p className="text-base font-bold text-white truncate">{iframeTitle}</p>
                 </div>
               </div>
             </div>
 
             {/* Center: URL bar */}
-            <div className="hidden md:flex flex-1 mx-6 items-center gap-3 rounded-full bg-white/10 border border-white/10 px-5 py-2.5 min-w-0">
-              <Shield size={16} className="text-[#86efac]" />
-              <span className="text-sm text-white/70 truncate font-mono">{iframeUrl}</span>
+            <div className="hidden md:flex flex-1 mx-4 items-center gap-2.5 rounded-full bg-white/10 border border-white/10 px-4 py-1.5 min-w-0">
+              <Shield size={14} className="text-[#86efac]" />
+              <span className="text-xs text-white/70 truncate font-mono">{iframeUrl}</span>
             </div>
 
             {/* Right: Open in new tab & Security Status */}
-            <div className="flex items-center gap-4 shrink-0">
+            <div className="flex items-center gap-3 shrink-0">
               {/* Open in new tab */}
               <a
                 href={iframeUrl ?? ''}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-lg border border-white/15 bg-transparent px-4 py-2.5 text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+                className="flex items-center gap-1.5 rounded-lg border border-white/15 bg-transparent px-3 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
                 title="Buka di tab baru"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
                 <span className="hidden sm:inline">Buka di Tab Baru</span>
               </a>
 
               {/* Security Status (Visible on larger screens) */}
-              <div className="hidden xl:flex items-center gap-2 border-l border-white/15 pl-5">
+              <div className="hidden xl:flex items-center gap-2 border-l border-white/15 pl-4">
                 <div className="flex flex-col items-end justify-center gap-0.5">
-                  <span className="text-[10px] font-bold text-white/40 tracking-wider">SECURITY STATUS</span>
-                  <span className="text-xs font-bold text-[#4ade80]">PROTECTED CONNECTION</span>
+                  <span className="text-[9px] font-bold text-white/40 tracking-wider">SECURITY STATUS</span>
+                  <span className="text-[11px] font-bold text-[#4ade80]">PROTECTED CONNECTION</span>
                 </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#4ade80]/10 border border-[#4ade80]/20">
-                  <Shield size={20} className="text-[#4ade80] fill-[#4ade80]/20" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#4ade80]/10 border border-[#4ade80]/20">
+                  <Shield size={16} className="text-[#4ade80] fill-[#4ade80]/20" />
                 </div>
               </div>
             </div>
@@ -977,15 +1011,15 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
           </div>
 
           {/* Blocked-site fallback banner */}
-          <div className="flex items-center justify-between gap-4 bg-[#1b293c]/90 px-6 py-3.5">
-            <p className="text-sm md:text-base text-white/60 font-medium">
+          <div className="flex items-center justify-between gap-4 bg-[#1b293c]/90 px-5 py-2.5">
+            <p className="text-xs md:text-sm text-white/60 font-medium">
               Jika halaman tidak tampil, situs OPD mungkin memblokir tampilan dalam bingkai.
             </p>
             <a
               href={iframeUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="shrink-0 text-sm md:text-base font-semibold text-[#4ade80] hover:underline"
+              className="shrink-0 text-xs md:text-sm font-semibold text-[#4ade80] hover:underline"
             >
               Buka langsung →
             </a>
@@ -1075,6 +1109,7 @@ const transparansiDocuments = [
 function TransparansiDokumen() {
   const [currentPage, setCurrentPage] = useState(0)
   const [selectedDocument, setSelectedDocument] = useState<typeof transparansiDocuments[0] | null>(null)
+  const [downloadConfirm, setDownloadConfirm] = useState<typeof transparansiDocuments[0] | null>(null)
   const itemsPerPage = 5
   const totalPages = Math.ceil(transparansiDocuments.length / itemsPerPage)
 
@@ -1137,7 +1172,7 @@ function TransparansiDokumen() {
   }, [selectedDocument]);
 
   return (
-    <section id="transparansi" className="bg-transparent px-4 py-20 md:px-8 lg:px-12 md:py-28">
+    <section id="transparansi" className="bg-white px-4 py-20 md:px-8 lg:px-12 md:py-28">
       <div className="mx-auto max-w-[1400px]">
         <div className="mb-12 flex items-start justify-between">
           <SectionHeading subtitle="Transparansi keuangan daerah adalah kunci pemerintahan yang bersih, akuntabel, dan dipercaya rakyat untuk membangun masa depan yang lebih baik.">
@@ -1180,15 +1215,12 @@ function TransparansiDokumen() {
                   >
                     {doc.views}
                   </button>
-                  <a
-                    href={doc.url || 'https://www.rd.usda.gov/sites/default/files/pdf-sample_0.pdf'}
-                    download
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    onClick={() => setDownloadConfirm(doc)}
                     className="flex-1 rounded-md bg-[#159447] px-3 py-2 text-center text-xs font-medium text-white hover:bg-[#0f7a36] transition-colors"
                   >
                     {doc.downloads}
-                  </a>
+                  </button>
                 </div>
               </div>
             ))}
@@ -1229,32 +1261,31 @@ function TransparansiDokumen() {
         {/* Modal Pop-up */}
         {selectedDocument && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 pt-16"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 pt-24 md:pt-28"
             onClick={handleCloseModal}
           >
             <div
-              className="bg-[#fafafa] rounded-2xl shadow-2xl max-w-5xl w-full flex flex-col overflow-hidden animate-[fadeInUp_0.3s_ease-out]"
+              className="bg-[#fafafa] rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-[fadeInUp_0.3s_ease-out]"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Content Wrapper */}
-              <div className="p-5 md:p-8 flex flex-col h-full max-h-[60vh] overflow-y-auto">
-                {/* Category Badge */}
-                <div className="mb-3">
-                  <span className="inline-block bg-[#f1f5f9] text-[#475569] text-xs font-medium px-4 py-1.5 rounded-md">
-                    {selectedDocument.category}
-                  </span>
-                </div>
-
-                {/* Title */}
-                <h2 className="text-xl md:text-2xl font-bold text-[#159447] mb-6">
-                  {selectedDocument.title}
-                </h2>
-
+              <div className="p-5 md:p-8 flex flex-col flex-1 min-h-0">
                 {/* Grid Layout for Details & PDF Preview */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
 
                   {/* Left Column: Details */}
-                  <div className="lg:col-span-5 flex flex-col gap-5">
+                  <div className="lg:col-span-5 flex flex-col gap-5 pr-0 md:pr-2">
+                    {/* Category & Title */}
+                    <div>
+                      <div className="mb-3">
+                        <span className="inline-block bg-[#f1f5f9] text-[#475569] text-xs font-medium px-4 py-1.5 rounded-md">
+                          {selectedDocument.category}
+                        </span>
+                      </div>
+                      <h2 className="text-xl md:text-2xl font-bold text-[#159447] leading-snug">
+                        {selectedDocument.title}
+                      </h2>
+                    </div>
                     {/* Deskripsi Program */}
                     <div>
                       <div className="flex items-center gap-2 text-[#159447] mb-1">
@@ -1282,8 +1313,8 @@ function TransparansiDokumen() {
                     </div>
                   </div>
 
-                  {/* Right Column: PDF Preview (Red Box Area) */}
-                  <div className="lg:col-span-7 h-[350px] md:h-[420px] bg-white border-2 border-gray-100 rounded-xl overflow-hidden shadow-sm">
+                  {/* Right Column: PDF Preview */}
+                  <div className="lg:col-span-7 h-full min-h-[300px] bg-white border-2 border-gray-100 rounded-xl overflow-hidden shadow-sm">
                     <embed
                       src={selectedDocument.previewUrl}
                       type="application/pdf"
@@ -1296,24 +1327,23 @@ function TransparansiDokumen() {
               </div>
 
               {/* Footer: Buttons */}
-              <div className="border-t border-gray-200 px-5 py-3.5 bg-white">
+              <div className="border-t border-gray-200 px-5 py-3.5 bg-white shrink-0">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                  
+
                   {/* Navigation Buttons (Left) */}
                   <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
                     <button
                       onClick={handlePrevDocument}
                       disabled={getCurrentDocumentIndex() === 1}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors ${
-                        getCurrentDocumentIndex() === 1
-                          ? 'cursor-not-allowed bg-gray-100 text-gray-400'
-                          : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                      }`}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors ${getCurrentDocumentIndex() === 1
+                        ? 'cursor-not-allowed bg-gray-100 text-gray-400'
+                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
                     >
                       <ChevronLeft size={16} />
                       <span className="hidden sm:inline">Sebelumnya</span>
                     </button>
-                    
+
                     <span className="text-xs text-[#94a3b8] font-semibold mx-1">
                       {getCurrentDocumentIndex()} / {transparansiDocuments.length}
                     </span>
@@ -1321,11 +1351,10 @@ function TransparansiDokumen() {
                     <button
                       onClick={handleNextDocument}
                       disabled={getCurrentDocumentIndex() === transparansiDocuments.length}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors ${
-                        getCurrentDocumentIndex() === transparansiDocuments.length
-                          ? 'cursor-not-allowed bg-gray-100 text-gray-400'
-                          : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                      }`}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors ${getCurrentDocumentIndex() === transparansiDocuments.length
+                        ? 'cursor-not-allowed bg-gray-100 text-gray-400'
+                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
                     >
                       <span className="hidden sm:inline">Selanjutnya</span>
                       <ChevronRight size={16} />
@@ -1340,20 +1369,54 @@ function TransparansiDokumen() {
                     >
                       Tutup
                     </button>
-                    <a
-                      href={selectedDocument.url}
-                      download
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      onClick={() => setDownloadConfirm(selectedDocument)}
                       className="px-4 py-2 text-xs md:text-sm rounded-lg bg-[#159447] text-white font-bold hover:bg-[#0f7a36] shadow-md transition-all flex items-center gap-1.5"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                       </svg>
                       Unduh
-                    </a>
+                    </button>
                   </div>
 
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Download Confirmation Modal */}
+        {downloadConfirm && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 animate-[fadeInUp_0.2s_ease-out]">
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-50 border-2 border-green-100">
+                  <svg className="h-6 w-6 text-[#159447]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                </div>
+                <h3 className="mb-2 text-lg font-bold text-[#1b293c]">Konfirmasi Unduhan</h3>
+                <p className="mb-6 text-sm text-[#66758a]">
+                  Apakah yakin ingin unduh dokumen ini?
+                </p>
+                <div className="flex w-full gap-3">
+                  <button
+                    onClick={() => setDownloadConfirm(null)}
+                    className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    Tidak
+                  </button>
+                  <a
+                    href={downloadConfirm.url || '#'}
+                    download
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setDownloadConfirm(null)}
+                    className="flex-1 rounded-lg bg-[#159447] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#0f7a36] transition-colors flex items-center justify-center"
+                  >
+                    Ya
+                  </a>
                 </div>
               </div>
             </div>
@@ -1439,24 +1502,12 @@ export default function Page() {
       <Hero />
       <Welcome />
 
-      {/* Wrapper Background Image dari Section Profil sampai Situs OPD */}
-      <div
-        className="relative bg-cover bg-center bg-no-repeat bg-fixed"
-        style={{
-          // Ganti URL di bawah ini dengan path gambar yang Anda inginkan
-          backgroundImage: "url('/images/drone-view.webp')",
-        }}
-      >
-        {/* Overlay transparan opsional untuk menjaga keterbacaan teks/konten */}
-        <div className="absolute inset-0 bg-white/75 pointer-events-none backdrop-blur-[2px]" />
-
-        {/* Konten Section */}
-        <div className="relative z-10">
-          <Profile />
-          <News />
-          <Opd onIframeToggle={setIsIframeOpen} />
-          <TransparansiDokumen />
-        </div>
+      {/* Konten Utama */}
+      <div className="bg-white">
+        <Profile />
+        <News />
+        <Opd onIframeToggle={setIsIframeOpen} />
+        <TransparansiDokumen />
       </div>
       <Partners />
     </main>

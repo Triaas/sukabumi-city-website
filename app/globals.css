@@ -142,3 +142,12 @@ button {
 body.hide-navbar #main-navbar {
   display: none !important;
 }
+
+/* Hide scrollbar utility (used by LeadersGallery carousel) */
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
