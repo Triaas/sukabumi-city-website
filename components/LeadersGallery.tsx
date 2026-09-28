@@ -7,9 +7,6 @@ import { Leader } from '@/data/leadersData'
 export default function LeadersGallery({ title, leaders }: { title: string, leaders: Leader[] }) {
   const [selected, setSelected] = useState<Leader>(leaders[0])
   const [isExpanded, setIsExpanded] = useState(false)
-  const displayedLeaders = isExpanded ? leaders : leaders.slice(0, 7)
-
-  // Tambahkan ini untuk reference scrolling
   const galleryRef = useRef<HTMLDivElement>(null)
 
   const handleLeaderSelect = (leader: Leader) => {
@@ -29,7 +26,7 @@ export default function LeadersGallery({ title, leaders }: { title: string, lead
       </div>
 
       {/* Master View (Detail Tokoh Terpilih) */}
-      <div 
+      <div
         ref={galleryRef}
         id="master-view"
         className="scroll-mt-24 bg-slate-50 border border-slate-200 rounded-2xl p-6 md:p-10 shadow-sm flex flex-col md:flex-row gap-8 items-center md:items-start transition-all duration-500 min-h-[320px]"
@@ -87,18 +84,18 @@ export default function LeadersGallery({ title, leaders }: { title: string, lead
           )}
         </div>
 
-        <div className={`
-          ${isExpanded
-            ? 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-y-8 gap-x-4 justify-items-center pt-6 pb-2'
-            : 'flex gap-4 overflow-x-auto pb-6 pt-6 snap-x hide-scrollbar justify-start md:justify-around w-full'}
-        `}>
-          {displayedLeaders.map((leader) => (
+        <div className={`grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-y-8 gap-x-4 justify-items-center w-full transition-all duration-300 ${
+          isExpanded
+            ? 'h-auto overflow-visible pt-6 pb-2'
+            : 'max-h-[160px] overflow-y-auto overflow-x-hidden snap-y snap-mandatory pt-6 pb-2 pr-2'
+        }`}>
+          {leaders.map((leader) => (
             <button
               key={leader.id}
               onClick={() => handleLeaderSelect(leader)}
-              className={`shrink-0 w-24 sm:w-28 flex flex-col items-center gap-2 transition-all duration-300 focus:outline-none ${!isExpanded && 'snap-center'} ${selected.id === leader.id
-                  ? 'scale-110 -translate-y-2'
-                  : 'opacity-60 hover:opacity-100 hover:-translate-y-1'
+              className={`shrink-0 w-24 sm:w-28 flex flex-col items-center gap-2 transition-all duration-300 focus:outline-none ${!isExpanded ? 'snap-start scroll-mt-6' : ''} ${selected.id === leader.id
+                ? 'scale-110 -translate-y-2'
+                : 'opacity-60 hover:opacity-100 hover:-translate-y-1'
                 }`}
             >
               <div className={`w-20 h-20 rounded-full overflow-hidden border-2 shadow-sm flex-shrink-0 bg-white ${selected.id === leader.id ? 'border-[#159447] shadow-md' : 'border-white'

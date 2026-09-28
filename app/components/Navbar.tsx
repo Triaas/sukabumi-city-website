@@ -2,10 +2,12 @@
 
 import { Search } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
+import { usePathname } from 'next/navigation'
 
 export function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
   if (isIframeOpen) return null
 
+  const pathname = usePathname()
   const [activeSection, setActiveSection] = useState('beranda')
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 })
   const navRef = useRef<HTMLDivElement>(null)
@@ -14,11 +16,12 @@ export function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
 
   // Navigation items that correspond to page sections (tracked for active state)
   const navItems = [
-    { id: 'beranda', label: 'Beranda' },
-    { id: 'profil', label: 'Profil' },
-    { id: 'berita', label: 'Pengumuman & Berita' },
-    { id: 'opd', label: 'Situs OPD' },
-    { id: 'transparansi', label: 'Transparansi Dokumen' },
+    { id: 'beranda', label: 'Beranda', href: '/#beranda' },
+    { id: 'profil', label: 'Profil', href: '/#profil' },
+    { id: 'berita', label: 'Pengumuman & Berita', href: '/#berita' },
+    { id: 'opd', label: 'Situs OPD', href: '/#opd' },
+    { id: 'transparansi', label: 'Transparansi Dokumen', href: '/#transparansi' },
+    { id: 'kebijakan-privasi', label: 'Kebijakan Privasi', href: '/kebijakan-privasi' },
   ]
 
   useEffect(() => {
@@ -40,6 +43,13 @@ export function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
   }, [activeSection])
 
   useEffect(() => {
+    if (pathname !== '/') {
+      if (pathname === '/kebijakan-privasi') {
+        setActiveSection('kebijakan-privasi')
+      }
+      return
+    }
+
     let lastActiveSection: string = 'beranda'
 
     const handleScroll = () => {
@@ -49,6 +59,8 @@ export function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
       const scrollPosition = window.scrollY + window.innerHeight * 0.4
 
       for (let i = navItems.length - 1; i >= 0; i--) {
+        if (navItems[i].id === 'kebijakan-privasi') continue
+        
         const sectionEl = document.getElementById(navItems[i].id)
         if (sectionEl) {
           // Use getBoundingClientRect for accurate position
@@ -70,7 +82,7 @@ export function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
     window.addEventListener('scroll', handleScroll, { passive: true })
     handleScroll()
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  }, [pathname])
 
   return (
     <header id="main-navbar" className="fixed top-4 left-0 right-0 z-50 px-4 md:px-8 lg:px-12 flex justify-center w-full">
@@ -101,26 +113,28 @@ export function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
               <a
                 key={item.id}
                 ref={(el) => { itemRefs.current[item.id] = el }}
-                href={`/#${item.id}`}
+                href={item.href}
                 onClick={(e) => {
-                  // Check if we're already on the home page
-                  if (window.location.pathname === '/') {
-                    e.preventDefault()
+                  if (item.href.startsWith('/#')) {
+                    // Check if we're already on the home page
+                    if (window.location.pathname === '/') {
+                      e.preventDefault()
 
-                    // Disable scroll-spy during programmatic navigation
-                    isScrollingRef.current = true
-                    setActiveSection(item.id)
+                      // Disable scroll-spy during programmatic navigation
+                      isScrollingRef.current = true
+                      setActiveSection(item.id)
 
-                    const el = document.getElementById(item.id)
-                    if (el) {
-                      const rect = el.getBoundingClientRect()
-                      const offsetTop = rect.top + window.scrollY - 100
-                      window.scrollTo({ top: offsetTop, behavior: 'smooth' })
+                      const el = document.getElementById(item.id)
+                      if (el) {
+                        const rect = el.getBoundingClientRect()
+                        const offsetTop = rect.top + window.scrollY - 100
+                        window.scrollTo({ top: offsetTop, behavior: 'smooth' })
 
-                      // Re-enable scroll-spy after animation completes
-                      setTimeout(() => {
-                        isScrollingRef.current = false
-                      }, 1000) // 1 second to allow smooth scroll to complete
+                        // Re-enable scroll-spy after animation completes
+                        setTimeout(() => {
+                          isScrollingRef.current = false
+                        }, 1000) // 1 second to allow smooth scroll to complete
+                      }
                     }
                   }
                   // If not on home page, let the browser handle navigation
@@ -132,14 +146,6 @@ export function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
               </a>
             )
           })}
-
-          {/* Kebijakan Privasi - Standard link without active state */}
-          <a
-            href="/kebijakan-privasi"
-            className="pb-1 text-slate-300 hover:text-white transition-colors duration-200"
-          >
-            Kebijakan Privasi
-          </a>
 
           <span
             className="absolute bottom-0 bg-[#f9c74f] h-[3px] rounded-full transition-all duration-300 ease-in-out pointer-events-none"

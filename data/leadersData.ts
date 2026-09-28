@@ -55,7 +55,7 @@ export const leadersList: Leader[] = [
     name: "Raden Widjaja Soerija",
     role: "Pejabat Wali Kota, Kota Kecil Sukabumi",
     period: "1950",
-    image: "/images/walikota/default.jpg",
+    image: "/images/walikota/siluet.jpg",
     bio: "Memimpin pada masa awal berdirinya Kota Kecil Sukabumi berdasarkan UU No. 17 Tahun 1950.",
     fullBio: [
       "Raden Widjaja Soerija menjabat sebagai Pejabat Wali Kota saat Sukabumi resmi ditetapkan sebagai Kota Kecil.",
@@ -81,7 +81,7 @@ export const leadersList: Leader[] = [
     name: "Raden Soebandi Prawiranata",
     role: "Wali Kota, Kota Praja Sukabumi",
     period: "1952 - 1959",
-    image: "/images/walikota/soebandi.jpg",
+    image: "/images/walikota/siluet.jpg",
     bio: "Mantan pejabat Keresidenan Priangan yang menakhodai Sukabumi saat berstatus Kota Praja.",
     fullBio: [
       "Periode Kota Praja ini dinakhodai oleh Raden Soebandi Prawiranata yang menduduki posisi pimpinan dari tahun 1952 hingga 1959.",
@@ -120,7 +120,7 @@ export const leadersList: Leader[] = [
     name: "Raden Semeru",
     role: "Penjabat Wali Kota",
     period: "1963",
-    image: "/images/walikota/semeru.jpg",
+    image: "/images/walikota/siluet.jpg",
     bio: "Penjabat Wali Kota yang mengisi kekosongan transisi kepemimpinan daerah pada tahun 1963.",
     fullBio: [
       "Raden Semeru ditunjuk sebagai Penjabat Wali Kota secara singkat pada tahun 1963.",
@@ -146,7 +146,7 @@ export const leadersList: Leader[] = [
     name: "Raden Bidin Suryagunawan",
     role: "Penjabat Wali Kota",
     period: "1966",
-    image: "/images/pimpinan/bidin.jpg",
+    image: "/images/walikota/siluet.jpg",
     bio: "Diutus untuk mengawal pemerintahan transisi demi meredam friksi horizontal pasca-Peristiwa G30S/PKI.",
     fullBio: [
       "Rentetan kekacauan politik tingkat nasional akibat eskalasi Peristiwa G30S/PKI memaksa terjadinya kekosongan pimpinan daerah di banyak wilayah.",
@@ -211,7 +211,7 @@ export const leadersList: Leader[] = [
     name: "R. Nuriana",
     role: "Penjabat Sementara",
     period: "1997 - 1998",
-    image: "/images/pimpinan/nuriana.jpg",
+    image: "/images/walikota/siluet.jpg",
     bio: "Gubernur Jawa Barat yang merangkap jabatan untuk mengawal transisi pemerintahan Sukabumi saat krisis multi-dimensi.",
     fullBio: [
       "Pada akhir masa jabatan Udin Koswara, gelombang krisis ekonomi mulai menerjang yang berujung pada krisis multi-dimensi nasional.",

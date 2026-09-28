@@ -57,7 +57,7 @@ const news = [
 ]
 
 function SectionHeading({ children, subtitle }: { children: React.ReactNode; subtitle?: string }) {
-  return <div className="mb-9"><h2 className="flex items-center gap-3 text-3xl font-bold tracking-tight text-[#172135] md:text-4xl"><span className="h-10 w-1.5 rounded-full bg-[#159447]" />{children}</h2>{subtitle && <p className="mt-3 max-w-5xl text-lg leading-relaxed text-[#566276]">{subtitle}</p>}</div>
+  return <div className="mb-6"><h2 className="flex items-center gap-3 text-3xl font-bold tracking-tight text-[#172135] md:text-4xl"><span className="h-10 w-1.5 rounded-full bg-[#159447]" />{children}</h2>{subtitle && <p className="mt-3 max-w-5xl text-lg leading-relaxed text-[#566276]">{subtitle}</p>}</div>
 }
 
 function Hero() {
@@ -98,7 +98,7 @@ function Hero() {
 
 function Welcome() {
   return (
-    <section className="bg-white px-4 py-20 md:px-8 lg:px-12 md:py-28">
+    <section className="bg-white px-4 py-10 md:px-8 lg:px-12 md:py-16">
       <div className="mx-auto flex max-w-[1400px] flex-col items-center gap-12 lg:flex-row lg:gap-16">
         <article className="max-w-[390px] rounded-3xl bg-[#eff4f8] p-8 shadow-sm md:p-10">
           <h2 className="text-3xl font-bold leading-tight text-[#ba8500]">
@@ -134,7 +134,7 @@ function Welcome() {
 
 function Profile() {
   return (
-    <section id="profil" className="bg-slate-50 px-4 py-20 md:px-8 lg:px-12">
+    <section id="profil" className="bg-slate-50 px-4 py-10 md:px-8 lg:px-12 md:py-16">
       <div className="mx-auto max-w-[1400px]">
         <SectionHeading subtitle="Mengenal lebih dekat sejarah, visi misi, dan berbagai aspek penting lainnya dari Kota Sukabumi.">
           Profil Kota Sukabumi
@@ -185,7 +185,7 @@ function Profile() {
 function NewsList({ items, announcement = false }: { items: string[][]; announcement?: boolean }) { return <div className="flex flex-col gap-6">{items.map(([title, date, category]) => <article key={title} className="flex gap-5"><div className={`grid size-20 shrink-0 place-items-center rounded-lg ${announcement ? 'bg-[#eff4f8] text-[#f29b10]' : 'bg-[#d6d6d6] text-xs text-black'}`}>{announcement ? <Megaphone /> : 'img'}</div><div><h3 className="text-base font-bold leading-tight text-[#1d293d]">{title}</h3><p className="mt-1 text-sm text-[#687991]">{date} <span className="text-[#159447]">•</span> {category}</p></div></article>)}</div> }
 
 function News() {
-  return <section id="berita" className="bg-white px-4 py-20 md:px-8 lg:px-12">
+  return <section id="berita" className="bg-white px-4 py-10 md:px-8 lg:px-12 md:py-16">
     <div className="mx-auto max-w-[1400px]">
       <SectionHeading subtitle="Pengumuman dan berita terbaru dari Kota Sukabumi.">
         Pengumuman & Berita
@@ -195,14 +195,19 @@ function News() {
           <h3 className="mb-6 text-2xl font-bold text-[#263349]">Pengumuman</h3>
           <div className="mb-7 h-1 w-14 rounded-full bg-[#f4c13b]" />
           <NewsList items={announcements} announcement />
-          <a className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44]"
-            href="https://portal.sukabumikota.go.id/category/pengumuman/">
-            Lihat Semua <ArrowRight size={18} /></a>
+          <Link className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44] hover:text-[#0f7a36] transition-colors"
+            href="/pengumuman">
+            Lihat Semua <ArrowRight size={18} />
+          </Link>
         </div>
         <div>
           <h3 className="mb-6 text-2xl font-bold text-[#263349]">Berita</h3>
           <div className="mb-7 h-1 w-14 rounded-full bg-[#f4c13b]" />
-          <NewsList items={news} /><a className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44]" href="https://portal.sukabumikota.go.id/category/berita-kota/">Lihat Semua <ArrowRight size={18} /></a>
+          <NewsList items={news} />
+          <Link className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44] hover:text-[#0f7a36] transition-colors"
+            href="/berita">
+            Lihat Semua <ArrowRight size={18} />
+          </Link>
         </div>
       </div>
     </div>
@@ -663,7 +668,7 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
 
   return (
     <>
-      <section id="opd" className="bg-slate-50 px-4 py-20 md:px-8 lg:px-12">
+      <section id="opd" className="bg-slate-50 px-4 py-10 md:px-8 lg:px-12 md:py-16">
         <div className="mx-auto max-w-[1400px]">
           <SectionHeading subtitle="Akses langsung ke portal resmi Organisasi Perangkat Daerah (OPD) dan wilayah administratif Kecamatan di lingkungan Pemerintah Kota Sukabumi.">
             Organisasi Perangkat Daerah
@@ -1172,7 +1177,7 @@ function TransparansiDokumen() {
   }, [selectedDocument]);
 
   return (
-    <section id="transparansi" className="bg-white px-4 py-20 md:px-8 lg:px-12 md:py-28">
+    <section id="transparansi" className="bg-white px-4 py-10 md:px-8 lg:px-12 md:py-16">
       <div className="mx-auto max-w-[1400px]">
         <div className="mb-12 flex items-start justify-between">
           <SectionHeading subtitle="Transparansi keuangan daerah adalah kunci pemerintahan yang bersih, akuntabel, dan dipercaya rakyat untuk membangun masa depan yang lebih baik.">

@@ -463,7 +463,7 @@ export default async function DetailPage({
                   <img
                     src={content.contentImage}
                     alt={content.title}
-                    className="w-full max-w-xs md:max-w-xs mx-auto h-auto block object-contain"
+                    className="w-full max-w-md md:max-w-md mx-auto h-auto block object-contain rounded-xl shadow-sm"
                   />
                 </div>
               )}
@@ -618,21 +618,7 @@ export default async function DetailPage({
                 </div>
               ))}
 
-              {/* Call to Action */}
-              <div className="mt-12 pt-8 border-t border-gray-200">
-                <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
-                  {/* <p className="text-[#566276] text-sm">
-                    Untuk informasi lebih lengkap, silakan hubungi kami.
-                  </p> */}
-                  <Link
-                    href="/"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#159447] text-white font-semibold rounded-lg hover:bg-[#0f7a36] transition-colors duration-200 shadow-md hover:shadow-lg"
-                  >
-                    <ArrowLeft size={20} />
-                    Kembali ke Beranda
-                  </Link>
-                </div>
-              </div>
+
             </div>
           </div>
 
