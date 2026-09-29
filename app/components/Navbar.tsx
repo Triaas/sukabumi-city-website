@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { Search } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
@@ -87,11 +88,21 @@ export function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
   return (
     <header id="main-navbar" className="fixed top-4 left-0 right-0 z-50 px-4 md:px-8 lg:px-12 flex justify-center w-full">
       <div className="w-full max-w-[1400px] bg-slate-900/70 backdrop-blur-md rounded-2xl md:rounded-3xl border border-white/10 px-6 py-3 shadow-xl transition-all duration-300 flex items-center justify-between gap-8 md:gap-12">
-        <div className="flex items-center gap-3.5 md:gap-4">
+        <Link
+          href="/"
+          onClick={(e) => {
+            if (pathname === '/') {
+              e.preventDefault()
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+              setActiveSection('beranda')
+            }
+          }}
+          className="flex items-center gap-3.5 md:gap-4 group cursor-pointer"
+        >
           <img
             src="/logo.png"
             alt="Logo Kota Sukabumi"
-            className="h-14 sm:h-16 md:h-[68px] w-auto object-contain shrink-0"
+            className="h-14 sm:h-16 md:h-[68px] w-auto object-contain shrink-0 group-hover:scale-105 transition-transform duration-200"
           />
           <div className="flex flex-col justify-between py-0.5">
             <p className="text-[11px] sm:text-xs font-semibold tracking-[0.12em] text-white/75 leading-tight">
@@ -104,7 +115,7 @@ export function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
               Reugreug Pageuh Repeh Rapih
             </p>
           </div>
-        </div>
+        </Link>
 
         <nav ref={navRef} className="relative hidden items-center gap-4 md:gap-6 lg:gap-8 text-base font-semibold lg:flex py-2">
           {navItems.map((item) => {

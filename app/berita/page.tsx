@@ -17,16 +17,28 @@ const allNews = [
 export default function BeritaPage() {
   return (
     <main className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <div className="bg-[#1b293c] py-16 px-4 md:px-8 lg:px-12 text-white">
-        <div className="mx-auto max-w-[1400px]">
-          <Link href="/" className="inline-flex items-center gap-2 text-white/80 hover:text-white mb-6 transition-colors">
-            <ArrowLeft size={18} /> Kembali ke Beranda
+      {/* Hero Banner */}
+      <section
+        className="relative text-white pt-36 pb-20 md:pt-44 md:pb-28 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url('/images/news.webp')` }}
+      >
+        {/* Overlay */}
+        <div className="absolute inset-0 z-0 bg-slate-900/65" />
+
+        <div className="container mx-auto px-4 md:px-8 lg:px-12 max-w-[1400px] relative z-10">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-6 transition-colors duration-200"
+          >
+            <ArrowLeft size={20} />
+            <span className="font-medium">Kembali ke Beranda</span>
           </Link>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Berita Kota</h1>
-          <p className="text-lg text-white/70 max-w-2xl">Kumpulan berita terkini, liputan kegiatan, dan rilis pers seputar pembangunan di Kota Sukabumi.</p>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">Berita Kota</h1>
+          <p className="text-lg md:text-xl text-white/90 max-w-3xl">
+            Kumpulan berita terkini, liputan kegiatan, dan rilis pers seputar pembangunan di Kota Sukabumi.
+          </p>
         </div>
-      </div>
+      </section>
 
       {/* Content Grid */}
       <div className="py-12 px-4 md:px-8 lg:px-12">

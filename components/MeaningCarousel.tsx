@@ -28,22 +28,22 @@ export default function MeaningCarousel({ items }: { items: MeaningItem[] }) {
     <div className="mt-12 flex flex-col lg:flex-row gap-6 mx-auto max-w-5xl items-stretch">
 
       {/* Kolom Kiri: Slide Utama */}
-      <div className="flex-1 bg-[#1b2b4e] rounded-3xl overflow-hidden relative shadow-xl min-h-[500px]">
+      <div className="flex-1 bg-[#1b2b4e] rounded-3xl overflow-hidden relative shadow-xl min-h-[400px] md:min-h-[415px] flex flex-col justify-center">
         {/* Latar Belakang Dekoratif */}
         <div className="absolute inset-0 opacity-10 pointer-events-none flex items-center justify-center overflow-hidden">
           <div className="w-[150%] h-[150%] border-[40px] border-white/20 rounded-[40%] animate-[spin_60s_linear_infinite]" />
         </div>
 
         {/* Konten Slide */}
-        <div className="relative z-10 px-8 py-10 pb-20 flex flex-col items-center justify-between h-full">
-          {/* Area Judul dengan tinggi minimum tetap agar posisi elemen bawah konsisten */}
-          <div className="min-h-[84px] md:min-h-[96px] flex items-center justify-center w-full mb-4">
-            <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-white text-center tracking-wide drop-shadow-md leading-tight">
+        <div className="relative z-10 px-8 pt-4 pb-14 flex flex-col items-center justify-center gap-2 h-full">
+          {/* Area Judul */}
+          <div className="flex items-center justify-center w-full">
+            <h3 className="text-xl sm:text-2xl md:text-3xl md:text-4xl font-bold text-white text-center tracking-wide drop-shadow-md leading-tight">
               {currentItem.title}
             </h3>
           </div>
 
-          <div className="w-48 h-48 md:w-56 md:h-56 my-auto flex items-center justify-center">
+          <div className="w-40 h-40 md:w-48 md:h-48 flex items-center justify-center my-1">
             <img
               key={currentIndex}
               src={currentItem.image || '/images/Lambang_Kota_Sukabumi.png'}
@@ -52,7 +52,7 @@ export default function MeaningCarousel({ items }: { items: MeaningItem[] }) {
             />
           </div>
 
-          <p className="text-white/90 text-center text-base md:text-lg leading-relaxed mt-8 max-w-md font-medium min-h-[80px]">
+          <p className="text-white/90 text-center text-sm md:text-base leading-relaxed max-w-md font-medium">
             {currentItem.desc}
           </p>
         </div>
@@ -75,9 +75,8 @@ export default function MeaningCarousel({ items }: { items: MeaningItem[] }) {
               key={idx}
               onClick={() => setCurrentIndex(idx)}
               aria-label={`Go to slide ${idx + 1}`}
-              className={`rounded-full transition-all duration-300 cursor-pointer ${
-                idx === currentIndex ? 'w-6 h-2 bg-[#f3c338]' : 'size-2 bg-white/40 hover:bg-white/60'
-              }`}
+              className={`rounded-full transition-all duration-300 cursor-pointer ${idx === currentIndex ? 'w-6 h-2 bg-[#f3c338]' : 'size-2 bg-white/40 hover:bg-white/60'
+                }`}
             />
           ))}
         </div>
@@ -105,20 +104,18 @@ export default function MeaningCarousel({ items }: { items: MeaningItem[] }) {
               <button
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
-                className={`relative w-full aspect-square rounded-xl border-2 overflow-hidden transition-all duration-300 ${
-                  idx === currentIndex
+                className={`relative w-full aspect-square rounded-xl border-2 overflow-hidden transition-all duration-300 ${idx === currentIndex
                     ? 'border-[#1b2b4e] shadow-md ring-2 ring-[#1b2b4e]/20'
                     : 'border-slate-100 hover:border-slate-300 bg-slate-50/50'
-                }`}
+                  }`}
                 title={item.title}
               >
                 <div className="absolute inset-0 p-1.5 flex items-center justify-center">
                   <img
                     src={item.image || '/images/Lambang_Kota_Sukabumi.png'}
                     alt={item.title}
-                    className={`w-full h-full object-contain transition-all duration-300 ${
-                      idx === currentIndex ? 'scale-110 drop-shadow-md' : 'opacity-70 hover:opacity-100'
-                    }`}
+                    className={`w-full h-full object-contain transition-all duration-300 ${idx === currentIndex ? 'scale-110 drop-shadow-md' : 'opacity-70 hover:opacity-100'
+                      }`}
                   />
                 </div>
               </button>

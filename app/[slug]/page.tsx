@@ -11,6 +11,7 @@ const contentData: {
     description: string
     content: string[]
     heroImage: string
+    heroImageFit?: 'cover' | 'contain'
     contentImage?: string
     contentImageTitle?: string
     inlineImages?: { [key: number]: { src: string; caption?: string; title?: string; subtitle?: string } }
@@ -120,7 +121,8 @@ const contentData: {
   'lambang': {
     title: 'Lambang Kota Sukabumi',
     description: 'Makna filosofis di balik lambang resmi daerah',
-    heroImage: '/images/logo-pemkoot-sukabumi-card.jpg',
+    heroImage: '/images/Lambang_Kota_Sukabumi.png',
+    heroImageFit: 'contain',
     contentImage: '/images/Lambang_Kota_Sukabumi.png',
     meaningItems: [
       { title: 'Perisai', desc: 'Melambangkan Ketangguhan Fisik dan Mental dalam menghadapi segala tantangan pembangunan.', image: '/images/perisai.png' },
@@ -424,11 +426,19 @@ export default async function DetailPage({
     <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* Hero Section */}
       <section
-        className="relative text-white pt-36 pb-20 md:pt-44 md:pb-28 bg-cover bg-center bg-no-repeat"
+        className={`relative text-white pt-36 pb-20 md:pt-44 md:pb-28 bg-no-repeat ${
+          content.heroImageFit === 'contain'
+            ? 'bg-contain bg-center'
+            : 'bg-cover bg-center'
+        }`}
         style={{ backgroundImage: `url('${content.heroImage}')` }}
       >
         {/* Overlay gradient for better text readability */}
-        <div className="absolute inset-0 bg-slate-900/65 z-0" />
+        <div
+          className={`absolute inset-0 z-0 ${
+            content.heroImageFit === 'contain' ? 'bg-slate-900/70 backdrop-blur-sm' : 'bg-slate-900/65'
+          }`}
+        />
 
         <div className="container mx-auto px-4 md:px-8 lg:px-12 max-w-[1400px] relative z-10">
           <Link
@@ -463,7 +473,7 @@ export default async function DetailPage({
                   <img
                     src={content.contentImage}
                     alt={content.title}
-                    className="w-full max-w-md md:max-w-md mx-auto h-auto block object-contain rounded-xl shadow-sm"
+                    className="w-full max-w-md md:max-w-md mx-auto h-auto block object-contain"
                   />
                 </div>
               )}

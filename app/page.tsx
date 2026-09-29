@@ -682,7 +682,7 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
                   onClick={() => handleCategoryChange(category)}
                   className={`px-6 py-4 text-base text-left font-medium transition-all duration-200 rounded-lg border ${activeCategory === category
                     ? 'border-[#159447] bg-[#159447] text-white'
-                    : 'border-[#e5e7eb] bg-white text-[#4b5563] hover:border-[#d1d5db] hover:bg-[#f9fafb]'
+                    : 'border-[#e5e7eb] bg-white text-[#4b5563] hover:bg-slate-50 hover:shadow-md'
                     }`}
                   aria-pressed={activeCategory === category}
                 >
@@ -838,7 +838,7 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
               <div className="flex-1">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 content-start">
                   {currentModalItems.map((item, index) => {
-                    const cardClasses = "flex items-center gap-4 rounded-lg border border-[#e5ebf0] bg-[#f8fafc] p-4 transition-all duration-200 hover:border-green-200 hover:bg-[#f0fdf4] hover:shadow-md w-full text-left cursor-pointer"
+                    const cardClasses = "flex items-center gap-4 rounded-lg border border-[#e5ebf0] bg-[#f8fafc] p-4 transition-all duration-200 hover:border-green-200 hover:bg-slate-50 hover:shadow-md w-full text-left cursor-pointer"
                     const inner = (
                       <>
                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white border border-[#e5ebf0] text-[#16a34a] shadow-sm overflow-hidden">
