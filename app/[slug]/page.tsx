@@ -2,18 +2,21 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import LeadersGallery from '@/components/LeadersGallery'
 import MeaningCarousel from '@/components/MeaningCarousel'
+import ScrollSpyNav from '@/components/ScrollSpyNav'
 import { Leader, leadersList } from '@/data/leadersData'
 
 // Data konten untuk setiap slug
 const contentData: {
   [key: string]: {
     title: string
+    quickLinks?: Array<{ label: string; targetId: string }>
     description: string
     content: string[]
     heroImage: string
     heroImageFit?: 'cover' | 'contain'
     contentImage?: string
     contentImageTitle?: string
+    contentImageClassName?: string
     inlineImages?: { [key: number]: { src: string; caption?: string; title?: string; subtitle?: string } }
     tableData?: Array<{
       title: string
@@ -34,6 +37,11 @@ const contentData: {
   'sejarah': {
     title: 'Sejarah Kota Sukabumi',
     description: 'Jejak perkembangan Kota Sukabumi dari masa ke masa',
+    quickLinks: [
+      { label: 'Sejarah', targetId: 'sejarah-content' },
+      { label: 'Nomenklatur', targetId: 'nomenklatur' },
+      { label: 'Pimpinan', targetId: 'hall-of-fame' }
+    ],
     heroImage: '/images/sejarah-card.jpg',
     contentImage: '/images/soek4bum01.jpg',
     inlineImages: {
@@ -124,6 +132,7 @@ const contentData: {
     heroImage: '/images/Lambang_Kota_Sukabumi.png',
     heroImageFit: 'contain',
     contentImage: '/images/Lambang_Kota_Sukabumi.png',
+    contentImageClassName: 'max-w-[220px] md:max-w-[260px]',
     meaningItems: [
       { title: 'Perisai', desc: 'Melambangkan Ketangguhan Fisik dan Mental dalam menghadapi segala tantangan pembangunan.', image: '/images/perisai.png' },
       { title: 'Warna Hijau', desc: 'Merupakan perlambangan dari Kesuburan dan Kemakmuran alam di Kota Sukabumi.', image: '/images/hijau.png' },
@@ -139,7 +148,7 @@ const contentData: {
   },
   'geografi': {
     title: 'Geografi Kota Sukabumi',
-    description: 'Letak, topografi, dan kondisi geografis wilayah',
+    description: 'Letak wilayah, kondisi geografis, serta demografi Kota Sukabumi.',
     heroImage: '/images/geo-card.jpg',
     inlineImages: {
       1: {
@@ -426,18 +435,16 @@ export default async function DetailPage({
     <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* Hero Section */}
       <section
-        className={`relative text-white pt-36 pb-20 md:pt-44 md:pb-28 bg-no-repeat ${
-          content.heroImageFit === 'contain'
-            ? 'bg-contain bg-center'
-            : 'bg-cover bg-center'
-        }`}
+        className={`relative text-white pt-36 pb-20 md:pt-44 md:pb-28 bg-no-repeat ${content.heroImageFit === 'contain'
+          ? 'bg-contain bg-center'
+          : 'bg-cover bg-center'
+          }`}
         style={{ backgroundImage: `url('${content.heroImage}')` }}
       >
         {/* Overlay gradient for better text readability */}
         <div
-          className={`absolute inset-0 z-0 ${
-            content.heroImageFit === 'contain' ? 'bg-slate-900/70 backdrop-blur-sm' : 'bg-slate-900/65'
-          }`}
+          className={`absolute inset-0 z-0 ${content.heroImageFit === 'contain' ? 'bg-slate-900/70 backdrop-blur-sm' : 'bg-slate-900/65'
+            }`}
         />
 
         <div className="container mx-auto px-4 md:px-8 lg:px-12 max-w-[1400px] relative z-10">
@@ -459,9 +466,13 @@ export default async function DetailPage({
 
       {/* Content Section */}
       <section className="py-16 md:py-24">
-        <div className="container mx-auto px-4 md:px-8 lg:px-12 max-w-[1400px]">
+        <div className="container mx-auto px-4 md:px-8 lg:px-12 max-w-[1400px] relative">
+          {content.quickLinks && (
+            <ScrollSpyNav links={content.quickLinks} />
+          )}
+
           <div className="max-w-5xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12">
+            <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12 relative z-20">
               {/* Gambar Utama di atas */}
               {content.contentImage && (
                 <div className="text-center mb-10">
@@ -473,11 +484,12 @@ export default async function DetailPage({
                   <img
                     src={content.contentImage}
                     alt={content.title}
-                    className="w-full max-w-md md:max-w-md mx-auto h-auto block object-contain"
+                    className={`w-full mx-auto h-auto block object-contain ${content.contentImageClassName || 'max-w-md md:max-w-md'
+                      }`}
                   />
                 </div>
               )}
-              <div className="prose prose-lg max-w-none">
+              <div id="sejarah-content" className="prose prose-lg max-w-none scroll-mt-36">
                 {content.content.map((paragraph, index) => (
                   <div key={index}>
                     <div
@@ -543,14 +555,14 @@ export default async function DetailPage({
                     </h3>
                     <div className="h-1 w-20 bg-[#159447] rounded-full mx-auto mt-4" />
                   </div>
-                  
+
                   <MeaningCarousel items={content.meaningItems} />
                 </div>
               )}
 
               {/* Vertical Timeline */}
               {content.timelineData && (
-                <div className="mt-16 pt-8 border-t border-gray-100">
+                <div id="nomenklatur" className="mt-16 pt-8 border-t border-gray-100 scroll-mt-36">
                   <div className="text-center mb-10">
                     <h3 className="text-2xl md:text-3xl font-bold text-[#172135]">
                       {content.timelineData.title}
@@ -589,10 +601,12 @@ export default async function DetailPage({
 
               {/* Leaders Hall of Fame Gallery */}
               {content.leadersData && (
-                <LeadersGallery
-                  title={content.leadersData.title}
-                  leaders={content.leadersData.items}
-                />
+                <div id="hall-of-fame" className="scroll-mt-36">
+                  <LeadersGallery
+                    title={content.leadersData.title}
+                    leaders={content.leadersData.items}
+                  />
+                </div>
               )}
 
               {/* Tabel Data (Mendukung Multiple Tables) */}
@@ -631,13 +645,10 @@ export default async function DetailPage({
 
             </div>
           </div>
-
-          {/* Copyright Footer */}
-          <div className="mt-12 pb-4 text-center text-sm font-medium text-[#566276]">
-            Copyright © 2026 Website Resmi Pemerintah Kota Sukabumi
-          </div>
         </div>
       </section>
+
+
     </main>
   )
 }
