@@ -1,4 +1,13 @@
-export type Leader = {
+export interface DeputyLeader {
+  name: string
+  role: string
+  image: string
+  bio: string
+  fullBio?: string[]
+  slug?: string
+}
+
+export interface Leader {
   id: number
   slug: string
   name: string
@@ -6,7 +15,8 @@ export type Leader = {
   period: string
   image: string
   bio: string
-  fullBio: string[]
+  fullBio?: string[]
+  deputy?: DeputyLeader
 }
 
 export const leadersList: Leader[] = [
@@ -64,15 +74,15 @@ export const leadersList: Leader[] = [
   },
   {
     id: 5,
-    slug: "Raden S. Affandi Kartadjoemena",
+    slug: "affandi-kartadjoemena",
     name: "Raden S. Affandi Kartadjoemena",
     role: "Wali Kota, Kota Kecil Sukabumi",
     period: "1950 - 1952",
     image: "/images/walikota/Kartadjoemena.jpg",
-    bio: "Menjabat sebagai Wali Kota pertama pada masa krusial pasca-kemerdekaan Republik Indonesia. Beliau berfokus pada transisi pemerintahan dari sistem militer Jepang ke sistem birokrasi sipil nasional.",
+    bio: "Memimpin Kota Kecil Sukabumi pada awal dekade 1950-an, melanjutkan penataan pemerintahan daerah setelah ditetapkannya Sukabumi sebagai Kota Kecil berdasarkan UU No. 17 Tahun 1950.",
     fullBio: [
-      "Mr. R. Syamsudin adalah tokoh sentral dalam masa transisi kemerdekaan di Kota Sukabumi. Beliau mengambil alih tampuk kepemimpinan segera setelah proklamasi dikumandangkan, memastikan kekosongan kekuasaan peninggalan Jepang (Soekaboemi Shi) tidak menimbulkan kekacauan.",
-      "Fokus utama beliau pada masa jabatannya yang singkat adalah mengkonsolidasikan kekuatan sipil, membentuk aparatur pemerintahan daerah pertama yang setia pada Republik, serta menjaga ketertiban masyarakat di tengah ancaman kembalinya pasukan kolonial (NICA)."
+      "Raden S. Affandi Kartadjoemena menjabat sebagai Wali Kota Kota Kecil Sukabumi pada periode 1950 hingga 1952, tak lama setelah Sukabumi resmi ditetapkan sebagai Kota Kecil melalui Undang-Undang Nomor 17 Tahun 1950.",
+      "Pada masa kepemimpinannya, fokus utama pemerintahan adalah memperkuat fondasi administrasi daerah yang mandiri dan menjaga kesinambungan pelayanan publik, sebelum estafet kepemimpinan dilanjutkan oleh Raden Soebandi Prawiranata pada era Kota Praja."
     ]
   },
   {
@@ -255,7 +265,14 @@ export const leadersList: Leader[] = [
     fullBio: [
       "Merintis pengabdian dari status PNS golongan terbawah hingga mencapai zenit kepangkatan birokrasi sebagai Sekretaris Daerah, Mohamad Muraz adalah birokrat sejati.",
       "Di bawah kendalinya, birokrasi kota meraih panen penghargaan: juara LAKIP lima kali berturut-turut, piala Adipura, dan opini WTP tiga kali beruntun dari BPK RI. Beliau juga meletakkan landasan advokasi politik strategis untuk realisasi Jalan Tol Bocimi."
-    ]
+    ],
+    deputy: {
+      name: "H. Achmad Fahmi, S.Ag., M.Pd.",
+      role: "Wakil Wali Kota",
+      image: "/images/walikota/Achmad_Fahmi.webp",
+      bio: "Berlatar belakang sebagai aktivis dakwah dan mantan Wakil Ketua DPRD, beliau mendampingi Mohamad Muraz pada periode 2013-2018 sebelum akhirnya sukses menjadi Wali Kota definitif di periode selanjutnya.",
+      slug: "achmad-fahmi"
+    }
   },
   {
     id: 20,
@@ -263,12 +280,23 @@ export const leadersList: Leader[] = [
     name: "H. Achmad Fahmi, S.Ag., M.Pd.",
     role: "Wali Kota, Kota Sukabumi",
     period: "2018 - 2023",
-    image: "/images/walikota/Achmad_Fahmi.jpeg",
+    image: "/images/walikota/Achmad_Fahmi.webp",
     bio: "Pemimpin yang sukses mengarungi tantangan pandemi COVID-19 dengan mempertahankan ritme pelayanan prima.",
     fullBio: [
       "Mengusung visi pembangunan religius dan humanis bersama wakilnya yang berlatar belakang pengusaha, Andri S. Hamami, kepemimpinan Achmad Fahmi segera dihadapkan pada disrupsi terberat abad 21, pandemi global COVID-19.",
       "Melalui manuver fiskal yang tangguh, Pemkot Sukabumi mencatatkan rekor serapan Realisasi Belanja Daerah Tertinggi kedua tingkat nasional pada 2021 dan berhasil meraih predikat A- dari KemenPANRB atas kualitas penyelenggaraan pelayanan publiknya."
-    ]
+    ],
+    deputy: {
+      name: "H. Andri Setiawan Hamami, S.H., M.H.",
+      role: "Wakil Wali Kota",
+      image: "/images/wakil_walikota/Andri_hamami.webp",
+      bio: "Pengusaha dan konglomerat lokal kawakan yang menyuntikkan dimensi pragmatisme bisnis dan rasionalitas investasi ekonomi makro ke dalam perencanaan strategis daerah.",
+      slug: "andri-setiawan-hamami",
+      fullBio: [
+        "H. Andri Setiawan Hamami, S.H., M.H. menjabat sebagai Wakil Wali Kota Sukabumi periode 2018-2023, mendampingi H. Achmad Fahmi.",
+        "Berlatar belakang pengusaha, beliau menyuntikkan dimensi pragmatisme bisnis dan rasionalitas investasi ekonomi makro ke dalam perencanaan strategis daerah."
+      ]
+    }
   },
   {
     id: 21,
@@ -276,7 +304,7 @@ export const leadersList: Leader[] = [
     name: "Drs. Kusmana Hartadji, M.M.",
     role: "Penjabat Wali Kota, Kota Sukabumi",
     period: "2023 - 2025",
-    image: "/images/walikota/Kusmana_Hartadji.jpg",
+    image: "/images/walikota/Kusmana_Hartadji.webp",
     bio: "Teknokrat transisi yang merumuskan haluan kota dua dekade ke depan melalui RPJPD 2025-2045 dan proteksionisme pasar UMKM lokal.",
     fullBio: [
       "Mengisi masa transisi jeda elektoral nasional, Kusmana Hartadji mengambil langkah bersejarah dengan merancang dan mengesahkan dokumen RPJPD Periode 2025-2045 yang dipusatkan pada target pembangunan inklusif berkelanjutan yang selaras dengan visi Indonesia Emas.",
@@ -289,11 +317,22 @@ export const leadersList: Leader[] = [
     name: "H. Ayep Zaki, S.E., M.M.",
     role: "Wali Kota, Kota Sukabumi",
     period: "2025 - 2030",
-    image: "/images/walikota/Ayep_Zaki.jpg",
+    image: "/images/walikota/Ayep_Zaki.webp",
     bio: "Pemimpin kontemporer bervisi 'IMAN' yang mengedepankan stimulus populis dan filantropi bagi kesejahteraan akar rumput.",
     fullBio: [
       "Dilantik pada 20 Februari 2025 bersama wakilnya Bobby Maulana, H. Ayep Zaki mencetak sejarah manuver populis dengan menolak secara terbuka hak gaji bulanannya.",
       "Mengusung arsitektur visi 'IMAN' (Inovatif, Mandiri, Agamis, dan Nasionalis), kebijakannya berfokus pada terapi goncangan ekonomi mikro. Program andalannya meliputi gratisasi fasilitas Puskesmas berbasis homecare, kenaikan insentif 100% bagi pengurus RT/RW, dan injeksi investasi sosial lewat skema Dana Abadi Rp 10 Juta per Rukun Tetangga (RT) untuk melindungi kelompok rentan perkotaan."
-    ]
+    ],
+    deputy: {
+      name: "Bobby Maulana",
+      role: "Wakil Wali Kota",
+      image: "/images/wakil_walikota/Bobby_maulana.webp",
+      bio: "Pesohor industri hiburan nasional dan pendiri grup musik komedi Trio Ubur Ubur. Bertindak sebagai representasi kaum milenial yang berhasil mendulang basis simpati pemilih pemula dengan pendekatan elektoral out-of-the-box.",
+      slug: "bobby-maulana",
+      fullBio: [
+        "Bobby Maulana menjabat sebagai Wakil Wali Kota Sukabumi periode 2025-2030, mendampingi H. Ayep Zaki.",
+        "Dikenal sebagai pesohor industri hiburan nasional dan pendiri grup musik komedi Trio Ubur Ubur, beliau menjadi representasi kaum milenial yang berhasil mendulang simpati pemilih pemula dengan pendekatan elektoral out-of-the-box."
+      ]
+    }
   }
 ]

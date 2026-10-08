@@ -37,7 +37,7 @@ export default function MeaningCarousel({ items }: { items: MeaningItem[] }) {
         {/* Konten Slide */}
         <div className="relative z-10 px-8 pt-4 pb-14 flex flex-col items-center justify-center gap-2 h-full">
           {/* Area Judul */}
-          <div className="flex items-center justify-center w-full">
+          <div className="flex items-center justify-center w-full h-[72px] md:h-[96px]">
             <h3 className="text-xl sm:text-2xl md:text-3xl md:text-4xl font-bold text-white text-center tracking-wide drop-shadow-md leading-tight">
               {currentItem.title}
             </h3>
@@ -48,7 +48,7 @@ export default function MeaningCarousel({ items }: { items: MeaningItem[] }) {
               key={currentIndex}
               src={currentItem.image || '/images/Lambang_Kota_Sukabumi.png'}
               alt={currentItem.title}
-              className="w-full h-full object-contain drop-shadow-2xl animate-[fadeIn_0.5s_ease-out]"
+              className="w-full h-full object-contain drop-shadow-2xl animate-[fadeIn_0.5s_ease-out] transition-transform duration-300 hover:scale-115"
             />
           </div>
 

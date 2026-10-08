@@ -47,6 +47,8 @@ export function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
     if (pathname !== '/') {
       if (pathname === '/kebijakan-privasi') {
         setActiveSection('kebijakan-privasi')
+      } else if (pathname.startsWith('/berita') || pathname.startsWith('/pengumuman')) {
+        setActiveSection('berita')
       }
       return
     }

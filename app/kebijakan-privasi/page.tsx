@@ -31,7 +31,7 @@ export default function KebijakanPrivasiPage() {
             Kebijakan Privasi
           </h1>
           <p className="text-lg md:text-xl text-white/90 max-w-3xl">
-            Pernyataan terkait perlindungan data, privasi, dan ketentuan penggunaan layanan portal.
+            perlindungan data, privasi, dan ketentuan penggunaan layanan portal.
           </p>
         </div>
       </section>

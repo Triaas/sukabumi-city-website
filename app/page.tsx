@@ -31,8 +31,11 @@ import {
   Megaphone,
   Play,
   X,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { allNews } from '@/data/newsData'
+import { getAnnouncements, AnnouncementItem } from '@/lib/announcements'
 
 const profileCards = [
   { title: 'Sejarah', description: 'Jejak perkembangan Kota Sukabumi dari masa ke masa.', image: '/images/sejarah-card.jpg', href: '/sejarah' },
@@ -44,17 +47,8 @@ const profileCards = [
   { title: 'Unit Kesehatan Sekolah (UKS)', description: 'Program pembinaan kesehatan komprehensif di lingkungan sekolah.', image: '/images/UKS-card.jpg', href: '/uks' },
 ]
 
-const announcements = [
-  ['SURAT EDARAN PELAKSANAAN KEGIATAN HARI JADI KOTA SUKABUMI KE-110', '24 Okt 2023', 'Edaran Resmi'],
-  ['JADWAL SELEKSI KOMPETENSI DASAR (SKD) CALON APARATUR SIPIL NEGARA', '18 Okt 2023', 'Kepegawaian (BKPSDM)'],
-  ['PEMBERITAHUAN PEMELIHARAAN SISTEM LAYANAN KEPENDUDUKAN DIGITAL', '12 Okt 2023', 'Pelayanan Publik'],
-]
-
-const news = [
-  ['PELANTIKAN PENGURUS MUI KOTA SUKABUMI PERIODE 2023-2028 RESMI DISELENGGARAKAN', '25 Okt 2023', 'Bagian Kesra Kota Sukabumi'],
-  ['WALIKOTA SUKABUMI APRESIASI GELAR BUDAYA DAN KULINER TRADISIONAL DI ALUN-ALUN', '22 Okt 2023', 'Disporapar Kota Sukabumi'],
-  ['DINAS PEKERJAAN UMUM TINJAU PENYELESAIAN PROYEK DRAINASE DAN JALAN KOTA', '19 Okt 2023', 'DPUTR Kota Sukabumi'],
-]
+// Card berita beranda: 3 berita terbaru dari sumber data yang sama dengan halaman /berita
+const news = allNews.slice(0, 3)
 
 function SectionHeading({ children, subtitle }: { children: React.ReactNode; subtitle?: string }) {
   return <div className="mb-6"><h2 className="flex items-center gap-3 text-3xl font-bold tracking-tight text-[#172135] md:text-4xl"><span className="h-10 w-1.5 rounded-full bg-[#159447]" />{children}</h2>{subtitle && <p className="mt-3 max-w-5xl text-lg leading-relaxed text-[#566276]">{subtitle}</p>}</div>
@@ -105,14 +99,14 @@ function Welcome() {
             Reugreug Pageuh Repeh Rapih
           </h2>
           <p className="mt-6 text-lg leading-relaxed text-[#29364a]">
-            Untuk mewujudkan masyarakat yang reugreug harinya, harus dipegang pageuh norma dan kebiasaan saling menghormati, tepa selira, dan toleran agar kehidupan masyarakat menjadi répeh, tidak dipenuhi oleh bentakan dan hentakkan, sebuah masyarakat yang mempertontonkan rapih dan saling memuliakan.
+            Untuk mewujudkan masyarakat yang reugreug harinya, harus dipegang pageuh norma dan kebiasaan saling menghormati, tepa selira, dan toleran agar kehidupan masyarakat menjadi repeh, tidak dipenuhi oleh bentakan dan hentakkan, sebuah masyarakat yang mempertontonkan rapih dan saling memuliakan.
           </p>
         </article>
 
         <div className="flex flex-1 items-end justify-center gap-0">
           <div className="relative z-10 w-full max-w-[500px] self-end">
             <img
-              src="/images/foto walikota dan wakil walikota.webp"
+              src="/images/walikota&wakil.jpg"
               className="w-full"
               alt="Walikota dan Wakil Walikota Sukabumi"
             />
@@ -182,36 +176,88 @@ function Profile() {
   )
 }
 
-function NewsList({ items, announcement = false }: { items: string[][]; announcement?: boolean }) { return <div className="flex flex-col gap-6">{items.map(([title, date, category]) => <article key={title} className="flex gap-5"><div className={`grid size-20 shrink-0 place-items-center rounded-lg ${announcement ? 'bg-[#eff4f8] text-[#f29b10]' : 'bg-[#d6d6d6] text-xs text-black'}`}>{announcement ? <Megaphone /> : 'img'}</div><div><h3 className="text-base font-bold leading-tight text-[#1d293d]">{title}</h3><p className="mt-1 text-sm text-[#687991]">{date} <span className="text-[#159447]">•</span> {category}</p></div></article>)}</div> }
+interface NewsItem {
+  slug: string
+  title: string
+  date: string
+  category?: string
+}
+
+function NewsList({ items, announcement = false }: { items: NewsItem[]; announcement?: boolean }) {
+  return (
+    <div className="flex flex-col gap-3 h-full">
+      {items.map((item) => (
+        <Link
+          key={item.slug}
+          href={announcement ? `/pengumuman/${item.slug}` : `/berita/${item.slug}`}
+          className="flex items-center gap-4 rounded-xl border-2 border-[#e5ebf0] bg-white p-4 transition-all duration-200 hover:border-green-200 hover:bg-slate-50 hover:shadow-md group cursor-pointer h-full"
+        >
+          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg ${announcement ? 'bg-[#fffbeb] text-[#f29b10]' : 'bg-slate-100 text-slate-400'}`}>
+            {announcement ? <Megaphone size={22} /> : <ImageIcon size={22} />}
+          </div>
+          <div className="flex-1 min-w-0 flex flex-col justify-center h-full">
+            <h3 className="text-sm font-bold leading-snug text-[#1b293c] group-hover:text-[#159447] transition-colors line-clamp-2" title={item.title}>
+              {item.title}
+            </h3>
+            <p className="mt-1 text-xs text-[#687991]">
+              {item.date} {!announcement && <><span className="text-[#159447] mx-1">•</span> {item.category}</>}
+            </p>
+          </div>
+          <div className="shrink-0 flex items-center h-full">
+            <ChevronRight size={16} className="text-[#cbd5e1] group-hover:text-[#159447] transition-colors" />
+          </div>
+        </Link>
+      ))}
+    </div>
+  )
+}
 
 function News() {
-  return <section id="berita" className="bg-white px-4 py-10 md:px-8 lg:px-12 md:py-16">
-    <div className="mx-auto max-w-[1400px]">
-      <SectionHeading subtitle="Pengumuman dan berita terbaru dari Kota Sukabumi.">
-        Pengumuman & Berita
-      </SectionHeading>
-      <div className="grid gap-14 lg:grid-cols-2">
-        <div>
-          <h3 className="mb-6 text-2xl font-bold text-[#263349]">Pengumuman</h3>
-          <div className="mb-7 h-1 w-14 rounded-full bg-[#f4c13b]" />
-          <NewsList items={announcements} announcement />
-          <Link className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44] hover:text-[#0f7a36] transition-colors"
-            href="/pengumuman">
-            Lihat Semua <ArrowRight size={18} />
-          </Link>
-        </div>
-        <div>
-          <h3 className="mb-6 text-2xl font-bold text-[#263349]">Berita</h3>
-          <div className="mb-7 h-1 w-14 rounded-full bg-[#f4c13b]" />
-          <NewsList items={news} />
-          <Link className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44] hover:text-[#0f7a36] transition-colors"
-            href="/berita">
-            Lihat Semua <ArrowRight size={18} />
-          </Link>
+  const [dbAnnouncements, setDbAnnouncements] = useState<AnnouncementItem[]>([])
+
+  useEffect(() => {
+    async function fetchTopAnnouncements() {
+      const data = await getAnnouncements()
+      // Ambil 3 data paling atas/terbaru saja
+      setDbAnnouncements(data.slice(0, 3))
+    }
+    fetchTopAnnouncements()
+  }, [])
+
+  return (
+    <section id="berita" className="bg-white px-4 py-10 md:px-8 lg:px-12 md:py-16">
+      <div className="mx-auto max-w-[1400px]">
+        <SectionHeading subtitle="Pengumuman dan berita terbaru dari Kota Sukabumi.">
+          Pengumuman {"&"} Berita
+        </SectionHeading>
+        <div className="grid gap-14 lg:grid-cols-2 items-stretch">
+          <div className="flex flex-col h-full">
+            <h3 className="mb-6 text-2xl font-bold text-[#263349]">Pengumuman</h3>
+            <div className="mb-7 h-1 w-14 rounded-full bg-[#f4c13b]" />
+            <div className="flex-1 flex flex-col">
+              {/* Gunakan state dbAnnouncements di sini */}
+              <NewsList items={dbAnnouncements} announcement />
+            </div>
+            <Link className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44] hover:text-[#0f7a36] transition-colors"
+              href="/pengumuman">
+              Pengumuman Lainnya <ArrowRight size={18} />
+            </Link>
+          </div>
+          <div className="flex flex-col h-full">
+            <h3 className="mb-6 text-2xl font-bold text-[#263349]">Berita</h3>
+            <div className="mb-7 h-1 w-14 rounded-full bg-[#f4c13b]" />
+            <div className="flex-1 flex flex-col">
+              <NewsList items={news} />
+            </div>
+            <Link className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44] hover:text-[#0f7a36] transition-colors"
+              href="/berita">
+              Berita Lainnya <ArrowRight size={18} />
+            </Link>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+  )
 }
 
 interface SubItem {
@@ -680,7 +726,7 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
                 <button
                   key={category}
                   onClick={() => handleCategoryChange(category)}
-                  className={`px-6 py-4 text-base text-left font-medium transition-all duration-200 rounded-lg border ${activeCategory === category
+                  className={`px-6 py-4 text-base text-left font-medium transition-all duration-200 rounded-lg border-2 ${activeCategory === category
                     ? 'border-[#159447] bg-[#159447] text-white'
                     : 'border-[#e5e7eb] bg-white text-[#4b5563] hover:bg-slate-50 hover:shadow-md'
                     }`}
@@ -708,7 +754,7 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
                 <div className="flex-1">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 content-start">
                     {currentPage.items.map((service: ServiceCard, index: number) => {
-                      const cardClasses = "flex cursor-pointer items-center gap-4 rounded-lg border border-[#e5ebf0] bg-white p-4 transition-all duration-200 hover:border-green-200 hover:bg-slate-50 hover:shadow-md w-full text-left"
+                      const cardClasses = "flex cursor-pointer items-center gap-4 rounded-lg border-2 border-[#e5ebf0] bg-white p-4 transition-all duration-200 hover:border-green-200 hover:bg-slate-50 hover:shadow-md w-full text-left"
                       const inner = (
                         <>
                           {/* Icon or Image */}
@@ -833,12 +879,12 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
               <p className="text-sm text-[#66758a] ml-4">Pilih layanan yang tersedia</p>
             </div>
 
-            {/* Modal Cards Grid + Pagination — min-h keeps layout stable */}
+            {/* Modal Cards Grid + Pagination ΓÇö min-h keeps layout stable */}
             <div className="flex flex-col min-h-[260px]">
               <div className="flex-1">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 content-start">
                   {currentModalItems.map((item, index) => {
-                    const cardClasses = "flex items-center gap-4 rounded-lg border border-[#e5ebf0] bg-[#f8fafc] p-4 transition-all duration-200 hover:border-green-200 hover:bg-slate-50 hover:shadow-md w-full text-left cursor-pointer"
+                    const cardClasses = "flex items-center gap-4 rounded-lg border-2 border-[#e5ebf0] bg-[#f8fafc] p-4 transition-all duration-200 hover:border-green-200 hover:bg-slate-50 hover:shadow-md w-full text-left cursor-pointer"
                     const inner = (
                       <>
                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white border border-[#e5ebf0] text-[#16a34a] shadow-sm overflow-hidden">
@@ -930,7 +976,7 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
           aria-modal="true"
           aria-label={`Preview: ${iframeTitle}`}
         >
-          {/* Toolbar — always visible */}
+          {/* Toolbar ΓÇö always visible */}
           <div className="flex items-center justify-between gap-3 bg-[#1b293c] px-4 py-2.5 shadow-lg">
             {/* Left: Back button + icon + title */}
             <div className="flex items-center gap-3 min-w-0">
@@ -1026,7 +1072,7 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
               rel="noopener noreferrer"
               className="shrink-0 text-xs md:text-sm font-semibold text-[#4ade80] hover:underline"
             >
-              Buka langsung →
+              Buka langsung ΓåÆ
             </a>
           </div>
         </div>
@@ -1185,12 +1231,12 @@ function TransparansiDokumen() {
           </SectionHeading>
           {/* <div className="hidden md:block">
             <button className="rounded-lg bg-[#159447] px-4 py-2 font-medium text-white hover:bg-[#0f7a36] transition-colors">
-              Lihat Selengkapnya →
+              Lihat Selengkapnya ΓåÆ
             </button>
           </div> */}
         </div>
 
-        {/* Document Cards Grid + Pagination — flex-col with min-h keeps pagination position stable */}
+        {/* Document Cards Grid + Pagination ΓÇö flex-col with min-h keeps pagination position stable */}
         <div className="flex flex-col" style={{ minHeight: '320px' }}>
           {/* Document Cards Grid */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 flex-1">
@@ -1207,7 +1253,7 @@ function TransparansiDokumen() {
                   </div>
                 </div>
 
-                {/* Document Title — flex-grow pushes buttons to bottom */}
+                {/* Document Title ΓÇö flex-grow pushes buttons to bottom */}
                 <h3 className="flex-grow mb-4 text-sm font-medium leading-tight text-[#1f2937] line-clamp-3">
                   {doc.title}
                 </h3>
@@ -1231,7 +1277,7 @@ function TransparansiDokumen() {
             ))}
           </div>
 
-          {/* Navigation Controls — always at bottom of the fixed-height container */}
+          {/* Navigation Controls ΓÇö always at bottom of the fixed-height container */}
           {totalPages > 1 && (
             <div className="mt-8 flex items-center justify-center gap-4">
               <button
@@ -1304,13 +1350,13 @@ function TransparansiDokumen() {
                       </p>
                     </div>
 
-                    {/* Tanggal Publikasi */}
+                    {/* Tanggal Pemberlakuan */}
                     <div>
                       <div className="flex items-center gap-2 text-[#159447] mb-1">
                         <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                         </svg>
-                        <span className="text-xs text-[#94a3b8] font-medium">Tanggal Publikasi</span>
+                        <span className="text-xs text-[#94a3b8] font-medium">Tanggal Pemberlakuan</span>
                       </div>
                       <p className="text-[#334155] text-sm md:text-sm pl-6">
                         {selectedDocument.publishedDate}
