@@ -20,7 +20,7 @@ const menuItems = [
     { name: 'Kelola Berita', href: '/admin/berita', icon: Newspaper },
     { name: 'Pengumuman Resmi', href: '/admin/pengumuman', icon: Megaphone },
     { name: 'Transparansi Keuangan', href: '/admin/transparansi', icon: FileText },
-    { name: 'Kelola Slider', href: '/admin/slider', icon: MonitorPlay },
+    { name: 'Banner Beranda', href: '/admin/banner', icon: MonitorPlay },
     { name: 'Pengaturan', href: '/admin/pengaturan', icon: Settings },
 ]
 
@@ -28,7 +28,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const pathname = usePathname()
 
     return (
-        <div className="flex h-screen w-full bg-[#f4f7f6] overflow-hidden font-sans">
+        <div className="flex h-screen w-full bg-[#f4f7f6] overflow-hidden" style={{ fontFamily: "'Inter', Arial, sans-serif" }}>
 
             {/* SIDEBAR */}
             <aside className="w-[260px] bg-[#f8fafc] border-r border-slate-200 flex flex-col shrink-0">
@@ -39,10 +39,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         <Landmark size={22} />
                     </div>
                     <div className="flex flex-col">
-                        <h1 className="text-[15px] font-extrabold text-[#1b293c] leading-tight">
+                        <h1 className="text-[15px] font-bold text-[#172135] leading-tight tracking-tight">
                             Portal Pemda
                         </h1>
-                        <p className="text-[11px] text-slate-500 font-semibold tracking-wide mt-0.5">
+                        <p className="text-[11px] text-[#566276] font-medium tracking-wide mt-0.5">
                             Sistem Informasi Publik
                         </p>
                     </div>
@@ -50,7 +50,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                 {/* Area Navigasi Menu */}
                 <nav className="flex-1 px-4 py-2 space-y-1.5 overflow-y-auto">
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-2">
+                    <div className="text-[10px] font-bold text-[#566276]/60 uppercase tracking-widest mb-3 px-2">
                         Menu Utama
                     </div>
 
@@ -66,12 +66,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             <Link
                                 key={item.name}
                                 href={item.href}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${isActive
-                                        ? 'bg-[#159447] text-white shadow-md shadow-green-900/10'
-                                        : 'text-slate-600 hover:bg-slate-100 hover:text-[#1b293c]'
+                                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all duration-200 ${isActive
+                                        ? 'bg-[#159447] text-white shadow-md shadow-green-900/10 font-semibold'
+                                        : 'text-[#566276] font-medium hover:bg-slate-100 hover:text-[#172135]'
                                     }`}
                             >
-                                <Icon size={18} className={isActive ? 'text-white' : 'text-slate-500'} />
+                                <Icon size={18} className={isActive ? 'text-white' : 'text-[#566276]'} />
                                 {item.name}
                             </Link>
                         )
@@ -86,10 +86,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 <User size={16} />
                             </div>
                             <div className="min-w-0">
-                                <p className="text-[13px] font-bold text-[#1b293c] truncate">
+                                <p className="text-[13px] font-bold text-[#172135] truncate tracking-tight">
                                     Trias Firmansyah
                                 </p>
-                                <p className="text-[10px] text-slate-500 font-medium">
+                                <p className="text-[10px] text-[#566276] font-medium">
                                     Admin Utama
                                 </p>
                             </div>
