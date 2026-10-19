@@ -1,9 +1,6 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import { Navbar } from './components/Navbar'
-import { Footer } from './components/Footer'
-import ScrollToTop from '@/components/ScrollToTop'
 
 export const metadata: Metadata = {
   title: 'Pemerintah Kota Sukabumi | Website Resmi',
@@ -11,18 +8,9 @@ export const metadata: Metadata = {
   generator: 'v0.app',
   icons: {
     icon: [
-      {
-        url: '/logo.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/logo.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/logo.png',
-        type: 'image/svg+xml',
-      },
+      { url: '/logo.png', media: '(prefers-color-scheme: light)' },
+      { url: '/logo.png', media: '(prefers-color-scheme: dark)' },
+      { url: '/logo.png', type: 'image/svg+xml' },
     ],
     apple: '/apple-icon.png',
   },
@@ -44,10 +32,10 @@ export default function RootLayout({
   return (
     <html lang="id" className="bg-white">
       <body className="antialiased">
-        <Navbar />
+        {/* Navbar dan Footer DIHAPUS dari sini */}
+        
         {children}
-        <Footer />
-        <ScrollToTop />
+        
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
