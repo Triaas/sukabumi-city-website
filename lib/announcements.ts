@@ -1,7 +1,6 @@
 'use server'
 
 import pool from './db';
-import { RowDataPacket } from 'mysql2';
 
 export interface AnnouncementItem {
     id: number;
@@ -21,12 +20,12 @@ export async function getAnnouncements(): Promise<AnnouncementItem[]> {
     try {
         const query = `
       SELECT 
-        p.ID as id,
+        p.id,
         p.post_title AS title,
         p.post_name AS slug,
         p.post_date AS raw_date
       FROM wp_posts p
-      JOIN wp_term_relationships tr ON p.ID = tr.object_id
+      JOIN wp_term_relationships tr ON p.id = tr.object_id
       JOIN wp_term_taxonomy tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
       JOIN wp_terms t ON tt.term_id = t.term_id
       WHERE t.slug = 'pengumuman' 
@@ -34,7 +33,7 @@ export async function getAnnouncements(): Promise<AnnouncementItem[]> {
       ORDER BY p.post_date DESC;
     `;
 
-        const [rows] = await pool.query<RowDataPacket[]>(query);
+        const { rows } = await pool.query(query);
 
         return rows.map((row) => ({
             id: row.id,
@@ -42,7 +41,7 @@ export async function getAnnouncements(): Promise<AnnouncementItem[]> {
             slug: row.slug,
             date: new Date(row.raw_date).toLocaleDateString('id-ID', {
                 day: '2-digit',
-                month: 'short',
+                month: 'long',
                 year: 'numeric',
             }),
         }));
@@ -61,11 +60,11 @@ export async function getAnnouncementBySlug(slug: string): Promise<AnnouncementD
         post_date AS raw_date,
         post_content AS content
       FROM wp_posts 
-      WHERE post_name = ? AND post_status = 'publish'
+      WHERE post_name = $1 AND post_status = 'publish'
       LIMIT 1;
     `;
 
-        const [rows] = await pool.query<RowDataPacket[]>(query, [slug]);
+        const { rows } = await pool.query(query, [slug]);
 
         if (rows.length === 0) return null;
 

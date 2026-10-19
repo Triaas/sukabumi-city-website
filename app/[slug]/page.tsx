@@ -17,7 +17,7 @@ const contentData: {
     contentImage?: string
     contentImageTitle?: string
     contentImageClassName?: string
-    inlineImages?: { [key: number]: { src: string; caption?: string; title?: string; subtitle?: string } }
+    inlineImages?: { [key: number]: { src: string; caption?: string; title?: string; subtitle?: string; link?: string; imageClassName?: string } }
     tableData?: Array<{
       title: string
       subtitle: string
@@ -375,6 +375,8 @@ const contentData: {
       1: {
         src: '/images/Sukabumi dalam angka.jpeg',
         caption: 'Sumber: BPS Kota Sukabumi 2026',
+        link: 'https://sukabumikota.bps.go.id/id/publication/2026/02/27/b3c2d3ab48f0a9944fdd34ff/kota-sukabumi-dalam-angka-2026.html',
+        imageClassName: 'max-w-[300px] w-full h-auto mx-auto rounded-xl shadow-sm hover:scale-103 transition-transform duration-300 cursor-pointer block',
       }
     },
     content: [
@@ -521,15 +523,33 @@ export default async function DetailPage({
                         )}
 
                         {/* Gambar utama */}
-                        <img
-                          src={content.inlineImages[index].src}
-                          alt={content.inlineImages[index].title || content.inlineImages[index].caption || `Ilustrasi bagian ${index}`}
-                          className={
-                            content.inlineImages[index].title
-                              ? "mx-auto h-auto max-w-full rounded-lg block"
-                              : "w-full max-w-md mx-auto h-auto rounded-xl mb-2 shadow-sm block"
-                          }
-                        />
+                        {content.inlineImages[index].link ? (
+                          <a href={content.inlineImages[index].link} target="_blank" rel="noopener noreferrer" className="block w-fit mx-auto">
+                            <img
+                              src={content.inlineImages[index].src}
+                              alt={content.inlineImages[index].title || content.inlineImages[index].caption || `Ilustrasi bagian ${index}`}
+                              className={
+                                content.inlineImages[index].imageClassName || (
+                                  content.inlineImages[index].title
+                                    ? "mx-auto h-auto max-w-full rounded-lg block"
+                                    : "w-full max-w-md mx-auto h-auto rounded-xl mb-2 shadow-sm block"
+                                )
+                              }
+                            />
+                          </a>
+                        ) : (
+                          <img
+                            src={content.inlineImages[index].src}
+                            alt={content.inlineImages[index].title || content.inlineImages[index].caption || `Ilustrasi bagian ${index}`}
+                            className={
+                              content.inlineImages[index].imageClassName || (
+                                content.inlineImages[index].title
+                                  ? "mx-auto h-auto max-w-full rounded-lg block"
+                                  : "w-full max-w-md mx-auto h-auto rounded-xl mb-2 shadow-sm block"
+                              )
+                            }
+                          />
+                        )}
 
                         {/* Caption / Sumber Data */}
                         {content.inlineImages[index].caption && (

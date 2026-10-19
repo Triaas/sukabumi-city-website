@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ArrowLeft, Calendar, User } from 'lucide-react'
 import ShareButtons from '@/components/ShareButtons'
-import { getAnnouncementBySlug } from '@/lib/announcements'
+import { getAnnouncementBySlug, getAnnouncements } from '@/lib/announcements'
 
 export default async function AnnouncementDetailPage({
   params,
@@ -9,7 +9,14 @@ export default async function AnnouncementDetailPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  const announcement = await getAnnouncementBySlug(slug)
+  const [announcement, allAnnouncements] = await Promise.all([
+    getAnnouncementBySlug(slug),
+    getAnnouncements(),
+  ])
+
+  const otherAnnouncements = allAnnouncements
+    .filter((item) => item.slug !== slug)
+    .slice(0, 4)
 
   if (!announcement) {
     return (
@@ -26,14 +33,14 @@ export default async function AnnouncementDetailPage({
   const shortcodeRegex = /\[embeddoc\s+url="([^"]+)"[^\]]*\]/i
   const match = announcement.content.match(shortcodeRegex)
   let pdfUrl = match ? match[1] : null
-  
+
   // 2. Ubah URL absolut web lama menjadi relative path (lokal Next.js)
   if (pdfUrl) {
     pdfUrl = pdfUrl.replace('https://portal.sukabumikota.go.id', '')
     // Jika format URL di database pakai http:// juga, bersihkan sekalian:
     pdfUrl = pdfUrl.replace('http://portal.sukabumikota.go.id', '')
   }
-  
+
   // 3. Bersihkan teks shortcode dari konten agar tidak muncul di layar
   const cleanContent = announcement.content.replace(shortcodeRegex, '')
 
@@ -82,7 +89,7 @@ export default async function AnnouncementDetailPage({
 
               {/* File Preview Box */}
               {pdfUrl && (
-                <div className="mb-10 w-full h-[600px] md:h-[800px] rounded-xl overflow-hidden shadow-sm border border-slate-200 bg-slate-100 flex flex-col">
+                <div className="mb-10 w-full h-[400px] md:h-[500px] rounded-xl overflow-hidden shadow-sm border border-slate-200 bg-slate-100 flex flex-col">
                   <iframe
                     src={pdfUrl}
                     className="w-full flex-1 border-0"
@@ -93,6 +100,51 @@ export default async function AnnouncementDetailPage({
 
             </div>
           </div>
+
+          {/* Pengumuman Lainnya */}
+          {otherAnnouncements && otherAnnouncements.length > 0 && (
+            <div className="mt-12 w-full">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-[#1d293d]">Pengumuman Lainnya</h2>
+                <Link
+                  href="/pengumuman"
+                  className="text-sm font-bold text-[#159447] hover:text-[#0f7a36] transition-colors"
+                >
+                  Lihat Semua →
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {otherAnnouncements.map((item) => (
+                  <Link
+                    href={`/pengumuman/${item.slug}`}
+                    key={item.id}
+                    className="group p-1.5 rounded-[22px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex flex-col cursor-pointer"
+                  >
+                    <div className="flex flex-col flex-1 rounded-2xl bg-white border border-slate-200/90 overflow-hidden shadow-sm transition-all duration-300 group-hover:border-[#159447]/40">
+                      <div className="h-36 bg-slate-200 flex items-center justify-center overflow-hidden">
+                        <img
+                          src="/images/toa_pengumuman.jpg"
+                          alt="Ilustrasi Pengumuman"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                      <div className="p-4 flex flex-col flex-1">
+                        <div className="text-xs font-bold text-[#159447] mb-2 uppercase tracking-wider">
+                          Pengumuman
+                        </div>
+                        <h3 className="text-sm font-semibold text-[#1d293d] mb-3 leading-snug group-hover:text-[#159447] transition-colors line-clamp-3 flex-1">
+                          {item.title}
+                        </h3>
+                        <div className="mt-auto text-xs font-medium text-slate-500">
+                          {item.date}
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </main>

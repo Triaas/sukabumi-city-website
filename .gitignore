@@ -13,3 +13,6 @@ __v0_jsx-dev-runtime.ts
 node_modules
 .next/
 .DS_Store
+
+# Ignore WordPress Uploads (Terlalu besar untuk Git)
+public/wp-content/uploads/

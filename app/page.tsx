@@ -34,8 +34,8 @@ import {
   Image as ImageIcon,
 } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { allNews } from '@/data/newsData'
 import { getAnnouncements, AnnouncementItem } from '@/lib/announcements'
+import { fetchNews } from '@/lib/news'
 
 const profileCards = [
   { title: 'Sejarah', description: 'Jejak perkembangan Kota Sukabumi dari masa ke masa.', image: '/images/sejarah-card.jpg', href: '/sejarah' },
@@ -47,8 +47,12 @@ const profileCards = [
   { title: 'Unit Kesehatan Sekolah (UKS)', description: 'Program pembinaan kesehatan komprehensif di lingkungan sekolah.', image: '/images/UKS-card.jpg', href: '/uks' },
 ]
 
-// Card berita beranda: 3 berita terbaru dari sumber data yang sama dengan halaman /berita
-const news = allNews.slice(0, 3)
+interface EventBanner {
+  id: number;
+  title: string;
+  image: string;
+  href: string;
+}
 
 function SectionHeading({ children, subtitle }: { children: React.ReactNode; subtitle?: string }) {
   return <div className="mb-6"><h2 className="flex items-center gap-3 text-3xl font-bold tracking-tight text-[#172135] md:text-4xl"><span className="h-10 w-1.5 rounded-full bg-[#159447]" />{children}</h2>{subtitle && <p className="mt-3 max-w-5xl text-lg leading-relaxed text-[#566276]">{subtitle}</p>}</div>
@@ -93,20 +97,54 @@ function Hero() {
 function Welcome() {
   return (
     <section className="bg-white px-4 py-10 md:px-8 lg:px-12 md:py-16">
-      <div className="mx-auto flex max-w-[1400px] flex-col items-center gap-12 lg:flex-row lg:gap-16">
-        <article className="max-w-[390px] rounded-3xl bg-[#eff4f8] p-8 shadow-sm md:p-10">
-          <h2 className="text-3xl font-bold leading-tight text-[#ba8500]">
+      <div className="mx-auto flex max-w-[1400px] flex-col items-center gap-12 lg:flex-row lg:gap-4">
+        <article className="w-full max-w-[440px] rounded-3xl bg-[#eff4f8] p-7 md:p-9 shadow-sm">
+          <div className="flex items-center gap-2 mb-2.5">
+            <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#ba8500]">Motto Kota Sukabumi</span>
+          </div>
+          <h2 className="text-2xl md:text-3xl font-semibold leading-tight text-[#18243b]">
             Reugreug Pageuh Repeh Rapih
           </h2>
-          <p className="mt-6 text-lg leading-relaxed text-[#29364a]">
-            Untuk mewujudkan masyarakat yang reugreug harinya, harus dipegang pageuh norma dan kebiasaan saling menghormati, tepa selira, dan toleran agar kehidupan masyarakat menjadi repeh, tidak dipenuhi oleh bentakan dan hentakkan, sebuah masyarakat yang mempertontonkan rapih dan saling memuliakan.
-          </p>
+          <div className="mt-7 pt-6 border-t border-slate-200/80 grid grid-cols-2 gap-x-6 gap-y-6">
+            <div className="flex flex-col">
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-base md:text-lg font-bold text-[#159447]">Reugreug</h3>
+              </div>
+              <p className="mt-1 text-xs md:text-psm leading-snug text-[#29364a]">
+                Hati tenteram dan penuh rasa aman.
+              </p>
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-base md:text-lg font-bold text-[#159447]">Pageuh</h3>
+              </div>
+              <p className="mt-1 text-xs md:text-sm leading-snug text-[#29364a]">
+                Teguh memegang norma & toleransi.
+              </p>
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-base md:text-lg font-bold text-[#159447]">Repeh</h3>
+              </div>
+              <p className="mt-1 text-xs md:text-sm leading-snug text-[#29364a]">
+                Hidup rukun damai tanpa kegaduhan.
+              </p>
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-base md:text-lg font-bold text-[#159447]">Rapih</h3>
+              </div>
+              <p className="mt-1 text-xs md:text-sm leading-snug text-[#29364a]">
+                Tertib tatanan & saling memuliakan.
+              </p>
+            </div>
+          </div>
         </article>
 
         <div className="flex flex-1 items-end justify-center gap-0">
-          <div className="relative z-10 w-full max-w-[500px] self-end">
+          <div className="relative z-10 w-full max-w-[570px] self-end">
             <img
-              src="/images/walikota&wakil.jpg"
+              src="/images/10.png"
               className="w-full"
               alt="Walikota dan Wakil Walikota Sukabumi"
             />
@@ -176,35 +214,150 @@ function Profile() {
   )
 }
 
+function EventSlider() {
+  const [banners, setBanners] = useState<EventBanner[]>([])
+  const [currentSlide, setCurrentSlide] = useState(0)
+
+  useEffect(() => {
+    fetch('/api/event-banners')
+      .then((res) => res.json())
+      .then((data: EventBanner[]) => setBanners(data))
+      .catch((err) => console.error('Gagal memuat event banners:', err))
+  }, [])
+
+  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % Math.max(banners.length, 1))
+  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + Math.max(banners.length, 1)) % Math.max(banners.length, 1))
+
+  useEffect(() => {
+    if (banners.length === 0) return
+    const timer = setInterval(() => {
+      nextSlide()
+    }, 5000)
+    return () => clearInterval(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSlide, banners.length])
+
+  return (
+    <section className="bg-white pt-10 pb-2 px-4 md:px-8 lg:px-12">
+      <div className="mx-auto max-w-[1400px]">
+        {/* Slider Container */}
+        <div className="relative w-full h-[180px] sm:h-[260px] md:h-[360px] lg:h-[420px] rounded-2xl md:rounded-3xl overflow-hidden shadow-md group bg-slate-100">
+
+          {banners.length === 0 ? (
+            <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-sm">Memuat slider...</div>
+          ) : (
+            <>
+              {/* Slides */}
+              {banners.map((banner, index) => (
+                <a
+                  key={banner.id}
+                  href={banner.href || '#'}
+                  className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                    }`}
+                  tabIndex={index === currentSlide ? 0 : -1}
+                  aria-hidden={index !== currentSlide}
+                >
+                  <img
+                    src={banner.image}
+                    alt={banner.title}
+                    className="absolute inset-0 w-full h-full object-cover object-center"
+                  />
+                  {/* Subtle gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                </a>
+              ))}
+
+              {/* Prev Button */}
+              <button
+                onClick={(e) => { e.preventDefault(); prevSlide(); }}
+                aria-label="Slide sebelumnya"
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-slate-900/40 text-white hover:bg-slate-900/75 backdrop-blur-sm flex items-center justify-center transition-all cursor-pointer"
+              >
+                <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+              </button>
+
+              {/* Next Button */}
+              <button
+                onClick={(e) => { e.preventDefault(); nextSlide(); }}
+                aria-label="Slide berikutnya"
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-slate-900/40 text-white hover:bg-slate-900/75 backdrop-blur-sm flex items-center justify-center transition-all cursor-pointer"
+              >
+                <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+              </button>
+
+              {/* Pagination Dots (Kapsul) */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bg-slate-900/65 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2.5 shadow-lg">
+                {banners.map((banner, index) => (
+                  <button
+                    key={banner.id}
+                    onClick={() => setCurrentSlide(index)}
+                    aria-label={`Pergi ke slide ${index + 1}: ${banner.title}`}
+                    className={
+                      index === currentSlide
+                        ? 'w-7 h-2.5 rounded-full bg-[#159447] transition-all duration-300'
+                        : 'w-2.5 h-2.5 rounded-full bg-white/50 hover:bg-white/90 transition-all duration-300 cursor-pointer'
+                    }
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 interface NewsItem {
   slug: string
   title: string
   date: string
   category?: string
+  image?: string
 }
 
-function NewsList({ items, announcement = false }: { items: NewsItem[]; announcement?: boolean }) {
+function AnnouncementList({ items }: { items: NewsItem[] }) {
   return (
-    <div className="flex flex-col gap-3 h-full">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       {items.map((item) => (
+        /* Outer Transparent Wrapper (Double-Bezel) */
         <Link
           key={item.slug}
-          href={announcement ? `/pengumuman/${item.slug}` : `/berita/${item.slug}`}
-          className="flex items-center gap-4 rounded-xl border-2 border-[#e5ebf0] bg-white p-4 transition-all duration-200 hover:border-green-200 hover:bg-slate-50 hover:shadow-md group cursor-pointer h-full"
+          href={`/pengumuman/${item.slug}`}
+          className="group p-1.5 rounded-[22px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex flex-col"
         >
-          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg ${announcement ? 'bg-[#fffbeb] text-[#f29b10]' : 'bg-slate-100 text-slate-400'}`}>
-            {announcement ? <Megaphone size={22} /> : <ImageIcon size={22} />}
-          </div>
-          <div className="flex-1 min-w-0 flex flex-col justify-center h-full">
-            <h3 className="text-sm font-bold leading-snug text-[#1b293c] group-hover:text-[#159447] transition-colors line-clamp-2" title={item.title}>
-              {item.title}
-            </h3>
-            <p className="mt-1 text-xs text-[#687991]">
-              {item.date} {!announcement && <><span className="text-[#159447] mx-1">•</span> {item.category}</>}
-            </p>
-          </div>
-          <div className="shrink-0 flex items-center h-full">
-            <ChevronRight size={16} className="text-[#cbd5e1] group-hover:text-[#159447] transition-colors" />
+          {/* Inner Main Card */}
+          <div className="flex flex-col flex-1 rounded-2xl bg-white border border-slate-200/90 overflow-hidden shadow-sm transition-all duration-300 group-hover:border-[#159447]/40">
+            {/* Thumbnail */}
+            <div className="h-36 bg-[#fffbeb] flex items-center justify-center overflow-hidden">
+              {item.image ? (
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    e.currentTarget.src = '/images/news.webp'
+                    e.currentTarget.onerror = null
+                  }}
+                />
+              ) : (
+                <img
+                  src="/images/toa_pengumuman.jpg"
+                  alt="Pengumuman"
+                  className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                />
+              )}
+            </div>
+            {/* Content */}
+            <div className="p-4 flex flex-col flex-1">
+              <div className="text-xs font-bold text-[#159447] mb-2 uppercase tracking-wider">
+                Pengumuman
+              </div>
+              <h3 className="text-sm font-semibold text-[#1d293d] leading-snug group-hover:text-[#159447] transition-colors line-clamp-3 flex-1">
+                {item.title}
+              </h3>
+              <div className="mt-3 text-xs font-medium text-slate-400">{item.date}</div>
+            </div>
           </div>
         </Link>
       ))}
@@ -212,16 +365,83 @@ function NewsList({ items, announcement = false }: { items: NewsItem[]; announce
   )
 }
 
+function NewsCardList({ items }: { items: NewsItem[] }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {items.map((item) => (
+        /* Outer Transparent Wrapper (Double-Bezel) */
+        <Link
+          key={item.slug}
+          href={`/berita/${item.slug}`}
+          className="group p-1.5 rounded-[22px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex flex-col"
+        >
+          {/* Inner Main Card */}
+          <div className="flex flex-col flex-1 rounded-2xl bg-white border border-slate-200/90 overflow-hidden shadow-sm transition-all duration-300 group-hover:border-[#159447]/40">
+            {/* Thumbnail */}
+            <div className="h-36 bg-slate-100 flex items-center justify-center overflow-hidden">
+              {item.image ? (
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    e.currentTarget.src = '/images/news.webp'
+                    e.currentTarget.onerror = null
+                  }}
+                />
+              ) : (
+                <ImageIcon size={32} className="text-slate-300" />
+              )}
+            </div>
+            {/* Content */}
+            <div className="p-4 flex flex-col flex-1">
+              <div className="text-xs font-bold text-[#159447] mb-2 uppercase tracking-wider">
+                {item.category}
+              </div>
+              <h3 className="text-sm font-semibold text-[#1d293d] leading-snug group-hover:text-[#159447] transition-colors line-clamp-3 flex-1">
+                {item.title}
+              </h3>
+              <div className="mt-3 text-xs font-medium text-slate-400">{item.date}</div>
+            </div>
+          </div>
+        </Link>
+      ))}
+    </div>
+  )
+}
+
+function CardSkeleton() {
+  return (
+    <div className="p-1.5 rounded-[22px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm flex flex-col">
+      <div className="flex flex-col flex-1 rounded-2xl bg-white border border-slate-200/90 overflow-hidden shadow-sm animate-pulse">
+        {/* Image placeholder */}
+        <div className="h-36 bg-slate-200" />
+        {/* Content placeholder */}
+        <div className="p-4 flex flex-col flex-1">
+          <div className="h-3 w-20 bg-slate-200 rounded mb-2" />
+          <div className="h-4 w-full bg-slate-200 rounded mb-2" />
+          <div className="h-4 w-3/4 bg-slate-200 rounded mb-4" />
+          <div className="h-3 w-24 bg-slate-200 rounded mt-auto" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function News() {
   const [dbAnnouncements, setDbAnnouncements] = useState<AnnouncementItem[]>([])
+  const [dbNews, setDbNews] = useState<NewsItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    async function fetchTopAnnouncements() {
-      const data = await getAnnouncements()
-      // Ambil 3 data paling atas/terbaru saja
-      setDbAnnouncements(data.slice(0, 3))
+    async function loadData() {
+      await Promise.all([
+        getAnnouncements().then(data => setDbAnnouncements(data.slice(0, 3))),
+        fetchNews().then(data => setDbNews(data.slice(0, 3))),
+      ])
+      setIsLoading(false)
     }
-    fetchTopAnnouncements()
+    loadData()
   }, [])
 
   return (
@@ -230,25 +450,36 @@ function News() {
         <SectionHeading subtitle="Pengumuman dan berita terbaru dari Kota Sukabumi.">
           Pengumuman {"&"} Berita
         </SectionHeading>
-        <div className="grid gap-14 lg:grid-cols-2 items-stretch">
-          <div className="flex flex-col h-full">
+        <div className="grid gap-14 lg:grid-cols-2 items-start">
+          <div className="flex flex-col">
             <h3 className="mb-6 text-2xl font-bold text-[#263349]">Pengumuman</h3>
             <div className="mb-7 h-1 w-14 rounded-full bg-[#f4c13b]" />
-            <div className="flex-1 flex flex-col">
-              {/* Gunakan state dbAnnouncements di sini */}
-              <NewsList items={dbAnnouncements} announcement />
-            </div>
+            {isLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <CardSkeleton />
+                <CardSkeleton />
+                <CardSkeleton />
+              </div>
+            ) : (
+              <AnnouncementList items={dbAnnouncements} />
+            )}
             <Link className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44] hover:text-[#0f7a36] transition-colors"
               href="/pengumuman">
               Pengumuman Lainnya <ArrowRight size={18} />
             </Link>
           </div>
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col">
             <h3 className="mb-6 text-2xl font-bold text-[#263349]">Berita</h3>
             <div className="mb-7 h-1 w-14 rounded-full bg-[#f4c13b]" />
-            <div className="flex-1 flex flex-col">
-              <NewsList items={news} />
-            </div>
+            {isLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <CardSkeleton />
+                <CardSkeleton />
+                <CardSkeleton />
+              </div>
+            ) : (
+              <NewsCardList items={dbNews} />
+            )}
             <Link className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44] hover:text-[#0f7a36] transition-colors"
               href="/berita">
               Berita Lainnya <ArrowRight size={18} />
@@ -754,11 +985,11 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
                 <div className="flex-1">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 content-start">
                     {currentPage.items.map((service: ServiceCard, index: number) => {
-                      const cardClasses = "flex cursor-pointer items-center gap-4 rounded-lg border-2 border-[#e5ebf0] bg-white p-4 transition-all duration-200 hover:border-green-200 hover:bg-slate-50 hover:shadow-md w-full text-left"
+                      const outerClasses = "group p-1.5 rounded-[20px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex w-full text-left cursor-pointer"
                       const inner = (
-                        <>
+                        <div className="flex items-center gap-4 flex-1 rounded-2xl bg-white border border-slate-200/90 p-4 shadow-sm transition-all duration-300 group-hover:border-[#159447]/40 w-full min-w-0">
                           {/* Icon or Image */}
-                          <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-lg ${service.image ? '' : 'bg-[#f0fdf4] text-[#16a34a]'}`}>
+                          <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl p-1 transition-transform duration-300 group-hover:scale-105 ${service.image ? 'bg-slate-50 border border-slate-100' : 'bg-[#f0fdf4] text-[#16a34a]'}`}>
                             {service.image ? (
                               <img src={service.image} alt={service.title} className="h-full w-full object-contain" />
                             ) : (
@@ -767,12 +998,12 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
                           </div>
                           {/* Title & Subtitle */}
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-[#1b293c]">{service.title}</h4>
-                            <p className="text-sm text-[#66758a]">{service.subtitle}</p>
+                            <h4 className="font-bold text-[#1b293c] group-hover:text-[#159447] transition-colors">{service.title}</h4>
+                            <p className="text-sm text-[#66758a] mt-0.5 truncate">{service.subtitle}</p>
                           </div>
                           {/* Chevron */}
-                          <ChevronRight size={20} className="shrink-0 text-[#cbd5e1]" />
-                        </>
+                          <ChevronRight size={20} className="shrink-0 text-[#cbd5e1] group-hover:text-[#159447] group-hover:translate-x-0.5 transition-all" />
+                        </div>
                       )
 
                       const itemKey = `${service.id || 'service'}-${index}`
@@ -782,7 +1013,7 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
                           <button
                             key={itemKey}
                             onClick={() => openModal(service)}
-                            className={cardClasses}
+                            className={outerClasses}
                           >
                             {inner}
                           </button>
@@ -793,7 +1024,7 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
                         <button
                           key={itemKey}
                           onClick={() => service.href && service.href !== '#' ? openIframeModal(service.href, service.title) : undefined}
-                          className={cardClasses}
+                          className={outerClasses}
                         >
                           {inner}
                         </button>
@@ -884,22 +1115,25 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
               <div className="flex-1">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 content-start">
                   {currentModalItems.map((item, index) => {
-                    const cardClasses = "flex items-center gap-4 rounded-lg border-2 border-[#e5ebf0] bg-[#f8fafc] p-4 transition-all duration-200 hover:border-green-200 hover:bg-slate-50 hover:shadow-md w-full text-left cursor-pointer"
+                    const outerClasses = "group p-1.5 rounded-[20px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex w-full text-left cursor-pointer"
                     const inner = (
-                      <>
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white border border-[#e5ebf0] text-[#16a34a] shadow-sm overflow-hidden">
+                      <div className="flex items-center gap-4 flex-1 rounded-2xl bg-white border border-slate-200/90 p-4 shadow-sm transition-all duration-300 group-hover:border-[#159447]/40 w-full min-w-0">
+                        {/* Icon or Image */}
+                        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl p-1 transition-transform duration-300 group-hover:scale-105 ${item.image ? 'bg-slate-50 border border-slate-100' : 'bg-[#f0fdf4] text-[#16a34a]'}`}>
                           {item.image ? (
-                            <img src={item.image} alt={item.title} className="h-full w-full object-contain p-1" />
+                            <img src={item.image} alt={item.title} className="h-full w-full object-contain" />
                           ) : (
                             <ShoppingCart size={20} />
                           )}
                         </div>
+                        {/* Title & Subtitle */}
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-[#1b293c]">{item.title}</h4>
-                          <p className="text-xs text-[#66758a] leading-snug mt-0.5">{item.subtitle}</p>
+                          <h4 className="font-bold text-[#1b293c] group-hover:text-[#159447] transition-colors">{item.title}</h4>
+                          <p className="text-xs text-[#66758a] leading-snug mt-0.5 truncate">{item.subtitle}</p>
                         </div>
-                        <ChevronRight size={18} className="shrink-0 text-[#cbd5e1]" />
-                      </>
+                        {/* Chevron */}
+                        <ChevronRight size={18} className="shrink-0 text-[#cbd5e1] group-hover:text-[#159447] group-hover:translate-x-0.5 transition-all" />
+                      </div>
                     )
 
                     const itemKey = `${item.id || 'modal-item'}-${index}`
@@ -909,7 +1143,7 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
                         <button
                           key={itemKey}
                           onClick={() => openSubModal(item)}
-                          className={cardClasses}
+                          className={outerClasses}
                         >
                           {inner}
                         </button>
@@ -920,7 +1154,7 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
                       <button
                         key={itemKey}
                         onClick={() => item.href && item.href !== '#' ? openIframeModal(item.href, item.title) : undefined}
-                        className={cardClasses}
+                        className={outerClasses}
                       >
                         {inner}
                       </button>
@@ -1072,7 +1306,7 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
               rel="noopener noreferrer"
               className="shrink-0 text-xs md:text-sm font-semibold text-[#4ade80] hover:underline"
             >
-              Buka langsung ΓåÆ
+              Buka di tab baru <ArrowRight size={14} className="inline-flex items-center" />
             </a>
           </div>
         </div>
@@ -1081,90 +1315,32 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
   )
 }
 
-// Data untuk transparansi dokumen
-const transparansiDocuments = [
-  {
-    id: 1,
-    title: "11. Laporan Keuangan BUMN/Penyelenggaran Daerah",
-    type: "PDF",
-    views: "Lihat",
-    downloads: "Unduh",
-    url: '/docs/pdf-sample_0.pdf',
-    previewUrl: '/docs/pdf-sample_0.pdf',
-    category: 'Transparansi Pengelolaan Keuangan Daerah',
-    description: 'Laporan Keuangan BUMN/Penyelenggaraan Daerah',
-    publishedDate: '-'
-  },
-  {
-    id: 2,
-    title: "Kebijakan Umum Anggaran Pendapatan dan Belanja Daerah",
-    type: "PDF",
-    views: "Lihat",
-    downloads: "Unduh",
-    url: '/docs/pdf-sample_0.pdf',
-    previewUrl: '/docs/pdf-sample_0.pdf',
-    category: 'Transparansi Pengelolaan Keuangan Daerah',
-    description: 'Kebijakan Umum Anggaran Pendapatan dan Belanja Daerah',
-    publishedDate: '-'
-  },
-  {
-    id: 3,
-    title: "13. Laporan Alokasi Belanja Wajib yang disusun dari Hasil Penerimaan Pajak Daerah",
-    type: "PDF",
-    views: "Lihat",
-    downloads: "Unduh",
-    url: '/docs/pdf-sample_0.pdf',
-    previewUrl: '/docs/pdf-sample_0.pdf',
-    category: 'Transparansi Pengelolaan Keuangan Daerah',
-    description: '13. Laporan Alokasi Belanja Wajib yang disusun dari Hasil Penerimaan Pajak Daerah',
-    publishedDate: '-'
-  },
-  {
-    id: 4,
-    title: "Rencana Umum Pengadaan Barang/Jasa Pemerintah Daerah untuk Optimum Pengadaan Barang/Jasa",
-    type: "PDF",
-    views: "Lihat",
-    downloads: "Unduh",
-    url: '/docs/pdf-sample_0.pdf',
-    previewUrl: '/docs/pdf-sample_0.pdf',
-    category: 'Transparansi Pengelolaan Keuangan Daerah',
-    description: 'Rencana Umum Pengadaan Barang/Jasa Pemerintah Daerah untuk Optimum Pengadaan Barang/Jasa',
-    publishedDate: '-'
-  },
-  {
-    id: 5,
-    title: "13. Peraturan Daerah tentang Pertanggungjawaban Pelaksanaan APBD (Batang Tubuh dan Lampiran)",
-    type: "PDF",
-    views: "Lihat",
-    downloads: "Unduh",
-    url: '/docs/pdf-sample_0.pdf',
-    previewUrl: '/docs/pdf-sample_0.pdf',
-    category: 'Transparansi Pengelolaan Keuangan Daerah',
-    description: '13. Peraturan Daerah tentang Pertanggungjawaban Pelaksanaan APBD (Batang Tubuh dan Lampiran)',
-    publishedDate: '-'
-  },
-  {
-    id: 6,
-    title: "RKA PPKD Tahun Anggaran 2026",
-    type: "PDF",
-    views: "Lihat",
-    downloads: "Unduh",
-    url: '/docs/pdf-sample_0.pdf',
-    previewUrl: '/docs/pdf-sample_0.pdf',
-    category: 'Transparansi Pengelolaan Keuangan Daerah',
-    description: 'RKA PPKD Tahun Anggaran 2026',
-    publishedDate: '-'
-  }
-]
+interface TransparansiDoc {
+  id: number;
+  title: string;
+  type: string;
+  category: string;
+  description: string;
+  date: string;
+  pdfUrl: string | null;
+}
 
 function TransparansiDokumen() {
+  const [documents, setDocuments] = useState<TransparansiDoc[]>([])
   const [currentPage, setCurrentPage] = useState(0)
-  const [selectedDocument, setSelectedDocument] = useState<typeof transparansiDocuments[0] | null>(null)
-  const [downloadConfirm, setDownloadConfirm] = useState<typeof transparansiDocuments[0] | null>(null)
+  const [selectedDocument, setSelectedDocument] = useState<TransparansiDoc | null>(null)
+  const [downloadConfirm, setDownloadConfirm] = useState<TransparansiDoc | null>(null)
   const itemsPerPage = 5
-  const totalPages = Math.ceil(transparansiDocuments.length / itemsPerPage)
+  const totalPages = Math.ceil(documents.length / itemsPerPage)
 
-  const currentDocuments = transparansiDocuments.slice(
+  useEffect(() => {
+    fetch('/api/transparansi-dokumen')
+      .then((res) => res.json())
+      .then((data: TransparansiDoc[]) => setDocuments(data))
+      .catch((err) => console.error('Gagal memuat transparansi dokumen:', err))
+  }, [])
+
+  const currentDocuments = documents.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   )
@@ -1177,7 +1353,7 @@ function TransparansiDokumen() {
     setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1))
   }
 
-  const handleViewClick = (doc: typeof transparansiDocuments[0]) => {
+  const handleViewClick = (doc: TransparansiDoc) => {
     setSelectedDocument(doc)
   }
 
@@ -1187,25 +1363,25 @@ function TransparansiDokumen() {
 
   const handlePrevDocument = () => {
     if (selectedDocument) {
-      const currentIndex = transparansiDocuments.findIndex(doc => doc.id === selectedDocument.id)
+      const currentIndex = documents.findIndex(doc => doc.id === selectedDocument.id)
       if (currentIndex > 0) {
-        setSelectedDocument(transparansiDocuments[currentIndex - 1])
+        setSelectedDocument(documents[currentIndex - 1])
       }
     }
   }
 
   const handleNextDocument = () => {
     if (selectedDocument) {
-      const currentIndex = transparansiDocuments.findIndex(doc => doc.id === selectedDocument.id)
-      if (currentIndex < transparansiDocuments.length - 1) {
-        setSelectedDocument(transparansiDocuments[currentIndex + 1])
+      const currentIndex = documents.findIndex(doc => doc.id === selectedDocument.id)
+      if (currentIndex < documents.length - 1) {
+        setSelectedDocument(documents[currentIndex + 1])
       }
     }
   }
 
   const getCurrentDocumentIndex = () => {
     if (selectedDocument) {
-      return transparansiDocuments.findIndex(doc => doc.id === selectedDocument.id) + 1
+      return documents.findIndex(doc => doc.id === selectedDocument.id) + 1
     }
     return 0
   }
@@ -1240,41 +1416,49 @@ function TransparansiDokumen() {
         <div className="flex flex-col" style={{ minHeight: '320px' }}>
           {/* Document Cards Grid */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 flex-1">
-            {currentDocuments.map((doc) => (
-              <div
-                key={doc.id}
-                className="group flex flex-col rounded-xl bg-white border border-[#e5e7eb] p-6 shadow-sm transition-all duration-200 hover:border-[#159447] hover:shadow-md"
-              >
-                {/* PDF Icon */}
-                <div className="mb-4 flex justify-center">
-                  <div className="flex h-16 w-16 flex-col items-center justify-center rounded-lg bg-[#f0fdf4] border-2 border-[#159447]">
-                    <FileText className="h-6 w-6 text-[#159447]" />
-                    <span className="mt-1 text-xs font-bold text-[#159447]">{doc.type}</span>
+            {documents.length === 0 && currentDocuments.length === 0 ? (
+              <div className="col-span-5 flex items-center justify-center py-16 text-slate-400 text-sm">Memuat dokumen...</div>
+            ) : (
+              currentDocuments.map((doc) => (
+                /* Outer Transparent Wrapper (Double-Bezel) */
+                <div
+                  key={doc.id}
+                  className="group p-1.5 rounded-[22px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex flex-col"
+                >
+                  {/* Inner Main Card */}
+                  <div className="flex flex-col flex-1 rounded-2xl bg-white border border-slate-200/90 p-5 shadow-sm transition-all duration-300 group-hover:border-[#159447]/40">
+                    {/* PDF Icon */}
+                    <div className="mb-4 flex justify-center">
+                      <div className="flex h-16 w-16 flex-col items-center justify-center rounded-xl bg-[#f0fdf4] border-2 border-[#159447] transition-transform duration-300 group-hover:scale-105">
+                        <FileText className="h-6 w-6 text-[#159447]" />
+                        <span className="mt-1 text-xs font-bold text-[#159447]">{doc.type}</span>
+                      </div>
+                    </div>
+
+                    {/* Document Title — flex-grow pushes buttons to bottom */}
+                    <h3 className="flex-grow mb-4 text-sm font-medium leading-tight text-[#1f2937] line-clamp-3 group-hover:text-[#159447] transition-colors">
+                      {doc.title}
+                    </h3>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 mt-auto">
+                      <button
+                        onClick={() => handleViewClick(doc)}
+                        className="flex-1 rounded-lg bg-[#f8f9fa] border border-slate-200/80 px-3 py-2 text-center text-xs font-semibold text-[#6b7280] hover:bg-[#e5e7eb] hover:text-[#1f2937] transition-colors cursor-pointer"
+                      >
+                        Lihat
+                      </button>
+                      <button
+                        onClick={() => setDownloadConfirm(doc)}
+                        className="flex-1 rounded-lg bg-[#159447] px-3 py-2 text-center text-xs font-semibold text-white hover:bg-[#0f7a36] transition-colors cursor-pointer"
+                      >
+                        Unduh
+                      </button>
+                    </div>
                   </div>
                 </div>
-
-                {/* Document Title ΓÇö flex-grow pushes buttons to bottom */}
-                <h3 className="flex-grow mb-4 text-sm font-medium leading-tight text-[#1f2937] line-clamp-3">
-                  {doc.title}
-                </h3>
-
-                {/* Action Buttons */}
-                <div className="flex gap-2 mt-auto">
-                  <button
-                    onClick={() => handleViewClick(doc)}
-                    className="flex-1 rounded-md bg-[#f8f9fa] px-3 py-2 text-center text-xs font-medium text-[#6b7280] hover:bg-[#e5e7eb] transition-colors"
-                  >
-                    {doc.views}
-                  </button>
-                  <button
-                    onClick={() => setDownloadConfirm(doc)}
-                    className="flex-1 rounded-md bg-[#159447] px-3 py-2 text-center text-xs font-medium text-white hover:bg-[#0f7a36] transition-colors"
-                  >
-                    {doc.downloads}
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
 
           {/* Navigation Controls ΓÇö always at bottom of the fixed-height container */}
@@ -1359,20 +1543,24 @@ function TransparansiDokumen() {
                         <span className="text-xs text-[#94a3b8] font-medium">Tanggal Pemberlakuan</span>
                       </div>
                       <p className="text-[#334155] text-sm md:text-sm pl-6">
-                        {selectedDocument.publishedDate}
+                        {selectedDocument.date}
                       </p>
                     </div>
                   </div>
 
                   {/* Right Column: PDF Preview */}
                   <div className="lg:col-span-7 h-full min-h-[300px] bg-white border-2 border-gray-100 rounded-xl overflow-hidden shadow-sm">
-                    <embed
-                      src={selectedDocument.previewUrl}
-                      type="application/pdf"
-                      width="100%"
-                      height="100%"
-                      className="w-full h-full"
-                    />
+                    {selectedDocument.pdfUrl ? (
+                      <embed
+                        src={selectedDocument.pdfUrl}
+                        type="application/pdf"
+                        width="100%"
+                        height="100%"
+                        className="w-full h-full"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-slate-400 text-sm">Dokumen tidak tersedia</div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1396,13 +1584,13 @@ function TransparansiDokumen() {
                     </button>
 
                     <span className="text-xs text-[#94a3b8] font-semibold mx-1">
-                      {getCurrentDocumentIndex()} / {transparansiDocuments.length}
+                      {getCurrentDocumentIndex()} / {documents.length}
                     </span>
 
                     <button
                       onClick={handleNextDocument}
-                      disabled={getCurrentDocumentIndex() === transparansiDocuments.length}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors ${getCurrentDocumentIndex() === transparansiDocuments.length
+                      disabled={getCurrentDocumentIndex() === documents.length}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors ${getCurrentDocumentIndex() === documents.length
                         ? 'cursor-not-allowed bg-gray-100 text-gray-400'
                         : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                         }`}
@@ -1459,7 +1647,7 @@ function TransparansiDokumen() {
                     Tidak
                   </button>
                   <a
-                    href={downloadConfirm.url || '#'}
+                    href={downloadConfirm.pdfUrl || '#'}
                     download
                     target="_blank"
                     rel="noopener noreferrer"
@@ -1556,6 +1744,7 @@ export default function Page() {
       {/* Konten Utama */}
       <div className="bg-white">
         <Profile />
+        <EventSlider />
         <News />
         <Opd onIframeToggle={setIsIframeOpen} />
         <TransparansiDokumen />
@@ -1564,12 +1753,3 @@ export default function Page() {
     </main>
   )
 }
-
-
-
-
-
-
-
-
-

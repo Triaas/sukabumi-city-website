@@ -42,19 +42,30 @@ export function Footer() {
       <div className="footer-dots absolute inset-0 pointer-events-none opacity-100" />
 
       {/* Content wrapper with relative positioning */}
-      <div className="relative z-10">
-        <div className="mx-auto grid max-w-[1400px] gap-12 md:grid-cols-4">
+      <div className="relative z-10 mx-auto max-w-[1400px] px-6">
+        <div className="grid gap-12 md:grid-cols-4">
           <div>
-            <h3 className="text-lg font-bold">KONTAK</h3>
-            <a
-              href="https://diskominfo.sukabumikota.go.id"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block transition-opacity hover:opacity-80"
-            >
-              <img src="/images/Diskominfo.webp" alt="Diskominfo Logo" className="mt-8 h-auto w-74" />
-            </a>
-            <div className="mt-8 flex flex-col gap-5 text-sm leading-relaxed text-white/80">
+            <div className="flex items-center gap-4">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/5 border border-white/10 p-2 shadow-sm">
+                <img
+                  src="/images/Lambang_Kota_Sukabumi.png"
+                  alt="Lambang Kota Sukabumi"
+                  className="h-full w-full object-contain"
+                />
+              </div>
+              <div className="relative">
+                <p className="absolute -top-4.5 left-0 text-[11px] font-semibold tracking-[0.14em] text-white/75 leading-tight uppercase whitespace-nowrap">
+                  Website Resmi
+                </p>
+                <h3 className="text-base sm:text-lg font-bold leading-snug whitespace-nowrap">
+                  Pemerintah Kota Sukabumi
+                </h3>
+              </div>
+            </div>
+            <p className="mt-4 text-sm leading-relaxed text-white/70">
+              Website Pemerintah Kota Sukabumi merupakan layanan teknologi informasi untuk meningkatkan efisiensi, efektivitas, transparansi serta akuntabilitas dalam penyelenggaraan pemerintahan.
+            </p>
+            <div className="mt-6 flex flex-col gap-5 text-sm leading-relaxed text-white/80">
               <a
                 href="https://maps.app.goo.gl/CmbbaNogyg1h8DBA7"
                 target="_blank"
@@ -80,7 +91,7 @@ export function Footer() {
               </a>
             </div>
           </div>
-          <div>
+          <div className="md:pl-6 lg:pl-14 xl:pl-10">
             <h3 className="text-lg font-bold">TAUTAN TERKAIT</h3>
             <div className="mt-8 flex flex-col gap-5 text-white/80">
               <a
@@ -152,7 +163,20 @@ export function Footer() {
             </div>
           </div>
         </div>
-        <div className="mx-auto mt-14 max-w-[1400px] border-t border-white/15 pt-8 text-center text-sm text-white/80">Copyright © 2026 Website Resmi Pemerintah Kota Sukabumi</div>
+        <div className="mt-14 border-t border-white/15 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-white/70">
+          <div>Copyright © {new Date().getFullYear()} Website Resmi Pemerintah Kota Sukabumi</div>
+          <div>
+            Dikelola oleh{' '}
+            <a
+              href="https://diskominfo.sukabumikota.go.id/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-[#4ade80] hover:text-green-300 hover:underline transition-colors"
+            >
+              Diskominfo Kota Sukabumi
+            </a>
+          </div>
+        </div>
       </div>
     </footer>
   )
