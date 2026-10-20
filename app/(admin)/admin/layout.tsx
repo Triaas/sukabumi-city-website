@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
     LayoutDashboard,
@@ -10,7 +11,6 @@ import {
     MonitorPlay,
     Settings,
     LogOut,
-    Landmark,
     User
 } from 'lucide-react'
 
@@ -34,23 +34,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <aside className="w-[260px] bg-[#f8fafc] border-r border-slate-200 flex flex-col shrink-0">
 
                 {/* Logo / Header Sidebar */}
-                <div className="p-6 flex items-center gap-3">
-                    <div className="bg-[#159447] p-2.5 rounded-xl text-white shadow-sm">
-                        <Landmark size={22} />
+                <div className="px-6 py-6 flex items-center gap-3 border-b border-slate-200/60 mb-2">
+                    <div className="w-12 h-12 shrink-0 flex items-center justify-center">
+                        <Image
+                            src="/images/Lambang_Kota_Sukabumi.png"
+                            alt="Lambang Kota Sukabumi"
+                            width={48}
+                            height={48}
+                            className="w-full h-full object-contain drop-shadow-sm"
+                            priority
+                        />
                     </div>
                     <div className="flex flex-col">
                         <h1 className="text-[15px] font-bold text-[#172135] leading-tight tracking-tight">
-                            Portal Pemda
+                            Admin Pemerintah Kota Sukabumi
                         </h1>
                         <p className="text-[11px] text-[#566276] font-medium tracking-wide mt-0.5">
-                            Sistem Informasi Publik
+                            Sistem Manajemen Konten
                         </p>
                     </div>
                 </div>
 
                 {/* Area Navigasi Menu */}
                 <nav className="flex-1 px-4 py-2 space-y-1.5 overflow-y-auto">
-                    <div className="text-[10px] font-bold text-[#566276]/60 uppercase tracking-widest mb-3 px-2">
+                    <div className="pt-2 text-[10px] font-bold text-[#566276]/60 uppercase tracking-widest mb-3 px-2">
                         Menu Utama
                     </div>
 
@@ -67,8 +74,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 key={item.name}
                                 href={item.href}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all duration-200 ${isActive
-                                        ? 'bg-[#159447] text-white shadow-md shadow-green-900/10 font-semibold'
-                                        : 'text-[#566276] font-medium hover:bg-slate-100 hover:text-[#172135]'
+                                    ? 'bg-[#159447] text-white shadow-md shadow-green-900/10 font-semibold'
+                                    : 'text-[#566276] font-medium hover:bg-slate-100 hover:text-[#172135]'
                                     }`}
                             >
                                 <Icon size={18} className={isActive ? 'text-white' : 'text-[#566276]'} />
@@ -90,7 +97,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                     Trias Firmansyah
                                 </p>
                                 <p className="text-[10px] text-[#566276] font-medium">
-                                    Admin Utama
+                                    Admin
                                 </p>
                             </div>
                         </div>

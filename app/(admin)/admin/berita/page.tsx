@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import Link from 'next/link'
 import {
     PlusCircle,
     Search,
     Calendar,
-    SlidersHorizontal,
     ChevronDown,
+    ChevronLeft,
+    ChevronRight,
     ArrowDown,
     ArrowUp,
     Eye,
@@ -32,13 +34,42 @@ export interface BeritaItem {
     no: string
     title: string
     excerpt: string
-    category: 'Pelayanan' | 'Ekonomi' | 'Pemerintahan' | 'Kesehatan'
+    category: string
     status: 'Publish' | 'Draft'
     date: string
     time: string
     image: string
     reporter: Reporter
 }
+
+// Daftar kategori (sinkron dengan BeritaClient.tsx)
+const categories = [
+    'Semua kategori',
+    'Agama',
+    'Artikel',
+    'Bencana',
+    'Diskominfo',
+    'Ekonomi',
+    'Hukum',
+    'Infrastruktur',
+    'Kesehatan',
+    'Layanan Publik',
+    'Legislatif',
+    'Lingkungan',
+    'Olahraga',
+    'Pariwisata',
+    'Pendidikan',
+    'Pertanian',
+    'Politik',
+    'Seni Budaya',
+    'Sosial',
+    'Teknologi',
+    'Transportasi',
+    'Umum',
+    'Walikota',
+]
+
+const statusOptions = ['Semua Status', 'Publish', 'Draft']
 
 // Data awal berita sesuai screenshot desain
 const initialBerita: BeritaItem[] = [
@@ -49,7 +80,7 @@ const initialBerita: BeritaItem[] = [
         excerpt: 'Layanan terpadu cepat & ringkas',
         category: 'Pelayanan',
         status: 'Publish',
-        date: '24 Okt 2024',
+        date: '24 Okt 2026',
         time: '08:45 WIB',
         image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=360&q=80',
         reporter: {
@@ -66,7 +97,7 @@ const initialBerita: BeritaItem[] = [
         excerpt: 'Zona sanitasi & pangan higienis',
         category: 'Ekonomi',
         status: 'Publish',
-        date: '23 Okt 2024',
+        date: '23 Okt 2026',
         time: '16:10 WIB',
         image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=360&q=80',
         reporter: {
@@ -83,7 +114,7 @@ const initialBerita: BeritaItem[] = [
         excerpt: 'Prioritas belanja daerah difokuskan',
         category: 'Pemerintahan',
         status: 'Draft',
-        date: '22 Okt 2024',
+        date: '22 Okt 2026',
         time: '11:00 WIB',
         image: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=360&q=80',
         reporter: {
@@ -100,7 +131,7 @@ const initialBerita: BeritaItem[] = [
         excerpt: 'Suplemen nutrisi & pantau gizi',
         category: 'Kesehatan',
         status: 'Publish',
-        date: '21 Okt 2024',
+        date: '21 Okt 2026',
         time: '14:20 WIB',
         image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=360&q=80',
         reporter: {
@@ -115,9 +146,9 @@ const initialBerita: BeritaItem[] = [
         no: '05',
         title: 'Uji Beban Jembatan Lingkar',
         excerpt: 'Sertifikasi kelayakan operasional',
-        category: 'Pemerintahan',
+        category: 'Infrastruktur',
         status: 'Publish',
-        date: '19 Okt 2024',
+        date: '19 Okt 2026',
         time: '09:15 WIB',
         image: 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f7?auto=format&fit=crop&w=360&q=80',
         reporter: {
@@ -127,20 +158,363 @@ const initialBerita: BeritaItem[] = [
             avatarBg: 'bg-[#fef3c7] text-[#d97706]',
         },
     },
+    {
+        id: '6',
+        no: '06',
+        title: 'Pelatihan UMKM Go Digital Sukabumi',
+        excerpt: 'Fasilitasi pemasaran produk lokal ke marketplace',
+        category: 'Ekonomi',
+        status: 'Publish',
+        date: '18 Okt 2026',
+        time: '10:30 WIB',
+        image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=360&q=80',
+        reporter: {
+            name: 'Dian Kusuma',
+            role: 'Pranata Humas',
+            avatar: 'DK',
+            avatarBg: 'bg-[#ede9fe] text-[#6366f1]',
+        },
+    },
+    {
+        id: '7',
+        no: '07',
+        title: 'Pemberian Vaksinasi Booster Pelajar',
+        excerpt: 'Dinkes pastikan imunitas peserta didik terjaga',
+        category: 'Kesehatan',
+        status: 'Draft',
+        date: '17 Okt 2026',
+        time: '08:00 WIB',
+        image: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=360&q=80',
+        reporter: {
+            name: 'Bambang I.',
+            role: 'Wartawan Ahli',
+            avatar: 'BI',
+            avatarBg: 'bg-[#dcfce7] text-[#16a34a]',
+        },
+    },
+    {
+        id: '8',
+        no: '08',
+        title: 'Penyaluran Bantuan Sosial Warga Lansia',
+        excerpt: 'Dinsos distribusikan paket sembako di 7 kecamatan',
+        category: 'Sosial',
+        status: 'Publish',
+        date: '16 Okt 2026',
+        time: '13:45 WIB',
+        image: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=360&q=80',
+        reporter: {
+            name: 'Siti Aminah',
+            role: 'Staf Dokumentasi',
+            avatar: 'SA',
+            avatarBg: 'bg-[#fef3c7] text-[#d97706]',
+        },
+    },
+    {
+        id: '9',
+        no: '09',
+        title: 'Sosialisasi Tertib Lalu Lintas Pelajar',
+        excerpt: 'Dishub edukasi keselamatan berkendara di sekolah',
+        category: 'Transportasi',
+        status: 'Publish',
+        date: '15 Okt 2026',
+        time: '09:00 WIB',
+        image: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=360&q=80',
+        reporter: {
+            name: 'Dian Kusuma',
+            role: 'Pranata Humas',
+            avatar: 'DK',
+            avatarBg: 'bg-[#ede9fe] text-[#6366f1]',
+        },
+    },
+    {
+        id: '10',
+        no: '10',
+        title: 'Pameran Produk Ekonomi Kreatif Daerah',
+        excerpt: 'Ajang kreasi pengrajin kriya dan batik Sukabumi',
+        category: 'Ekonomi',
+        status: 'Publish',
+        date: '14 Okt 2026',
+        time: '15:20 WIB',
+        image: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=360&q=80',
+        reporter: {
+            name: 'Bambang I.',
+            role: 'Wartawan Ahli',
+            avatar: 'BI',
+            avatarBg: 'bg-[#dcfce7] text-[#16a34a]',
+        },
+    },
+    {
+        id: '11',
+        no: '11',
+        title: 'Pemeriksaan Kesehatan Gratis Warga Pesisir',
+        excerpt: 'Layanan tensi, gula darah, dan konsultasi dokter',
+        category: 'Kesehatan',
+        status: 'Publish',
+        date: '13 Okt 2026',
+        time: '08:15 WIB',
+        image: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=360&q=80',
+        reporter: {
+            name: 'Siti Aminah',
+            role: 'Staf Dokumentasi',
+            avatar: 'SA',
+            avatarBg: 'bg-[#fef3c7] text-[#d97706]',
+        },
+    },
+    {
+        id: '12',
+        no: '12',
+        title: 'Penguatan Kapasitas RT dan RW Se-Kota',
+        excerpt: 'Peningkatan peran pamong dalam pelayanan warga',
+        category: 'Pemerintahan',
+        status: 'Draft',
+        date: '12 Okt 2026',
+        time: '10:00 WIB',
+        image: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=360&q=80',
+        reporter: {
+            name: 'Dian Kusuma',
+            role: 'Pranata Humas',
+            avatar: 'DK',
+            avatarBg: 'bg-[#ede9fe] text-[#6366f1]',
+        },
+    },
+    {
+        id: '13',
+        no: '13',
+        title: 'Peluncuran Aplikasi Perizinan Berusaha Terpadu',
+        excerpt: 'Kemudahan izin usaha melalui platform digital',
+        category: 'Teknologi',
+        status: 'Publish',
+        date: '11 Okt 2026',
+        time: '11:30 WIB',
+        image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=360&q=80',
+        reporter: {
+            name: 'Bambang I.',
+            role: 'Wartawan Ahli',
+            avatar: 'BI',
+            avatarBg: 'bg-[#dcfce7] text-[#16a34a]',
+        },
+    },
+    {
+        id: '14',
+        no: '14',
+        title: 'Operasi Pasar Murah Sembako Bersubsidi',
+        excerpt: 'Jaga stabilitas harga bahan pokok menjelang akhir tahun',
+        category: 'Ekonomi',
+        status: 'Publish',
+        date: '10 Okt 2026',
+        time: '07:45 WIB',
+        image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=360&q=80',
+        reporter: {
+            name: 'Siti Aminah',
+            role: 'Staf Dokumentasi',
+            avatar: 'SA',
+            avatarBg: 'bg-[#fef3c7] text-[#d97706]',
+        },
+    },
+    {
+        id: '15',
+        no: '15',
+        title: 'Lomba Kelurahan Bersih dan Asri Tingkat Kota',
+        excerpt: 'Apresiasi warga kelurahan pengelola sampah mandiri',
+        category: 'Lingkungan',
+        status: 'Publish',
+        date: '09 Okt 2026',
+        time: '14:00 WIB',
+        image: 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=360&q=80',
+        reporter: {
+            name: 'Dian Kusuma',
+            role: 'Pranata Humas',
+            avatar: 'DK',
+            avatarBg: 'bg-[#ede9fe] text-[#6366f1]',
+        },
+    },
+    {
+        id: '16',
+        no: '16',
+        title: 'Penyuluhan Gizi Seimbang Ibu Hamil & Balita',
+        excerpt: 'Puskesmas gelar pendampingan kesehatan keluarga terpadu',
+        category: 'Kesehatan',
+        status: 'Publish',
+        date: '08 Okt 2026',
+        time: '09:30 WIB',
+        image: 'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&w=360&q=80',
+        reporter: {
+            name: 'Bambang I.',
+            role: 'Wartawan Ahli',
+            avatar: 'BI',
+            avatarBg: 'bg-[#dcfce7] text-[#16a34a]',
+        },
+    },
+    {
+        id: '17',
+        no: '17',
+        title: 'Diseminasi Keterbukaan Informasi Publik PPID',
+        excerpt: 'Standarisasi layanan sengketa dan permohonan data',
+        category: 'Diskominfo',
+        status: 'Draft',
+        date: '07 Okt 2026',
+        time: '13:15 WIB',
+        image: 'https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=360&q=80',
+        reporter: {
+            name: 'Siti Aminah',
+            role: 'Staf Dokumentasi',
+            avatar: 'SA',
+            avatarBg: 'bg-[#fef3c7] text-[#d97706]',
+        },
+    },
+    {
+        id: '18',
+        no: '18',
+        title: 'Bazar Pertanian Organik dan Sayur Segar',
+        excerpt: 'Petani binaan panen raya hidroponik perkotaan',
+        category: 'Pertanian',
+        status: 'Publish',
+        date: '06 Okt 2026',
+        time: '08:30 WIB',
+        image: 'https://images.unsplash.com/photo-1615811361523-6bd03d7748e7?auto=format&fit=crop&w=360&q=80',
+        reporter: {
+            name: 'Dian Kusuma',
+            role: 'Pranata Humas',
+            avatar: 'DK',
+            avatarBg: 'bg-[#ede9fe] text-[#6366f1]',
+        },
+    },
+    {
+        id: '19',
+        no: '19',
+        title: 'Rapat Koordinasi Forkopimda Triwulan IV',
+        excerpt: 'Sinergi pengamanan dan kondusivitas wilayah kota',
+        category: 'Pemerintahan',
+        status: 'Publish',
+        date: '05 Okt 2026',
+        time: '10:00 WIB',
+        image: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=360&q=80',
+        reporter: {
+            name: 'Bambang I.',
+            role: 'Wartawan Ahli',
+            avatar: 'BI',
+            avatarBg: 'bg-[#dcfce7] text-[#16a34a]',
+        },
+    },
+    {
+        id: '20',
+        no: '20',
+        title: 'Skrining Penyakit Tidak Menular Mobile Posbindu',
+        excerpt: 'Pemeriksaan rutin jemput bola di balai kelurahan',
+        category: 'Kesehatan',
+        status: 'Publish',
+        date: '04 Okt 2026',
+        time: '08:45 WIB',
+        image: 'https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?auto=format&fit=crop&w=360&q=80',
+        reporter: {
+            name: 'Siti Aminah',
+            role: 'Staf Dokumentasi',
+            avatar: 'SA',
+            avatarBg: 'bg-[#fef3c7] text-[#d97706]',
+        },
+    },
+    {
+        id: '21',
+        no: '21',
+        title: 'Layanan Rekam KTP-el Jemput Bola Sekolah',
+        excerpt: 'Disdukcapil percepat kepemilikan identitas pemilih pemula',
+        category: 'Pelayanan',
+        status: 'Publish',
+        date: '03 Okt 2026',
+        time: '11:15 WIB',
+        image: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=360&q=80',
+        reporter: {
+            name: 'Dian Kusuma',
+            role: 'Pranata Humas',
+            avatar: 'DK',
+            avatarBg: 'bg-[#ede9fe] text-[#6366f1]',
+        },
+    },
+    {
+        id: '22',
+        no: '22',
+        title: 'Pelatihan Kewirausahaan Milenial & Inkubasi Bisnis',
+        excerpt: 'Bimbingan teknis permodalan dan manajemen keuangan',
+        category: 'Ekonomi',
+        status: 'Draft',
+        date: '02 Okt 2026',
+        time: '14:00 WIB',
+        image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=360&q=80',
+        reporter: {
+            name: 'Bambang I.',
+            role: 'Wartawan Ahli',
+            avatar: 'BI',
+            avatarBg: 'bg-[#dcfce7] text-[#16a34a]',
+        },
+    },
+    {
+        id: '23',
+        no: '23',
+        title: 'Simulasi Tanggap Darurat Bencana Banjir dan Longsor',
+        excerpt: 'BPBD latih kesiapsiagaan relawan kelurahan tangguh',
+        category: 'Bencana',
+        status: 'Publish',
+        date: '01 Okt 2026',
+        time: '07:30 WIB',
+        image: 'https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=360&q=80',
+        reporter: {
+            name: 'Siti Aminah',
+            role: 'Staf Dokumentasi',
+            avatar: 'SA',
+            avatarBg: 'bg-[#fef3c7] text-[#d97706]',
+        },
+    },
+    {
+        id: '24',
+        no: '24',
+        title: 'Promosi Wisata Budaya dan Destinasi Alam Sukabumi',
+        excerpt: 'Disporapar gandeng asosiasi pariwisata tingkatkan kunjungan',
+        category: 'Pariwisata',
+        status: 'Publish',
+        date: '29 Sep 2026',
+        time: '09:00 WIB',
+        image: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=360&q=80',
+        reporter: {
+            name: 'Dian Kusuma',
+            role: 'Pranata Humas',
+            avatar: 'DK',
+            avatarBg: 'bg-[#ede9fe] text-[#6366f1]',
+        },
+    },
+    {
+        id: '25',
+        no: '25',
+        title: 'Sosialisasi Kanal Pengaduan Warga Bebas Pulsa',
+        excerpt: 'Integrasi call center tanggap darurat dan SP4N LAPOR',
+        category: 'Pelayanan',
+        status: 'Publish',
+        date: '28 Sep 2026',
+        time: '10:15 WIB',
+        image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=360&q=80',
+        reporter: {
+            name: 'Bambang I.',
+            role: 'Wartawan Ahli',
+            avatar: 'BI',
+            avatarBg: 'bg-[#dcfce7] text-[#16a34a]',
+        },
+    },
 ]
 
 export default function AdminBeritaPage() {
     const [beritaList, setBeritaList] = useState<BeritaItem[]>(initialBerita)
     const [searchTerm, setSearchTerm] = useState('')
-    const [activeCategory, setActiveCategory] = useState<string>('Semua')
-    const [dateFilter, setDateFilter] = useState('30 Hari Terakhir')
+    const [activeCategory, setActiveCategory] = useState<string>('Semua kategori')
+    const [isCategoryOpen, setIsCategoryOpen] = useState(false)
+    const [isStatusOpen, setIsStatusOpen] = useState(false)
+    const [dateFilter, setDateFilter] = useState('Semua Waktu')
+    const [startDate, setStartDate] = useState('')
+    const [endDate, setEndDate] = useState('')
     const [isDateOpen, setIsDateOpen] = useState(false)
     const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc')
-    const [statusFilter, setStatusFilter] = useState<string>('Semua')
-    const [isFilterOpen, setIsFilterOpen] = useState(false)
+    const [statusFilter, setStatusFilter] = useState<string>('Semua Status')
+
     const [currentPage, setCurrentPage] = useState(1)
-    const [rowsPerPage, setRowsPerPage] = useState(10)
-    const [isRowsOpen, setIsRowsOpen] = useState(false)
+    const [rowsPerPage] = useState(5)
 
     // Modals state
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
@@ -168,25 +542,83 @@ export default function AdminBeritaPage() {
                 item.reporter.name.toLowerCase().includes(searchTerm.toLowerCase())
 
             const matchCategory =
-                activeCategory === 'Semua' || item.category === activeCategory
+                activeCategory === 'Semua kategori' || item.category.toLowerCase().includes(activeCategory.toLowerCase())
 
             const matchStatus =
-                statusFilter === 'Semua' || item.status === statusFilter
+                statusFilter === 'Semua Status' || item.status === statusFilter
 
-            return matchSearch && matchCategory && matchStatus
+            // Filter Waktu
+            let matchDate = true
+            if (dateFilter === 'Bulan Ini') {
+                const months: Record<string, number> = {
+                    jan: 0, feb: 1, mar: 2, apr: 3, mei: 4, jun: 5,
+                    jul: 6, agu: 7, sep: 8, okt: 9, nov: 10, des: 11
+                }
+                const parts = item.date.trim().split(' ')
+                if (parts.length === 3) {
+                    const mKey = parts[1].toLowerCase().slice(0, 3)
+                    const itemMonth = months[mKey]
+                    const itemYear = parseInt(parts[2], 10)
+                    const now = new Date()
+                    matchDate = (itemMonth === now.getMonth() && itemYear === now.getFullYear()) || (itemMonth === 9 && itemYear === 2026)
+                }
+            } else if (dateFilter === 'Pilih Tanggal (Kustom)') {
+                const months: Record<string, number> = {
+                    jan: 0, feb: 1, mar: 2, apr: 3, mei: 4, jun: 5,
+                    jul: 6, agu: 7, sep: 8, okt: 9, nov: 10, des: 11
+                }
+                const parts = item.date.trim().split(' ')
+                if (parts.length === 3) {
+                    const day = parseInt(parts[0], 10)
+                    const mKey = parts[1].toLowerCase().slice(0, 3)
+                    const month = months[mKey] ?? 0
+                    const year = parseInt(parts[2], 10)
+                    const itemTimestamp = new Date(year, month, day).getTime()
+
+                    if (startDate) {
+                        const start = new Date(startDate).setHours(0, 0, 0, 0)
+                        if (itemTimestamp < start) matchDate = false
+                    }
+                    if (endDate) {
+                        const end = new Date(endDate).setHours(23, 59, 59, 999)
+                        if (itemTimestamp > end) matchDate = false
+                    }
+                }
+            }
+
+            return matchSearch && matchCategory && matchStatus && matchDate
         })
-    }, [beritaList, searchTerm, activeCategory, statusFilter])
+    }, [beritaList, searchTerm, activeCategory, statusFilter, dateFilter, startDate, endDate])
 
     // Sort logic
     const sortedData = useMemo(() => {
         return [...filteredData].sort((a, b) => {
             if (sortOrder === 'desc') {
-                return b.id.localeCompare(a.id)
+                return b.id.localeCompare(a.id, undefined, { numeric: true })
             } else {
-                return a.id.localeCompare(b.id)
+                return a.id.localeCompare(b.id, undefined, { numeric: true })
             }
         })
     }, [filteredData, sortOrder])
+
+    // Pagination helpers
+    const totalPages = Math.max(1, Math.ceil(sortedData.length / rowsPerPage))
+    const paginatedData = sortedData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)
+    const startItem = sortedData.length === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1
+    const endItem = Math.min(currentPage * rowsPerPage, sortedData.length)
+
+    const getPageNumbers = (): (number | '...')[] => {
+        if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1)
+        const pages: (number | '...')[] = []
+        const left = Math.max(2, currentPage - 1)
+        const right = Math.min(totalPages - 1, currentPage + 1)
+        pages.push(1)
+        if (left > 2) pages.push('...')
+        for (let i = left; i <= right; i++) pages.push(i)
+        if (right < totalPages - 1) pages.push('...')
+        pages.push(totalPages)
+        return pages
+    }
 
     // Handle open add modal
     const openAddModal = () => {
@@ -226,7 +658,7 @@ export default function AdminBeritaPage() {
             excerpt: formData.excerpt || 'Ringkasan publikasi kedinasan daerah...',
             category: formData.category,
             status: formData.status,
-            date: '24 Okt 2024',
+            date: '24 Okt 2026',
             time: '10:00 WIB',
             image:
                 formData.image.trim() ||
@@ -304,25 +736,24 @@ export default function AdminBeritaPage() {
                         Kelola Berita
                     </h1>
                     <p className="text-xs sm:text-sm text-[#566276] max-w-2xl leading-relaxed">
-                        Pusat publikasi informasi, liputan kegiatan kedinasan, dan dokumentasi program daerah secara terpadu.
+                        Kelola, sunting, dan pantau seluruh draf maupun publikasi warta kegiatan kedinasan Pemerintah Kota Sukabumi.
                     </p>
                 </div>
 
                 <div className="flex items-center justify-end sm:ml-auto self-end sm:self-center shrink-0">
-                    <button
-                        onClick={openAddModal}
+                    <Link
+                        href="/admin/berita/tambah"
                         className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#159447] hover:bg-[#12803d] active:scale-[0.99] text-white text-xs sm:text-sm font-semibold transition-all shadow-sm cursor-pointer"
                         style={{ backgroundColor: '#159447' }}
                     >
                         <PlusCircle size={17} className="stroke-[2.2] text-white" />
                         <span className="text-white">Tambah Berita Baru</span>
-                    </button>
+                    </Link>
                 </div>
             </div>
 
             {/* 2. CARD PENCARIAN & FILTER */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-4">
-                {/* Baris Pertama: Input Cari, Tombol Kategori, Date Filter, & Filter Button */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5">
                 <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
                     {/* Input Search */}
                     <div className="relative flex-1 min-w-[260px]">
@@ -332,10 +763,10 @@ export default function AdminBeritaPage() {
                         />
                         <input
                             type="text"
-                            placeholder="Cari judul berita, reporter, atau kata kunci..."
+                            placeholder="Cari judul berita atau nama reporter..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-slate-200/90 bg-white text-[#172135] placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] transition-all"
+                            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 bg-white text-[#172135] placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] transition-all"
                         />
                         {searchTerm && (
                             <button
@@ -347,130 +778,152 @@ export default function AdminBeritaPage() {
                         )}
                     </div>
 
-                    {/* Chips Kategori */}
-                    <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 lg:pb-0">
-                        {['Semua', 'Pemerintahan', 'Ekonomi', 'Pelayanan'].map((cat) => {
-                            const isActive = activeCategory === cat
-                            return (
-                                <button
-                                    key={cat}
-                                    onClick={() => setActiveCategory(cat)}
-                                    className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${isActive
-                                            ? 'bg-[#159447] text-white shadow-xs'
-                                            : 'bg-slate-100/80 hover:bg-slate-200/80 text-slate-700'
-                                        }`}
-                                    style={isActive ? { backgroundColor: '#159447', color: '#ffffff' } : undefined}
-                                >
-                                    {cat}
-                                </button>
-                            )
-                        })}
-                    </div>
-
-                    {/* Tombol Filter Waktu & Tombol Filter Ikon */}
-                    <div className="flex items-center gap-2 self-end lg:self-auto shrink-0">
-                        {/* Filter Waktu Dropdown */}
-                        <div className="relative">
+                    {/* Grup Dropdown Filter */}
+                    <div className="flex items-center gap-2 shrink-0">
+                        {/* Dropdown Kategori */}
+                        <div className="relative z-30">
                             <button
                                 type="button"
-                                onClick={() => setIsDateOpen(!isDateOpen)}
-                                className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200/90 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors whitespace-nowrap cursor-pointer"
+                                onClick={() => { setIsCategoryOpen(!isCategoryOpen); setIsStatusOpen(false); setIsDateOpen(false) }}
+                                className="flex items-center justify-between gap-3 min-w-[160px] px-3.5 py-2 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:border-[#159447] hover:text-[#159447] transition-all cursor-pointer whitespace-nowrap"
                             >
-                                <Calendar size={15} className="text-slate-500" />
+                                <span className="truncate">{activeCategory}</span>
+                                <ChevronDown size={14} className={`shrink-0 transition-transform duration-200 ${isCategoryOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                            {isCategoryOpen && (
+                                <>
+                                    <div className="fixed inset-0 z-20" onClick={() => setIsCategoryOpen(false)} />
+                                    <div className="absolute left-0 top-full mt-1.5 w-52 max-h-[280px] overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl flex flex-col py-1.5 z-30">
+                                        {categories.map((cat) => (
+                                            <button
+                                                key={cat}
+                                                onClick={() => { setActiveCategory(cat); setIsCategoryOpen(false) }}
+                                                className={`text-left px-4 py-2.5 text-xs font-semibold transition-colors ${
+                                                    activeCategory.toLowerCase() === cat.toLowerCase()
+                                                        ? 'text-[#159447] bg-[#f0fdf4] border-l-4 border-[#159447]'
+                                                        : 'text-slate-600 hover:bg-slate-50 border-l-4 border-transparent hover:border-slate-300'
+                                                }`}
+                                            >
+                                                {cat}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Dropdown Status */}
+                        <div className="relative z-30">
+                            <button
+                                type="button"
+                                onClick={() => { setIsStatusOpen(!isStatusOpen); setIsCategoryOpen(false); setIsDateOpen(false) }}
+                                className="flex items-center justify-between gap-3 min-w-[130px] px-3.5 py-2 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:border-[#159447] hover:text-[#159447] transition-all cursor-pointer whitespace-nowrap"
+                            >
+                                <span className="truncate">{statusFilter}</span>
+                                <ChevronDown size={14} className={`shrink-0 transition-transform duration-200 ${isStatusOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                            {isStatusOpen && (
+                                <>
+                                    <div className="fixed inset-0 z-20" onClick={() => setIsStatusOpen(false)} />
+                                    <div className="absolute left-0 top-full mt-1.5 w-44 bg-white border border-slate-200 rounded-xl shadow-xl flex flex-col py-1.5 z-30">
+                                        {statusOptions.map((s) => (
+                                            <button
+                                                key={s}
+                                                onClick={() => { setStatusFilter(s); setIsStatusOpen(false) }}
+                                                className={`text-left px-4 py-2.5 text-xs font-semibold transition-colors ${
+                                                    statusFilter === s
+                                                        ? 'text-[#159447] bg-[#f0fdf4] border-l-4 border-[#159447]'
+                                                        : 'text-slate-600 hover:bg-slate-50 border-l-4 border-transparent hover:border-slate-300'
+                                                }`}
+                                            >
+                                                {s}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Dropdown Tanggal/Waktu */}
+                        <div className="relative z-30">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsDateOpen(!isDateOpen)
+                                    setIsCategoryOpen(false)
+                                    setIsStatusOpen(false)
+                                }}
+                                className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:border-[#159447] hover:text-[#159447] transition-all whitespace-nowrap cursor-pointer"
+                            >
+                                <Calendar size={14} className="text-slate-500" />
                                 <span>{dateFilter}</span>
-                                <ChevronDown size={14} className="text-slate-400" />
+                                <ChevronDown size={13} className={`text-slate-400 transition-transform duration-200 ${isDateOpen ? 'rotate-180' : ''}`} />
                             </button>
 
                             {isDateOpen && (
-                                <div className="absolute right-0 mt-1.5 w-48 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-1.5 text-xs">
-                                    {['7 Hari Terakhir', '30 Hari Terakhir', 'Bulan Ini', 'Semua Waktu'].map((opt) => (
-                                        <button
-                                            key={opt}
-                                            onClick={() => {
-                                                setDateFilter(opt)
-                                                setIsDateOpen(false)
-                                            }}
-                                            className={`w-full text-left px-3.5 py-2 font-medium hover:bg-slate-50 transition-colors flex items-center justify-between cursor-pointer ${dateFilter === opt ? 'text-[#159447] font-bold bg-slate-50' : 'text-slate-600'
-                                                }`}
-                                        >
-                                            <span>{opt}</span>
-                                            {dateFilter === opt && <Check size={14} />}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                                <>
+                                    <div className="fixed inset-0 z-20" onClick={() => setIsDateOpen(false)} />
+                                    <div className="absolute right-0 mt-1.5 w-60 bg-white border border-slate-200 rounded-xl shadow-xl z-30 p-2.5 text-xs">
+                                        <div className="space-y-0.5">
+                                            {['Semua Waktu', 'Bulan Ini', 'Pilih Tanggal (Kustom)'].map((opt) => (
+                                                <button
+                                                    key={opt}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setDateFilter(opt)
+                                                        if (opt === 'Semua Waktu' || opt === 'Bulan Ini') {
+                                                            setStartDate('')
+                                                            setEndDate('')
+                                                            setIsDateOpen(false)
+                                                        }
+                                                    }}
+                                                    className={`w-full text-left px-3 py-2 rounded-lg font-medium hover:bg-slate-50 transition-colors flex items-center justify-between cursor-pointer ${
+                                                        dateFilter === opt ? 'text-[#159447] font-bold bg-[#f0fdf4]' : 'text-slate-600'
+                                                    }`}
+                                                >
+                                                    <span>{opt}</span>
+                                                    {dateFilter === opt && <Check size={14} className="text-[#159447]" />}
+                                                </button>
+                                            ))}
+                                        </div>
 
-                        {/* Tombol Filter Tambahan */}
-                        <div className="relative">
-                            <button
-                                type="button"
-                                onClick={() => setIsFilterOpen(!isFilterOpen)}
-                                className={`p-2 rounded-xl border border-slate-200/90 transition-colors flex items-center justify-center cursor-pointer ${statusFilter !== 'Semua' || isFilterOpen
-                                        ? 'bg-[#159447] text-white border-[#159447]'
-                                        : 'bg-white text-slate-600 hover:bg-slate-50'
-                                    }`}
-                                style={
-                                    statusFilter !== 'Semua' || isFilterOpen
-                                        ? { backgroundColor: '#159447', borderColor: '#159447', color: '#ffffff' }
-                                        : undefined
-                                }
-                                title="Filter Status"
-                            >
-                                <SlidersHorizontal size={16} />
-                            </button>
-
-                            {isFilterOpen && (
-                                <div className="absolute right-0 mt-1.5 w-44 bg-white border border-slate-200 rounded-xl shadow-lg z-20 p-2 text-xs">
-                                    <div className="font-bold text-slate-400 uppercase text-[10px] px-2 py-1">
-                                        Filter Status
+                                        {dateFilter === 'Pilih Tanggal (Kustom)' && (
+                                            <div className="mt-2.5 pt-2.5 border-t border-slate-100 space-y-2">
+                                                <div>
+                                                    <label className="block text-[11px] font-semibold text-slate-600">
+                                                        Mulai Tanggal
+                                                    </label>
+                                                    <input
+                                                        type="date"
+                                                        value={startDate}
+                                                        onChange={(e) => setStartDate(e.target.value)}
+                                                        className="w-full text-xs p-1.5 border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] bg-white mt-1"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[11px] font-semibold text-slate-600">
+                                                        Sampai Tanggal
+                                                    </label>
+                                                    <input
+                                                        type="date"
+                                                        value={endDate}
+                                                        onChange={(e) => setEndDate(e.target.value)}
+                                                        className="w-full text-xs p-1.5 border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] bg-white mt-1"
+                                                    />
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setIsDateOpen(false)}
+                                                    className="w-full mt-2 py-1.5 px-3 bg-[#159447] hover:bg-[#12803d] active:scale-[0.99] text-white text-xs font-semibold rounded-lg transition-all cursor-pointer text-center shadow-xs"
+                                                >
+                                                    Terapkan
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
-                                    {['Semua', 'Publish', 'Draft'].map((status) => (
-                                        <button
-                                            key={status}
-                                            onClick={() => {
-                                                setStatusFilter(status)
-                                                setIsFilterOpen(false)
-                                            }}
-                                            className={`w-full text-left px-2.5 py-1.5 rounded-lg font-medium hover:bg-slate-50 transition-colors flex items-center justify-between cursor-pointer ${statusFilter === status
-                                                    ? 'text-[#159447] font-bold bg-slate-50'
-                                                    : 'text-slate-600'
-                                                }`}
-                                        >
-                                            <span>{status === 'Semua' ? 'Semua Status' : status}</span>
-                                            {statusFilter === status && <Check size={13} />}
-                                        </button>
-                                    ))}
-                                </div>
+                                </>
                             )}
                         </div>
-                    </div>
-                </div>
-
-                {/* Baris Kedua: Ringkasan Filter & Sorting */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2 border-t border-slate-100 text-xs text-slate-500">
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <span>Menampilkan hasil terfilter:</span>
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md border border-slate-200 bg-white font-semibold text-[#172135] text-[11px]">
-                            {activeCategory === 'Semua' ? 'Semua Kategori' : activeCategory}
-                        </span>
-                        <span className="text-slate-300">•</span>
-                        <span>
-                            <strong className="text-[#172135] font-semibold">{filteredData.length}</strong> Berita Ditemukan
-                        </span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 sm:self-auto">
-                        <span className="text-[11px] font-bold text-[#566276]/60 tracking-wider">
-                            URUTKAN:
-                        </span>
-                        <button
-                            onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-                            className="inline-flex items-center gap-1 font-bold text-[#159447] hover:underline cursor-pointer"
-                        >
-                            <span>{sortOrder === 'desc' ? 'Terbaru' : 'Terlama'}</span>
-                            {sortOrder === 'desc' ? <ArrowDown size={13} /> : <ArrowUp size={13} />}
-                        </button>
                     </div>
                 </div>
             </div>
@@ -499,14 +952,14 @@ export default function AdminBeritaPage() {
                                     </td>
                                 </tr>
                             ) : (
-                                sortedData.map((item) => (
+                                paginatedData.map((item, index) => (
                                     <tr
                                         key={item.id}
                                         className="hover:bg-slate-50/60 transition-colors group"
                                     >
                                         {/* NO */}
                                         <td className="py-4 px-4 text-center font-semibold text-slate-400 text-xs">
-                                            {item.no}
+                                            {(currentPage - 1) * rowsPerPage + index + 1}
                                         </td>
 
                                         {/* GAMBAR */}
@@ -623,108 +1076,67 @@ export default function AdminBeritaPage() {
                 </div>
 
                 {/* 4. FOOTER PAGINASI */}
-                <div className="p-4 sm:p-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 bg-white">
-                    {/* Sisi Kiri: Menampilkan & Dropdown Baris */}
-                    <div className="flex items-center gap-3 flex-wrap">
+                <div className="p-4 sm:p-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white">
+                    {/* Sisi Kiri: Menampilkan */}
+                    <div className="text-sm font-medium text-slate-600">
                         <span>
-                            Menampilkan <span className="font-bold text-[#172135]">1 - {sortedData.length}</span> dari{' '}
-                            <span className="font-bold text-[#172135]">48</span> berita
+                            Menampilkan <span className="font-bold text-[#172135]">{startItem} - {endItem}</span> dari{' '}
+                            <span className="font-bold text-[#172135]">{sortedData.length}</span> berita
                         </span>
-
-                        <div className="flex items-center gap-1.5">
-                            <span>Baris:</span>
-                            <div className="relative">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsRowsOpen(!isRowsOpen)}
-                                    className="border border-slate-200 rounded-md px-2 py-0.5 text-xs text-slate-700 bg-white hover:bg-slate-50 flex items-center gap-1 font-semibold cursor-pointer"
-                                >
-                                    <span>{rowsPerPage}</span>
-                                    <ChevronDown size={13} className="text-slate-400" />
-                                </button>
-
-                                {isRowsOpen && (
-                                    <div className="absolute bottom-full mb-1 left-0 w-16 bg-white border border-slate-200 rounded-lg shadow-md py-1 z-20">
-                                        {[5, 10, 20].map((num) => (
-                                            <button
-                                                key={num}
-                                                onClick={() => {
-                                                    setRowsPerPage(num)
-                                                    setIsRowsOpen(false)
-                                                }}
-                                                className={`w-full text-left px-2.5 py-1 text-xs hover:bg-slate-50 cursor-pointer ${rowsPerPage === num ? 'font-bold text-[#159447]' : 'text-slate-600'
-                                                    }`}
-                                            >
-                                                {num}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
                     </div>
 
                     {/* Sisi Kanan: Navigasi Halaman */}
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1 flex-wrap">
+                        {/* Tombol Sebelumnya */}
                         <button
-                            disabled={currentPage === 1}
                             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                            className="text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-xs px-2 py-1 transition-colors cursor-pointer"
+                            disabled={currentPage === 1}
+                            className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md transition-all duration-200 cursor-pointer ${
+                                currentPage === 1
+                                    ? 'cursor-not-allowed bg-slate-100 text-slate-400'
+                                    : 'bg-white text-slate-600 border border-slate-200 hover:border-[#159447] hover:text-[#159447] shadow-xs'
+                            }`}
                         >
-                            &lt; Sebelumnya
+                            <ChevronLeft size={14} />
                         </button>
 
-                        <button
-                            onClick={() => setCurrentPage(1)}
-                            className={`w-7 h-7 rounded-md font-bold text-xs flex items-center justify-center transition-colors cursor-pointer ${currentPage === 1
-                                    ? 'bg-[#159447] text-white shadow-xs'
-                                    : 'text-slate-600 hover:bg-slate-100'
-                                }`}
-                            style={currentPage === 1 ? { backgroundColor: '#159447', color: '#ffffff' } : undefined}
-                        >
-                            1
-                        </button>
+                        {/* Angka Pagination */}
+                        <div className="flex items-center gap-1">
+                            {getPageNumbers().map((page, idx) =>
+                                page === '...' ? (
+                                    <span
+                                        key={`ellipsis-${idx}`}
+                                        className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-slate-400 font-semibold text-xs"
+                                    >
+                                        ...
+                                    </span>
+                                ) : (
+                                    <button
+                                        key={page}
+                                        onClick={() => setCurrentPage(page as number)}
+                                        className={`w-7 h-7 sm:w-8 sm:h-8 rounded-md text-xs font-bold transition-all duration-200 cursor-pointer ${
+                                            currentPage === page
+                                                ? 'bg-[#159447] text-white shadow-sm shadow-green-200 scale-105'
+                                                : 'bg-white text-slate-600 border border-slate-200 hover:border-[#159447] hover:text-[#159447]'
+                                        }`}
+                                    >
+                                        {page}
+                                    </button>
+                                )
+                            )}
+                        </div>
 
+                        {/* Tombol Selanjutnya */}
                         <button
-                            onClick={() => setCurrentPage(2)}
-                            className={`w-7 h-7 rounded-md font-medium text-xs flex items-center justify-center transition-colors cursor-pointer ${currentPage === 2
-                                    ? 'bg-[#159447] text-white'
-                                    : 'text-slate-600 hover:bg-slate-100'
-                                }`}
-                            style={currentPage === 2 ? { backgroundColor: '#159447', color: '#ffffff' } : undefined}
+                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                            className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                                currentPage === totalPages
+                                    ? 'cursor-not-allowed bg-slate-100 text-slate-400'
+                                    : 'bg-[#159447] text-white hover:bg-[#127a3a] shadow-sm shadow-green-200'
+                            }`}
                         >
-                            2
-                        </button>
-
-                        <button
-                            onClick={() => setCurrentPage(3)}
-                            className={`w-7 h-7 rounded-md font-medium text-xs flex items-center justify-center transition-colors cursor-pointer ${currentPage === 3
-                                    ? 'bg-[#159447] text-white'
-                                    : 'text-slate-600 hover:bg-slate-100'
-                                }`}
-                            style={currentPage === 3 ? { backgroundColor: '#159447', color: '#ffffff' } : undefined}
-                        >
-                            3
-                        </button>
-
-                        <span className="text-slate-400 text-xs px-0.5">...</span>
-
-                        <button
-                            onClick={() => setCurrentPage(9)}
-                            className={`w-7 h-7 rounded-md font-medium text-xs flex items-center justify-center transition-colors cursor-pointer ${currentPage === 9
-                                    ? 'bg-[#159447] text-white'
-                                    : 'text-slate-600 hover:bg-slate-100'
-                                }`}
-                            style={currentPage === 9 ? { backgroundColor: '#159447', color: '#ffffff' } : undefined}
-                        >
-                            9
-                        </button>
-
-                        <button
-                            onClick={() => setCurrentPage((p) => Math.min(9, p + 1))}
-                            className="font-semibold text-xs text-slate-700 hover:text-[#159447] px-2 py-1 transition-colors cursor-pointer"
-                        >
-                            Selanjutnya &gt;
+                            <ChevronRight size={14} />
                         </button>
                     </div>
                 </div>
