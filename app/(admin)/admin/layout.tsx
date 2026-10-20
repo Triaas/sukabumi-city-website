@@ -17,8 +17,8 @@ import {
 // Konfigurasi daftar menu sidebar
 const menuItems = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-    { name: 'Kelola Berita', href: '/admin/berita', icon: Newspaper },
-    { name: 'Pengumuman Resmi', href: '/admin/pengumuman', icon: Megaphone },
+    { name: 'Berita', href: '/admin/berita', icon: Newspaper },
+    { name: 'Pengumuman', href: '/admin/pengumuman', icon: Megaphone },
     { name: 'Transparansi Keuangan', href: '/admin/transparansi', icon: FileText },
     { name: 'Banner Beranda', href: '/admin/banner', icon: MonitorPlay },
     { name: 'Pengaturan', href: '/admin/pengaturan', icon: Settings },
