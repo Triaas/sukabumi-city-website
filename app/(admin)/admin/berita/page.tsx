@@ -736,7 +736,7 @@ export default function AdminBeritaPage() {
                         Kelola Berita
                     </h1>
                     <p className="text-xs sm:text-sm text-[#566276] max-w-2xl leading-relaxed">
-                        Kelola, sunting, dan pantau seluruh draf maupun publikasi warta kegiatan kedinasan Pemerintah Kota Sukabumi.
+                        Kelola dan pantau seluruh publikasi berita kedinasan kota.
                     </p>
                 </div>
 
