@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Image as ImageIcon, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Image as ImageIcon, ChevronDown, ChevronLeft, ChevronRight, Search, X } from 'lucide-react'
 
 const categories = [
   'Semua kategori',
@@ -50,6 +50,7 @@ export default function BeritaClient({ initialNews }: { initialNews: any[] }) {
   const [activeCategory, setActiveCategory] = useState<string>(getInitialCategory)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [searchQuery, setSearchQuery] = useState('')
   const itemsPerPage = 8
 
   // Sync jika user navigasi back/forward dan URL param berubah
@@ -77,9 +78,14 @@ export default function BeritaClient({ initialNews }: { initialNews: any[] }) {
     setCurrentPage(1)
   }
 
-  const filteredNews = (activeCategory === 'Pilih Kategori' || activeCategory === 'Semua kategori')
+  const categoryFiltered = (activeCategory === 'Pilih Kategori' || activeCategory === 'Semua kategori')
     ? initialNews
     : initialNews.filter(news => news.category && news.category.toLowerCase().includes(activeCategory.toLowerCase()))
+
+  const normalizedQuery = searchQuery.trim().toLowerCase()
+  const filteredNews = normalizedQuery
+    ? categoryFiltered.filter(news => (news.title || '').toLowerCase().includes(normalizedQuery))
+    : categoryFiltered
 
   const totalPages = Math.ceil(filteredNews.length / itemsPerPage)
   const currentNews = filteredNews.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
@@ -113,9 +119,33 @@ export default function BeritaClient({ initialNews }: { initialNews: any[] }) {
 
       <div className="py-12 px-4 md:px-8 lg:px-12">
         <div className="mx-auto max-w-[1400px]">
-          {/* Dropdown Filter */}
-          <div ref={contentRef} className="mb-10 flex flex-col sm:flex-row sm:items-center justify-start gap-4 pb-4 border-b border-slate-200">
-            <div className="relative z-20">
+          {/* Search Bar & Dropdown Filter */}
+          <div ref={contentRef} className="mb-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+            {/* Search Bar */}
+            <div className="relative w-full sm:w-80">
+              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <input
+                id="search-berita"
+                type="text"
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1) }}
+                placeholder="Cari judul berita..."
+                className="w-full pl-11 pr-10 py-3 rounded-xl text-sm font-medium bg-white text-slate-700 border-2 border-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-[#159447] transition-all shadow-sm"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => { setSearchQuery(''); setCurrentPage(1) }}
+                  aria-label="Hapus pencarian"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-slate-400 hover:text-[#159447] hover:bg-slate-100 transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+
+            {/* Dropdown Filter Kategori (Sebelah Kanan) */}
+            <div className="relative z-20 sm:ml-auto">
               <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="flex w-full sm:w-auto min-w-[220px] items-center justify-between gap-4 px-5 py-3 rounded-xl text-sm font-bold bg-white text-slate-700 border-2 border-slate-200 hover:border-[#159447] hover:text-[#159447] transition-all shadow-sm">
                 <span className="truncate">{activeCategory}</span>
                 <ChevronDown size={18} className={`shrink-0 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
@@ -123,7 +153,7 @@ export default function BeritaClient({ initialNews }: { initialNews: any[] }) {
               {isDropdownOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setIsDropdownOpen(false)} />
-                  <div className="absolute right-0 sm:right-auto sm:left-0 top-full mt-2 w-full sm:w-64 max-h-[300px] overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl flex flex-col py-2 z-20 hide-scrollbar">
+                  <div className="absolute right-0 top-full mt-2 w-full sm:w-64 max-h-[300px] overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl flex flex-col py-2 z-20 hide-scrollbar">
                     {categories.map((cat: any) => (
                       <button key={cat} onClick={() => handleCategorySelect(cat)} className={`text-left px-5 py-3 text-sm font-bold transition-colors ${activeCategory.toLowerCase() === cat.toLowerCase() || (cat === 'Semua kategori' && activeCategory === 'Pilih Kategori') ? 'text-[#159447] bg-[#f0fdf4] border-l-4 border-[#159447]' : 'text-slate-600 hover:bg-slate-50 border-l-4 border-transparent hover:border-slate-300'}`}>
                         {cat}
@@ -133,8 +163,6 @@ export default function BeritaClient({ initialNews }: { initialNews: any[] }) {
                 </>
               )}
             </div>
-
-
           </div>
 
           {/* Grid Berita */}
@@ -177,7 +205,7 @@ export default function BeritaClient({ initialNews }: { initialNews: any[] }) {
                 </Link>
               ))
             ) : (
-              <div className="col-span-full text-center py-12 text-slate-500 font-medium">Belum ada berita untuk kategori ini.</div>
+              <div className="col-span-full text-center py-12 text-slate-500 font-medium">{normalizedQuery ? `Tidak ada berita dengan judul "${searchQuery.trim()}".` : 'Belum ada berita untuk kategori ini.'}</div>
             )}
           </div>
 

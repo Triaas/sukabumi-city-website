@@ -1296,16 +1296,16 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
           {/* Blocked-site fallback banner */}
           <div className="flex items-center justify-between gap-4 bg-[#1b293c]/90 px-5 py-2.5">
             <p className="text-xs md:text-sm text-white/60 font-medium">
-              Jika halaman tidak tampil, situs OPD mungkin memblokir tampilan dalam bingkai.
+              Jika situs tidak muncul,{' '}
+              <a
+                href={iframeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 text-xs md:text-sm font-semibold text-[#4ade80] hover:underline"
+              >
+                Buka di tab baru <ArrowRight size={14} className="inline-flex items-center" />
+              </a>
             </p>
-            <a
-              href={iframeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 text-xs md:text-sm font-semibold text-[#4ade80] hover:underline"
-            >
-              Buka di tab baru <ArrowRight size={14} className="inline-flex items-center" />
-            </a>
           </div>
         </div>
       )}

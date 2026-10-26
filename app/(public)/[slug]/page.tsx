@@ -17,6 +17,7 @@ const contentData: {
     contentImage?: string
     contentImageTitle?: string
     contentImageClassName?: string
+    contentImageCaption?: string
     inlineImages?: { [key: number]: { src: string; caption?: string; title?: string; subtitle?: string; link?: string; imageClassName?: string } }
     tableData?: Array<{
       title: string
@@ -44,10 +45,12 @@ const contentData: {
     ],
     heroImage: '/images/sejarah-card.jpg',
     contentImage: '/images/soek4bum01.jpg',
+    contentImageClassName: 'w-full max-w-md mx-auto h-auto rounded-xl shadow-sm block',
+    contentImageCaption: 'Rumah dinas residen (Residentswoning) Sukabumi tempo dulu',
     inlineImages: {
       2: {
         src: '/images/soek4bum04.jpg',
-        caption: 'Jalan Stasiun, Mei 1926 – Kini JaIan Zainal Zakse dilihat dari arah seberah Barat',
+        caption: 'Jalan Stasiun, Mei 1926 – Kini Jalan Zainal Zakse dilihat dari arah sebelah Barat',
       },
     },
     leadersData: {
@@ -477,7 +480,7 @@ export default async function DetailPage({
             <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12 relative z-20">
               {/* Gambar Utama di atas */}
               {content.contentImage && (
-                <div className="text-center mb-10">
+                <figure className="text-center mb-10">
                   {content.contentImageTitle && (
                     <h2 className="text-xl md:text-2xl font-bold uppercase tracking-wider text-[#172135] mb-4">
                       {content.contentImageTitle}
@@ -489,7 +492,12 @@ export default async function DetailPage({
                     className={`w-full mx-auto h-auto block object-contain ${content.contentImageClassName || 'max-w-md md:max-w-md'
                       }`}
                   />
-                </div>
+                  {content.contentImageCaption && (
+                    <figcaption className="text-xs md:text-sm text-[#566276] italic mt-2 text-center">
+                      {content.contentImageCaption}
+                    </figcaption>
+                  )}
+                </figure>
               )}
               <div id="sejarah-content" className="prose prose-lg max-w-none scroll-mt-36">
                 {content.content.map((paragraph, index) => (
@@ -583,32 +591,47 @@ export default async function DetailPage({
               {/* Vertical Timeline */}
               {content.timelineData && (
                 <div id="nomenklatur" className="mt-16 pt-8 border-t border-gray-100 scroll-mt-36">
-                  <div className="text-center mb-10">
+                  <div className="text-center mb-8">
                     <h3 className="text-2xl md:text-3xl font-bold text-[#172135]">
                       {content.timelineData.title}
                     </h3>
-                    <div className="h-1 w-20 bg-[#159447] rounded-full mx-auto mt-4" />
+                    <div className="h-1 w-20 bg-[#159447] rounded-full mx-auto mt-4 mb-8" />
+
+                    {/* Daftar Isi Mini (Quick Jump) */}
+                    <div className="flex flex-wrap justify-center gap-2 max-w-3xl mx-auto px-4">
+                      {content.timelineData.items.map((item, idx) => (
+                        <a
+                          key={`nav-${idx}`}
+                          href={`#nomenklatur-${idx}`}
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-[#159447] hover:text-white text-slate-600 text-xs font-semibold rounded-full border border-slate-200 transition-colors"
+                        >
+                          {item.period.split(' ')[0]} {/* Menampilkan tahun awalnya saja */}
+                        </a>
+                      ))}
+                    </div>
                   </div>
 
-                  <div className="max-w-3xl mx-auto relative border-l-2 border-[#159447]/30 ml-3 md:mx-auto md:border-l-2 md:border-[#159447]/30">
-                    <div className="space-y-8">
+                  <div className="max-w-2xl mx-auto relative border-l-2 border-[#159447]/30 ml-3 md:mx-auto md:border-l-2 md:border-[#159447]/30">
+                    <div className="space-y-4">
                       {content.timelineData.items.map((item, idx) => (
-                        <div key={idx} className="relative pl-8 md:pl-10 group">
+                        <div key={idx} id={`nomenklatur-${idx}`} className="relative pl-5 md:pl-6 group scroll-mt-32">
                           {/* Titik Timeline */}
-                          <div className="absolute -left-[9px] top-1.5 h-4 w-4 rounded-full bg-[#159447] border-4 border-white shadow-sm group-hover:scale-125 transition-transform duration-300" />
+                          <div className="absolute -left-[6px] top-3 h-3.5 w-3.5 rounded-full bg-[#159447] border-2 border-white shadow-sm group-hover:scale-125 transition-transform duration-300" />
 
                           {/* Card Konten */}
-                          <div className="bg-slate-50/80 border border-slate-100 rounded-xl p-5 md:p-6 shadow-sm hover:shadow-md hover:bg-white transition-all duration-300">
-                            <span className="text-sm font-bold text-[#159447] tracking-wider uppercase mb-1 block">
-                              {item.period}
-                            </span>
-                            <h4 className="text-xl md:text-2xl font-bold text-[#172135]">
+                          <div className="bg-slate-50/80 border border-slate-100 rounded-xl px-4 py-3 md:px-5 md:py-3.5 shadow-sm hover:shadow-md hover:bg-white transition-all duration-300">
+                            <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1">
+                              <span className="text-xs font-bold text-[#159447] tracking-wider uppercase">
+                                {item.period}
+                              </span>
+                              <div className="inline-block px-2 py-0.5 bg-slate-200/70 text-slate-700 text-[11px] font-semibold rounded-md border border-slate-300/50">
+                                {item.badge}
+                              </div>
+                            </div>
+                            <h4 className="text-base md:text-lg font-bold text-[#172135] mb-1">
                               {item.title}
                             </h4>
-                            <div className="mt-3 inline-block px-2.5 py-1 bg-slate-200/70 text-slate-700 text-xs font-semibold rounded-md border border-slate-300/50">
-                              {item.badge}
-                            </div>
-                            <p className="mt-4 text-[#566276] text-sm md:text-base leading-relaxed">
+                            <p className="text-[#566276] text-xs md:text-sm leading-relaxed">
                               {item.description}
                             </p>
                           </div>

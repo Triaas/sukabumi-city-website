@@ -53,13 +53,16 @@ export function Footer() {
                   className="h-full w-full object-contain"
                 />
               </div>
-              <div className="relative">
-                <p className="absolute -top-4.5 left-0 text-[11px] font-semibold tracking-[0.14em] text-white/75 leading-tight uppercase whitespace-nowrap">
+              <div className="flex flex-col justify-center">
+                <p className="text-[11px] font-semibold tracking-[0.14em] text-white/75 leading-tight uppercase whitespace-nowrap">
                   Website Resmi
                 </p>
                 <h3 className="text-base sm:text-lg font-bold leading-snug whitespace-nowrap">
                   Pemerintah Kota Sukabumi
                 </h3>
+                <p className="font-serif text-xs sm:text-sm italic text-[#f4ce4b] leading-tight whitespace-nowrap mt-0.5">
+                  Reugreug Pageuh Repeh Rapih
+                </p>
               </div>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-white/70">

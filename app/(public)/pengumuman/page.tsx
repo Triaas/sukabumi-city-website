@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Megaphone, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react'
+import { ArrowLeft, Megaphone, ChevronLeft, ChevronRight, Image as ImageIcon, Search, X } from 'lucide-react'
 import { getAnnouncements, AnnouncementItem } from '@/lib/announcements'
 
 export default function PengumumanPage() {
@@ -13,6 +13,7 @@ export default function PengumumanPage() {
   // State untuk Pagination
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 8
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Ambil data pengumuman saat halaman pertama kali dibuka
   useEffect(() => {
@@ -34,9 +35,14 @@ export default function PengumumanPage() {
     }
   }, [currentPage])
 
-  const totalPages = Math.ceil(announcements.length / itemsPerPage)
+  const normalizedQuery = searchQuery.trim().toLowerCase()
+  const filteredAnnouncements = normalizedQuery
+    ? announcements.filter((a) => (a.title || '').toLowerCase().includes(normalizedQuery))
+    : announcements
 
-  const currentAnnouncements = announcements.slice(
+  const totalPages = Math.ceil(filteredAnnouncements.length / itemsPerPage)
+
+  const currentAnnouncements = filteredAnnouncements.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   )
@@ -81,6 +87,31 @@ export default function PengumumanPage() {
       {/* Content List */}
       <div className="py-12 px-4 md:px-8 lg:px-12">
         <div className="mx-auto max-w-[1400px]">
+          {/* Search Bar */}
+          <div className="mb-10 pb-4 border-b border-slate-200 flex sm:justify-start">
+            <div className="relative w-full sm:w-80">
+              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <input
+                id="search-pengumuman"
+                type="text"
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1) }}
+                placeholder="Cari judul pengumuman..."
+                className="w-full pl-11 pr-10 py-3 rounded-xl text-sm font-medium bg-white text-slate-700 border-2 border-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-[#159447] transition-all shadow-sm"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => { setSearchQuery(''); setCurrentPage(1) }}
+                  aria-label="Hapus pencarian"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-slate-400 hover:text-[#159447] hover:bg-slate-100 transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+          </div>
+
           <div ref={contentRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 min-h-[400px]">
             {isLoading ? (
               <>
@@ -138,7 +169,7 @@ export default function PengumumanPage() {
               ))
             ) : (
               <div className="col-span-full text-center py-12 text-slate-500 font-medium">
-                Belum ada pengumuman.
+                {normalizedQuery ? `Tidak ada pengumuman dengan judul "${searchQuery.trim()}".` : 'Belum ada pengumuman.'}
               </div>
             )}
           </div>
