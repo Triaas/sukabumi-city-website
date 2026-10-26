@@ -703,7 +703,7 @@ export default function AdminTransparansiPage() {
                                         Tambah Dokumen Transparansi
                                     </h3>
                                     <p className="text-xs text-[#566276]">
-                                        Unggah dokumen laporan keuangan atau regulasi publik.
+                                        Unggah dokumen atau regulasi publik.
                                     </p>
                                 </div>
                             </div>

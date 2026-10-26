@@ -461,10 +461,14 @@ function News() {
             ) : (
               <AnnouncementList items={dbAnnouncements} />
             )}
-            <Link className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44] hover:text-[#0f7a36] transition-colors"
-              href="/pengumuman">
-              Pengumuman Lainnya <ArrowRight size={18} />
-            </Link>
+            <div className="mt-8 flex justify-end">
+              <Link
+                href="/pengumuman"
+                className="inline-flex items-center gap-2 rounded-xl border-2 border-[#159447] bg-white px-6 py-2 text-sm font-bold text-[#159447] transition-all hover:bg-[#f0fdf4] hover:shadow-sm"
+              >
+                Lainnya <ArrowRight size={16} />
+              </Link>
+            </div>
           </div>
           <div className="flex flex-col">
             <h3 className="mb-6 text-2xl font-bold text-[#263349]">Berita</h3>
@@ -478,10 +482,14 @@ function News() {
             ) : (
               <NewsCardList items={dbNews} />
             )}
-            <Link className="mt-8 inline-flex items-center gap-2 font-bold text-[#138c44] hover:text-[#0f7a36] transition-colors"
-              href="/berita">
-              Berita Lainnya <ArrowRight size={18} />
-            </Link>
+            <div className="mt-8 flex justify-end">
+              <Link
+                href="/berita"
+                className="inline-flex items-center gap-2 rounded-xl border-2 border-[#159447] bg-white px-6 py-2 text-sm font-bold text-[#159447] transition-all hover:bg-[#f0fdf4] hover:shadow-sm"
+              >
+                Lainnya <ArrowRight size={16} />
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -1400,8 +1408,8 @@ function TransparansiDokumen() {
     <section id="transparansi" className="bg-white px-4 py-10 md:px-8 lg:px-12 md:py-16">
       <div className="mx-auto max-w-[1400px]">
         <div className="mb-12 flex items-start justify-between">
-          <SectionHeading subtitle="Transparansi keuangan daerah adalah kunci pemerintahan yang bersih, akuntabel, dan dipercaya rakyat untuk membangun masa depan yang lebih baik.">
-            Transparansi Keuangan Daerah
+          <SectionHeading subtitle="Akses mudah ke dokumen resmi sebagai wujud transparansi dan akuntabilitas pemerintahan.">
+            Transparansi Dokumen Daerah
           </SectionHeading>
           {/* <div className="hidden md:block">
             <button className="rounded-lg bg-[#159447] px-4 py-2 font-medium text-white hover:bg-[#0f7a36] transition-colors">

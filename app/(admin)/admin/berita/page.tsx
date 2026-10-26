@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
     PlusCircle,
     Search,
@@ -501,6 +502,7 @@ const initialBerita: BeritaItem[] = [
 ]
 
 export default function AdminBeritaPage() {
+    const router = useRouter()
     const [beritaList, setBeritaList] = useState<BeritaItem[]>(initialBerita)
     const [searchTerm, setSearchTerm] = useState('')
     const [activeCategory, setActiveCategory] = useState<string>('Semua kategori')
@@ -519,7 +521,6 @@ export default function AdminBeritaPage() {
     // Modals state
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
     const [previewItem, setPreviewItem] = useState<BeritaItem | null>(null)
-    const [editingItem, setEditingItem] = useState<BeritaItem | null>(null)
     const [deletingId, setDeletingId] = useState<string | null>(null)
 
     // Form state for add / edit
@@ -673,47 +674,6 @@ export default function AdminBeritaPage() {
 
         setBeritaList([newItem, ...beritaList])
         setIsAddModalOpen(false)
-    }
-
-    // Handle open edit modal
-    const openEditModal = (item: BeritaItem) => {
-        setEditingItem(item)
-        setFormData({
-            title: item.title,
-            excerpt: item.excerpt,
-            category: item.category,
-            status: item.status,
-            image: item.image,
-            reporterName: item.reporter.name,
-            reporterRole: item.reporter.role,
-        })
-    }
-
-    // Handle save edit
-    const handleSaveEdit = (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!editingItem) return
-
-        setBeritaList((prev) =>
-            prev.map((item) =>
-                item.id === editingItem.id
-                    ? {
-                        ...item,
-                        title: formData.title,
-                        excerpt: formData.excerpt,
-                        category: formData.category,
-                        status: formData.status,
-                        image: formData.image,
-                        reporter: {
-                            ...item.reporter,
-                            name: formData.reporterName,
-                            role: formData.reporterRole,
-                        },
-                    }
-                    : item
-            )
-        )
-        setEditingItem(null)
     }
 
     // Handle delete
@@ -1053,7 +1013,7 @@ export default function AdminBeritaPage() {
                                                     <Eye size={14} />
                                                 </button>
                                                 <button
-                                                    onClick={() => openEditModal(item)}
+                                                    onClick={() => router.push('/admin/berita/tambah?id=' + item.id)}
                                                     title="Edit Berita"
                                                     className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50 flex items-center justify-center transition-colors cursor-pointer"
                                                 >
@@ -1274,115 +1234,7 @@ export default function AdminBeritaPage() {
                 </div>
             )}
 
-            {/* 6. MODAL: EDIT BERITA */}
-            {editingItem && (
-                <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl border border-slate-200 max-w-lg w-full p-6 shadow-2xl space-y-5">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                            <div>
-                                <h3 className="font-bold text-[#172135] text-base tracking-tight">Edit Berita</h3>
-                                <p className="text-xs text-[#566276]">Perbarui data publikasi nomor #{editingItem.no}</p>
-                            </div>
-                            <button
-                                onClick={() => setEditingItem(null)}
-                                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
-                            >
-                                <X size={18} />
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleSaveEdit} className="space-y-4 text-xs">
-                            <div>
-                                <label className="block font-medium text-[#172135] mb-1">Judul Berita</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={formData.title}
-                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#159447]"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block font-medium text-[#172135] mb-1">Ringkasan Berita</label>
-                                <textarea
-                                    rows={2}
-                                    value={formData.excerpt}
-                                    onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
-                                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#159447]"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block font-medium text-[#172135] mb-1">Kategori</label>
-                                    <select
-                                        value={formData.category}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                category: e.target.value as BeritaItem['category'],
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#159447] bg-white"
-                                    >
-                                        <option value="Pelayanan">Pelayanan</option>
-                                        <option value="Ekonomi">Ekonomi</option>
-                                        <option value="Pemerintahan">Pemerintahan</option>
-                                        <option value="Kesehatan">Kesehatan</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block font-medium text-[#172135] mb-1">Status</label>
-                                    <select
-                                        value={formData.status}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                status: e.target.value as BeritaItem['status'],
-                                            })
-                                        }
-                                        className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#159447] bg-white"
-                                    >
-                                        <option value="Publish">Publish</option>
-                                        <option value="Draft">Draft</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block font-medium text-[#172135] mb-1">URL Gambar Thumbnail</label>
-                                <input
-                                    type="text"
-                                    value={formData.image}
-                                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#159447]"
-                                />
-                            </div>
-
-                            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
-                                <button
-                                    type="button"
-                                    onClick={() => setEditingItem(null)}
-                                    className="px-4 py-2 rounded-xl border border-slate-200 text-[#566276] hover:bg-slate-50 font-medium cursor-pointer"
-                                >
-                                    Batal
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="px-4 py-2 rounded-xl bg-[#159447] hover:bg-[#12803d] text-white font-medium shadow-xs cursor-pointer"
-                                    style={{ backgroundColor: '#159447' }}
-                                >
-                                    Simpan Perubahan
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* 7. MODAL: LIHAT / PREVIEW DETAIL BERITA */}
+            {/* 6. MODAL: LIHAT / PREVIEW DETAIL BERITA */}
             {previewItem && (
                 <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
                     <div className="bg-white rounded-2xl border border-slate-200 max-w-lg w-full overflow-hidden shadow-2xl space-y-4">
