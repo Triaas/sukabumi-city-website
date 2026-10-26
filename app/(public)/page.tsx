@@ -70,7 +70,7 @@ function Hero() {
   }, [images.length])
 
   return (
-    <section id="beranda" className="relative flex h-screen min-h-[650px] items-end overflow-hidden bg-[#0c1d26] pt-36 pb-20 md:pt-44 md:pb-28">
+    <section id="beranda" className="relative flex h-screen min-h-[650px] items-center overflow-hidden bg-[#0c1d26] pt-20">
       {images.map((src, index) => (
         <img
           key={src}
@@ -81,7 +81,7 @@ function Hero() {
         />
       ))}
       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/40 to-slate-950/30 z-10" />
-      <div className="relative z-20 w-full max-w-[1400px] mx-auto px-4 pb-12 md:px-8 lg:px-12">
+      <div className="relative z-20 w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
         <div className="max-w-xl">
           <p className="mb-3 text-sm font-bold uppercase tracking-[0.24em] text-[#f3c338]">Selamat datang di</p>
           <h1 className="text-5xl font-bold leading-tight text-white md:text-7xl">Kota Sukabumi</h1>
@@ -97,7 +97,7 @@ function Hero() {
 function Welcome() {
   return (
     <section className="bg-white px-4 py-10 md:px-8 lg:px-12 md:py-16">
-      <div className="mx-auto flex max-w-[1400px] flex-col items-center gap-12 lg:flex-row lg:gap-4">
+      <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-10 lg:flex-row lg:gap-8">
         <article className="w-full max-w-[440px] rounded-3xl bg-[#eff4f8] p-7 md:p-9 shadow-sm">
           <div className="flex items-center gap-2 mb-2.5">
             <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#ba8500]">Motto Kota Sukabumi</span>
@@ -110,7 +110,7 @@ function Welcome() {
               <div className="flex items-baseline gap-2">
                 <h3 className="text-base md:text-lg font-bold text-[#159447]">Reugreug</h3>
               </div>
-              <p className="mt-1 text-xs md:text-psm leading-snug text-[#29364a]">
+              <p className="mt-1 text-xs md:text-sm leading-snug text-[#29364a]">
                 Hati tenteram dan penuh rasa aman.
               </p>
             </div>
@@ -141,22 +141,20 @@ function Welcome() {
           </div>
         </article>
 
-        <div className="flex flex-1 items-end justify-center gap-0">
-          <div className="relative z-10 w-full max-w-[570px] self-end">
+        <div className="flex flex-1 items-center justify-center gap-4 lg:gap-8">
+          <div className="relative z-10 w-full max-w-[500px] lg:max-w-[600px] self-end shrink-0">
             <img
-              src="/images/10.png"
+              src="/images/walikota dan wakil.png"
               className="w-full"
               alt="Walikota dan Wakil Walikota Sukabumi"
             />
           </div>
-          <div className="ml-10 hidden max-w-[270px] md:block">
-            <p className="font-serif text-4xl italic text-[#516076]">Sukabumi</p>
-            <p className="text-5xl font-black tracking-tight text-[#18243b]">
-              <span className="text-[#f29b10]">M</span>UBARAKAH
-            </p>
-            <p className="mt-3 font-bold tracking-[0.22em] text-[#62738c]">
-              MAJU, UNGGUL, BERBUDAYA &amp; BERKAH
-            </p>
+          <div className="ml-4 lg:ml-8 hidden max-w-[260px] lg:max-w-[320px] md:block self-center shrink-0">
+            <img
+              src="/images/Iman.png"
+              alt="IMAN - Inovatif, Mandiri, Agamis, Nasionalis"
+              className="w-full h-auto object-contain"
+            />
           </div>
         </div>
       </div>
@@ -240,8 +238,8 @@ function EventSlider() {
   return (
     <section className="bg-white pt-10 pb-2 px-4 md:px-8 lg:px-12">
       <div className="mx-auto max-w-[1400px]">
-        {/* Slider Container */}
-        <div className="relative w-full h-[180px] sm:h-[260px] md:h-[360px] lg:h-[420px] rounded-2xl md:rounded-3xl overflow-hidden shadow-md group bg-slate-100">
+        {/* Slider Container - Atur tinggi banner di class h-[...] berikut */}
+        <div className="relative w-full h-[135px] sm:h-[195px] md:h-[270px] lg:h-[315px] rounded-2xl md:rounded-3xl overflow-hidden shadow-md group bg-slate-100">
 
           {banners.length === 0 ? (
             <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-sm">Memuat slider...</div>
