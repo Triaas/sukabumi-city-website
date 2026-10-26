@@ -86,7 +86,7 @@ const initialPengumuman: PengumumanItem[] = [
         status: 'Publish',
         date: '22 Okt 2026',
         time: '09:15 WIB',
-        attachment: null, // Null 1
+        attachment: 'Surat_Himbauan_Cuaca_Ekstrem_BPBD.pdf',
         author: {
             name: 'Trias Firmansyah',
             role: 'Admin',
@@ -120,7 +120,7 @@ const initialPengumuman: PengumumanItem[] = [
         status: 'Draft',
         date: '18 Okt 2026',
         time: '10:00 WIB',
-        attachment: null, // Null 2
+        attachment: 'Surat_Edaran_Jam_Kerja_Ramadhan.pdf',
         author: {
             name: 'Trias Firmansyah',
             role: 'Admin',
@@ -233,6 +233,7 @@ export default function AdminPengumumanPage() {
     const fileInputRef = useRef<HTMLInputElement>(null)
     const editFileInputRef = useRef<HTMLInputElement>(null)
     const [isDragging, setIsDragging] = useState(false)
+    const [attachmentError, setAttachmentError] = useState(false)
 
     // ─── Filter & Search Logic ────────────────────────────────────────────────
     const filteredData = useMemo(() => {
@@ -316,6 +317,7 @@ export default function AdminPengumumanPage() {
 
     // ─── Modal Handlers ───────────────────────────────────────────────────────
     const openAddModal = () => {
+        setAttachmentError(false)
         setFormData({
             title: '',
             content: '',
@@ -330,6 +332,7 @@ export default function AdminPengumumanPage() {
     }
 
     const openEditModal = (item: PengumumanItem) => {
+        setAttachmentError(false)
         setEditingItem(item)
         const dateInput = parseIndoToDateInput(item.date) || getTodayDate()
         const timeInput = item.time.replace(' WIB', '').trim() || getCurrentTime()
@@ -349,6 +352,13 @@ export default function AdminPengumumanPage() {
     const handleSaveAdd = (e: React.FormEvent) => {
         e.preventDefault()
         if (!formData.title.trim()) return
+
+        // Validasi wajib lampiran dokumen
+        if (!formData.attachment) {
+            setAttachmentError(true)
+            return
+        }
+        setAttachmentError(false)
 
         const newId = String(pengumumanList.length + 1)
         const formattedNo = newId.padStart(2, '0')
@@ -380,6 +390,13 @@ export default function AdminPengumumanPage() {
     const handleSaveEdit = (e: React.FormEvent) => {
         e.preventDefault()
         if (!editingItem || !formData.title.trim()) return
+
+        // Validasi wajib lampiran dokumen
+        if (!formData.attachment) {
+            setAttachmentError(true)
+            return
+        }
+        setAttachmentError(false)
 
         const dateStr = formatDateToIndo(formData.publishDate) || editingItem.date
         const timeStr = formData.publishTime ? `${formData.publishTime} WIB` : editingItem.time
@@ -416,6 +433,7 @@ export default function AdminPengumumanPage() {
         const file = e.target.files?.[0]
         if (file) {
             setFormData((prev) => ({ ...prev, attachment: file.name }))
+            setAttachmentError(false)
         }
     }
 
@@ -425,6 +443,7 @@ export default function AdminPengumumanPage() {
         const file = e.dataTransfer.files?.[0]
         if (file && file.name.toLowerCase().endsWith('.pdf')) {
             setFormData((prev) => ({ ...prev, attachment: file.name }))
+            setAttachmentError(false)
         }
     }
 
@@ -692,8 +711,8 @@ export default function AdminPengumumanPage() {
                                                     <span>1 File</span>
                                                 </button>
                                             ) : (
-                                                <span className="text-xs text-slate-400 italic">
-                                                    Tidak ada
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-rose-50 text-rose-600 border border-rose-200">
+                                                    Belum Ada
                                                 </span>
                                             )}
                                         </td>
@@ -947,7 +966,7 @@ export default function AdminPengumumanPage() {
                             {/* 4. Lampiran Dokumen (PDF) */}
                             <div>
                                 <label className="block font-semibold text-[#172135] mb-1">
-                                    Lampiran Dokumen (PDF)
+                                    Lampiran Dokumen (PDF) <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="file"
@@ -966,7 +985,7 @@ export default function AdminPengumumanPage() {
                                                 <p className="text-xs font-semibold text-slate-800 truncate">
                                                     {formData.attachment}
                                                 </p>
-                                                <p className="text-[10px] text-slate-400">Dokumen PDF Terlampir</p>
+                                                <p className="text-[10px] text-emerald-600 font-medium">Dokumen PDF Terlampir</p>
                                             </div>
                                         </div>
                                         <button
@@ -994,19 +1013,27 @@ export default function AdminPengumumanPage() {
                                         onDrop={handleDropFile}
                                         onClick={() => fileInputRef.current?.click()}
                                         className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${
-                                            isDragging
+                                            attachmentError && !formData.attachment
+                                                ? 'border-red-400 bg-red-50/40'
+                                                : isDragging
                                                 ? 'border-[#159447] bg-[#f0fdf4]'
                                                 : 'border-slate-200 bg-[#f8fafc] hover:bg-slate-100 hover:border-slate-300'
                                         }`}
                                     >
-                                        <UploadCloud size={20} className="mx-auto text-slate-400 mb-1.5" />
+                                        <UploadCloud size={20} className={`mx-auto mb-1.5 ${attachmentError && !formData.attachment ? 'text-red-400' : 'text-slate-400'}`} />
                                         <p className="text-xs font-semibold text-slate-700">
                                             Tarik berkas PDF ke sini atau <span className="text-[#159447] underline">klik untuk memilih</span>
                                         </p>
                                         <p className="text-[10px] text-slate-400 mt-0.5">
-                                            Hanya mendukung format PDF (Maks. 10 MB)
+                                            <span className="text-red-500 font-semibold">Wajib dilampirkan</span> • Format PDF (Maks. 10 MB)
                                         </p>
                                     </div>
+                                )}
+                                {attachmentError && !formData.attachment && (
+                                    <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                        <AlertCircle size={13} className="shrink-0" />
+                                        Berkas dokumen lampiran (PDF) wajib diunggah.
+                                    </p>
                                 )}
                             </div>
 
@@ -1170,7 +1197,7 @@ export default function AdminPengumumanPage() {
                             {/* 4. Lampiran Dokumen (PDF) */}
                             <div>
                                 <label className="block font-semibold text-[#172135] mb-1">
-                                    Lampiran Dokumen (PDF)
+                                    Lampiran Dokumen (PDF) <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="file"
@@ -1189,7 +1216,7 @@ export default function AdminPengumumanPage() {
                                                 <p className="text-xs font-semibold text-slate-800 truncate">
                                                     {formData.attachment}
                                                 </p>
-                                                <p className="text-[10px] text-slate-400">Dokumen PDF Terlampir</p>
+                                                <p className="text-[10px] text-emerald-600 font-medium">Dokumen PDF Terlampir</p>
                                             </div>
                                         </div>
                                         <button
@@ -1217,19 +1244,27 @@ export default function AdminPengumumanPage() {
                                         onDrop={handleDropFile}
                                         onClick={() => editFileInputRef.current?.click()}
                                         className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${
-                                            isDragging
+                                            attachmentError && !formData.attachment
+                                                ? 'border-red-400 bg-red-50/40'
+                                                : isDragging
                                                 ? 'border-[#159447] bg-[#f0fdf4]'
                                                 : 'border-slate-200 bg-[#f8fafc] hover:bg-slate-100 hover:border-slate-300'
                                         }`}
                                     >
-                                        <UploadCloud size={20} className="mx-auto text-slate-400 mb-1.5" />
+                                        <UploadCloud size={20} className={`mx-auto mb-1.5 ${attachmentError && !formData.attachment ? 'text-red-400' : 'text-slate-400'}`} />
                                         <p className="text-xs font-semibold text-slate-700">
                                             Tarik berkas PDF ke sini atau <span className="text-[#159447] underline">klik untuk memilih</span>
                                         </p>
                                         <p className="text-[10px] text-slate-400 mt-0.5">
-                                            Hanya mendukung format PDF (Maks. 10 MB)
+                                            <span className="text-red-500 font-semibold">Wajib dilampirkan</span> • Format PDF (Maks. 10 MB)
                                         </p>
                                     </div>
+                                )}
+                                {attachmentError && !formData.attachment && (
+                                    <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                        <AlertCircle size={13} className="shrink-0" />
+                                        Berkas dokumen lampiran (PDF) wajib diunggah.
+                                    </p>
                                 )}
                             </div>
 

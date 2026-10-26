@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import {
     PlusCircle,
     Search,
@@ -180,8 +180,47 @@ export default function AdminTransparansiPage() {
 
     // Modal State
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+    const [previewItem, setPreviewItem] = useState<TransparansiItem | null>(null)
     const [editingItem, setEditingItem] = useState<TransparansiItem | null>(null)
     const [deletingId, setDeletingId] = useState<string | null>(null)
+
+    // Navigation Dokumen untuk Pop-up Preview
+    const handlePrevDocument = () => {
+        if (previewItem) {
+            const currentIndex = transparansiList.findIndex((doc) => doc.id === previewItem.id)
+            if (currentIndex > 0) {
+                setPreviewItem(transparansiList[currentIndex - 1])
+            }
+        }
+    }
+
+    const handleNextDocument = () => {
+        if (previewItem) {
+            const currentIndex = transparansiList.findIndex((doc) => doc.id === previewItem.id)
+            if (currentIndex < transparansiList.length - 1) {
+                setPreviewItem(transparansiList[currentIndex + 1])
+            }
+        }
+    }
+
+    const getCurrentDocumentIndex = () => {
+        if (previewItem) {
+            return transparansiList.findIndex((doc) => doc.id === previewItem.id) + 1
+        }
+        return 0
+    }
+
+    // Mematikan scroll halaman saat pop-up dokumen terbuka
+    useEffect(() => {
+        if (previewItem) {
+            document.body.style.overflow = 'hidden'
+        } else {
+            document.body.style.overflow = ''
+        }
+        return () => {
+            document.body.style.overflow = ''
+        }
+    }, [previewItem])
 
     // Form State (1 Kolom Rapi untuk Tambah & Edit)
     const [formData, setFormData] = useState({
@@ -587,7 +626,7 @@ export default function AdminTransparansiPage() {
                                             <div className="flex items-center justify-center gap-1.5">
                                                 <button
                                                     type="button"
-                                                    onClick={() => window.open(item.pdfFile, '_blank', 'noopener,noreferrer')}
+                                                    onClick={() => setPreviewItem(item)}
                                                     title="Lihat Dokumen"
                                                     className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50 flex items-center justify-center transition-colors cursor-pointer"
                                                 >
@@ -1055,6 +1094,172 @@ export default function AdminTransparansiPage() {
                             >
                                 Hapus Dokumen
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ─── 7. MODAL POP-UP: PREVIEW DOKUMEN (REUSE USER SIDE POPUP) ─── */}
+            {previewItem && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+                    onClick={() => setPreviewItem(null)}
+                >
+                    <div
+                        className="relative bg-[#fafafa] rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Tombol Tutup Silang di Sudut Kanan Atas */}
+                        <button
+                            type="button"
+                            onClick={() => setPreviewItem(null)}
+                            className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors cursor-pointer z-10"
+                            title="Tutup"
+                        >
+                            <X size={18} />
+                        </button>
+
+                        {/* Content Wrapper */}
+                        <div className="p-5 md:p-8 flex flex-col flex-1 min-h-0 overflow-y-auto">
+                            {/* Grid Layout for Details & PDF Preview */}
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
+                                {/* Left Column: Details */}
+                                <div className="lg:col-span-5 flex flex-col gap-5 pr-0 md:pr-2">
+                                    {/* Category & Title */}
+                                    <div>
+                                        <div className="mb-3">
+                                            <span className="inline-block bg-[#f1f5f9] text-[#475569] text-xs font-medium px-4 py-1.5 rounded-md">
+                                                Transparansi Pengelolaan Keuangan Daerah
+                                            </span>
+                                        </div>
+                                        <h2 className="text-xl md:text-2xl font-bold text-[#159447] leading-snug">
+                                            {previewItem.title}
+                                        </h2>
+                                    </div>
+
+                                    {/* Deskripsi Program */}
+                                    <div>
+                                        <div className="flex items-center gap-2 text-[#159447] mb-1">
+                                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <span className="text-xs text-[#94a3b8] font-medium">Deskripsi Program</span>
+                                        </div>
+                                        <p className="text-[#334155] text-sm md:text-sm pl-6 leading-relaxed">
+                                            {previewItem.description || 'Tidak ada deskripsi program.'}
+                                        </p>
+                                    </div>
+
+                                    {/* Tanggal Pemberlakuan */}
+                                    <div>
+                                        <div className="flex items-center gap-2 text-[#159447] mb-1">
+                                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                            </svg>
+                                            <span className="text-xs text-[#94a3b8] font-medium">Tanggal Pemberlakuan</span>
+                                        </div>
+                                        <p className="text-[#334155] text-sm md:text-sm pl-6">
+                                            {previewItem.effectiveDate}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Right Column: PDF Preview */}
+                                <div className="lg:col-span-7 h-full min-h-[300px] bg-white border-2 border-gray-100 rounded-xl overflow-hidden shadow-sm flex flex-col items-center justify-center">
+                                    {previewItem.pdfFile &&
+                                    (previewItem.pdfFile.startsWith('http') ||
+                                        previewItem.pdfFile.startsWith('/') ||
+                                        previewItem.pdfFile.startsWith('blob:') ||
+                                        previewItem.pdfFile.startsWith('data:')) ? (
+                                        <embed
+                                            src={previewItem.pdfFile}
+                                            type="application/pdf"
+                                            width="100%"
+                                            height="100%"
+                                            className="w-full h-full"
+                                        />
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center p-8 text-center bg-slate-50/50 w-full h-full">
+                                            <div className="flex h-16 w-16 flex-col items-center justify-center rounded-xl bg-[#f0fdf4] border-2 border-[#159447] mb-3">
+                                                <FileText className="h-6 w-6 text-[#159447]" />
+                                                <span className="mt-1 text-xs font-bold text-[#159447]">PDF</span>
+                                            </div>
+                                            <p className="text-sm font-semibold text-[#172135] max-w-xs truncate">{previewItem.pdfFile}</p>
+                                            <p className="text-xs text-slate-400 mt-1">Dokumen pratinjau belum tersedia (data dummy)</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer: Buttons */}
+                        <div className="border-t border-gray-200 px-5 py-3.5 bg-white shrink-0">
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                {/* Navigation Buttons (Left) */}
+                                <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+                                    <button
+                                        type="button"
+                                        onClick={handlePrevDocument}
+                                        disabled={getCurrentDocumentIndex() === 1}
+                                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors cursor-pointer ${
+                                            getCurrentDocumentIndex() === 1
+                                                ? 'cursor-not-allowed bg-gray-100 text-gray-400'
+                                                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        <ChevronLeft size={16} />
+                                        <span className="hidden sm:inline">Sebelumnya</span>
+                                    </button>
+
+                                    <span className="text-xs text-[#94a3b8] font-semibold mx-1">
+                                        {getCurrentDocumentIndex()} / {transparansiList.length}
+                                    </span>
+
+                                    <button
+                                        type="button"
+                                        onClick={handleNextDocument}
+                                        disabled={getCurrentDocumentIndex() === transparansiList.length}
+                                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors cursor-pointer ${
+                                            getCurrentDocumentIndex() === transparansiList.length
+                                                ? 'cursor-not-allowed bg-gray-100 text-gray-400'
+                                                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        <span className="hidden sm:inline">Selanjutnya</span>
+                                        <ChevronRight size={16} />
+                                    </button>
+                                </div>
+
+                                {/* Action Buttons (Right) */}
+                                <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                                    <button
+                                        type="button"
+                                        onClick={() => setPreviewItem(null)}
+                                        className="px-4 py-2 text-xs md:text-sm rounded-lg border-2 border-[#159447] text-[#159447] font-bold hover:bg-[#159447]/5 transition-colors cursor-pointer"
+                                    >
+                                        Tutup
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (
+                                                previewItem.pdfFile.startsWith('http') ||
+                                                previewItem.pdfFile.startsWith('/')
+                                            ) {
+                                                window.open(previewItem.pdfFile, '_blank')
+                                            } else {
+                                                alert('Mengunduh berkas dummy: ' + previewItem.pdfFile)
+                                            }
+                                        }}
+                                        className="px-4 py-2 text-xs md:text-sm rounded-lg bg-[#159447] text-white font-bold hover:bg-[#0f7a36] shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                        </svg>
+                                        Unduh
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

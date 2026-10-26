@@ -35,7 +35,7 @@ export interface BeritaItem {
     no: string
     title: string
     excerpt: string
-    category: string
+    categories: string[]
     status: 'Publish' | 'Draft'
     date: string
     time: string
@@ -79,7 +79,7 @@ const initialBerita: BeritaItem[] = [
         no: '01',
         title: 'Optimalisasi MPP Digital',
         excerpt: 'Layanan terpadu cepat & ringkas',
-        category: 'Pelayanan',
+        categories: ['Pelayanan', 'Teknologi'],
         status: 'Publish',
         date: '24 Okt 2026',
         time: '08:45 WIB',
@@ -96,7 +96,7 @@ const initialBerita: BeritaItem[] = [
         no: '02',
         title: 'Revitalisasi Pasar Induk II',
         excerpt: 'Zona sanitasi & pangan higienis',
-        category: 'Ekonomi',
+        categories: ['Ekonomi'],
         status: 'Publish',
         date: '23 Okt 2026',
         time: '16:10 WIB',
@@ -113,7 +113,7 @@ const initialBerita: BeritaItem[] = [
         no: '03',
         title: 'Perda APBD Perubahan',
         excerpt: 'Prioritas belanja daerah difokuskan',
-        category: 'Pemerintahan',
+        categories: ['Pemerintahan', 'Layanan Publik'],
         status: 'Draft',
         date: '22 Okt 2026',
         time: '11:00 WIB',
@@ -130,7 +130,7 @@ const initialBerita: BeritaItem[] = [
         no: '04',
         title: 'Gerakan Bebas Stunting',
         excerpt: 'Suplemen nutrisi & pantau gizi',
-        category: 'Kesehatan',
+        categories: ['Kesehatan'],
         status: 'Publish',
         date: '21 Okt 2026',
         time: '14:20 WIB',
@@ -147,7 +147,7 @@ const initialBerita: BeritaItem[] = [
         no: '05',
         title: 'Uji Beban Jembatan Lingkar',
         excerpt: 'Sertifikasi kelayakan operasional',
-        category: 'Infrastruktur',
+        categories: ['Infrastruktur', 'Transportasi'],
         status: 'Publish',
         date: '19 Okt 2026',
         time: '09:15 WIB',
@@ -164,7 +164,7 @@ const initialBerita: BeritaItem[] = [
         no: '06',
         title: 'Pelatihan UMKM Go Digital Sukabumi',
         excerpt: 'Fasilitasi pemasaran produk lokal ke marketplace',
-        category: 'Ekonomi',
+        categories: ['Ekonomi', 'Pelayanan'],
         status: 'Publish',
         date: '18 Okt 2026',
         time: '10:30 WIB',
@@ -181,7 +181,7 @@ const initialBerita: BeritaItem[] = [
         no: '07',
         title: 'Pemberian Vaksinasi Booster Pelajar',
         excerpt: 'Dinkes pastikan imunitas peserta didik terjaga',
-        category: 'Kesehatan',
+        categories: ['Kesehatan'],
         status: 'Draft',
         date: '17 Okt 2026',
         time: '08:00 WIB',
@@ -198,7 +198,7 @@ const initialBerita: BeritaItem[] = [
         no: '08',
         title: 'Penyaluran Bantuan Sosial Warga Lansia',
         excerpt: 'Dinsos distribusikan paket sembako di 7 kecamatan',
-        category: 'Sosial',
+        categories: ['Sosial', 'Layanan Publik'],
         status: 'Publish',
         date: '16 Okt 2026',
         time: '13:45 WIB',
@@ -215,7 +215,7 @@ const initialBerita: BeritaItem[] = [
         no: '09',
         title: 'Sosialisasi Tertib Lalu Lintas Pelajar',
         excerpt: 'Dishub edukasi keselamatan berkendara di sekolah',
-        category: 'Transportasi',
+        categories: ['Transportasi'],
         status: 'Publish',
         date: '15 Okt 2026',
         time: '09:00 WIB',
@@ -232,7 +232,7 @@ const initialBerita: BeritaItem[] = [
         no: '10',
         title: 'Pameran Produk Ekonomi Kreatif Daerah',
         excerpt: 'Ajang kreasi pengrajin kriya dan batik Sukabumi',
-        category: 'Ekonomi',
+        categories: ['Ekonomi'],
         status: 'Publish',
         date: '14 Okt 2026',
         time: '15:20 WIB',
@@ -249,7 +249,7 @@ const initialBerita: BeritaItem[] = [
         no: '11',
         title: 'Pemeriksaan Kesehatan Gratis Warga Pesisir',
         excerpt: 'Layanan tensi, gula darah, dan konsultasi dokter',
-        category: 'Kesehatan',
+        categories: ['Kesehatan', 'Layanan Publik'],
         status: 'Publish',
         date: '13 Okt 2026',
         time: '08:15 WIB',
@@ -266,7 +266,7 @@ const initialBerita: BeritaItem[] = [
         no: '12',
         title: 'Penguatan Kapasitas RT dan RW Se-Kota',
         excerpt: 'Peningkatan peran pamong dalam pelayanan warga',
-        category: 'Pemerintahan',
+        categories: ['Pemerintahan'],
         status: 'Draft',
         date: '12 Okt 2026',
         time: '10:00 WIB',
@@ -283,7 +283,7 @@ const initialBerita: BeritaItem[] = [
         no: '13',
         title: 'Peluncuran Aplikasi Perizinan Berusaha Terpadu',
         excerpt: 'Kemudahan izin usaha melalui platform digital',
-        category: 'Teknologi',
+        categories: ['Teknologi', 'Layanan Publik'],
         status: 'Publish',
         date: '11 Okt 2026',
         time: '11:30 WIB',
@@ -300,7 +300,7 @@ const initialBerita: BeritaItem[] = [
         no: '14',
         title: 'Operasi Pasar Murah Sembako Bersubsidi',
         excerpt: 'Jaga stabilitas harga bahan pokok menjelang akhir tahun',
-        category: 'Ekonomi',
+        categories: ['Ekonomi'],
         status: 'Publish',
         date: '10 Okt 2026',
         time: '07:45 WIB',
@@ -317,7 +317,7 @@ const initialBerita: BeritaItem[] = [
         no: '15',
         title: 'Lomba Kelurahan Bersih dan Asri Tingkat Kota',
         excerpt: 'Apresiasi warga kelurahan pengelola sampah mandiri',
-        category: 'Lingkungan',
+        categories: ['Lingkungan'],
         status: 'Publish',
         date: '09 Okt 2026',
         time: '14:00 WIB',
@@ -334,7 +334,7 @@ const initialBerita: BeritaItem[] = [
         no: '16',
         title: 'Penyuluhan Gizi Seimbang Ibu Hamil & Balita',
         excerpt: 'Puskesmas gelar pendampingan kesehatan keluarga terpadu',
-        category: 'Kesehatan',
+        categories: ['Kesehatan'],
         status: 'Publish',
         date: '08 Okt 2026',
         time: '09:30 WIB',
@@ -351,7 +351,7 @@ const initialBerita: BeritaItem[] = [
         no: '17',
         title: 'Diseminasi Keterbukaan Informasi Publik PPID',
         excerpt: 'Standarisasi layanan sengketa dan permohonan data',
-        category: 'Diskominfo',
+        categories: ['Diskominfo', 'Teknologi'],
         status: 'Draft',
         date: '07 Okt 2026',
         time: '13:15 WIB',
@@ -368,7 +368,7 @@ const initialBerita: BeritaItem[] = [
         no: '18',
         title: 'Bazar Pertanian Organik dan Sayur Segar',
         excerpt: 'Petani binaan panen raya hidroponik perkotaan',
-        category: 'Pertanian',
+        categories: ['Pertanian'],
         status: 'Publish',
         date: '06 Okt 2026',
         time: '08:30 WIB',
@@ -385,7 +385,7 @@ const initialBerita: BeritaItem[] = [
         no: '19',
         title: 'Rapat Koordinasi Forkopimda Triwulan IV',
         excerpt: 'Sinergi pengamanan dan kondusivitas wilayah kota',
-        category: 'Pemerintahan',
+        categories: ['Pemerintahan'],
         status: 'Publish',
         date: '05 Okt 2026',
         time: '10:00 WIB',
@@ -402,7 +402,7 @@ const initialBerita: BeritaItem[] = [
         no: '20',
         title: 'Skrining Penyakit Tidak Menular Mobile Posbindu',
         excerpt: 'Pemeriksaan rutin jemput bola di balai kelurahan',
-        category: 'Kesehatan',
+        categories: ['Kesehatan'],
         status: 'Publish',
         date: '04 Okt 2026',
         time: '08:45 WIB',
@@ -419,7 +419,7 @@ const initialBerita: BeritaItem[] = [
         no: '21',
         title: 'Layanan Rekam KTP-el Jemput Bola Sekolah',
         excerpt: 'Disdukcapil percepat kepemilikan identitas pemilih pemula',
-        category: 'Pelayanan',
+        categories: ['Pelayanan', 'Diskominfo'],
         status: 'Publish',
         date: '03 Okt 2026',
         time: '11:15 WIB',
@@ -436,7 +436,7 @@ const initialBerita: BeritaItem[] = [
         no: '22',
         title: 'Pelatihan Kewirausahaan Milenial & Inkubasi Bisnis',
         excerpt: 'Bimbingan teknis permodalan dan manajemen keuangan',
-        category: 'Ekonomi',
+        categories: ['Ekonomi'],
         status: 'Draft',
         date: '02 Okt 2026',
         time: '14:00 WIB',
@@ -453,7 +453,7 @@ const initialBerita: BeritaItem[] = [
         no: '23',
         title: 'Simulasi Tanggap Darurat Bencana Banjir dan Longsor',
         excerpt: 'BPBD latih kesiapsiagaan relawan kelurahan tangguh',
-        category: 'Bencana',
+        categories: ['Bencana', 'Sosial'],
         status: 'Publish',
         date: '01 Okt 2026',
         time: '07:30 WIB',
@@ -470,7 +470,7 @@ const initialBerita: BeritaItem[] = [
         no: '24',
         title: 'Promosi Wisata Budaya dan Destinasi Alam Sukabumi',
         excerpt: 'Disporapar gandeng asosiasi pariwisata tingkatkan kunjungan',
-        category: 'Pariwisata',
+        categories: ['Pariwisata', 'Seni Budaya', 'Diskominfo'],
         status: 'Publish',
         date: '29 Sep 2026',
         time: '09:00 WIB',
@@ -487,7 +487,7 @@ const initialBerita: BeritaItem[] = [
         no: '25',
         title: 'Sosialisasi Kanal Pengaduan Warga Bebas Pulsa',
         excerpt: 'Integrasi call center tanggap darurat dan SP4N LAPOR',
-        category: 'Pelayanan',
+        categories: ['Pelayanan'],
         status: 'Publish',
         date: '28 Sep 2026',
         time: '10:15 WIB',
@@ -527,7 +527,7 @@ export default function AdminBeritaPage() {
     const [formData, setFormData] = useState({
         title: '',
         excerpt: '',
-        category: 'Pelayanan' as BeritaItem['category'],
+        category: 'Pelayanan',
         status: 'Publish' as BeritaItem['status'],
         image: '',
         reporterName: 'Bambang I.',
@@ -543,7 +543,8 @@ export default function AdminBeritaPage() {
                 item.reporter.name.toLowerCase().includes(searchTerm.toLowerCase())
 
             const matchCategory =
-                activeCategory === 'Semua kategori' || item.category.toLowerCase().includes(activeCategory.toLowerCase())
+                activeCategory === 'Semua kategori' ||
+                item.categories.some((cat) => cat.toLowerCase().includes(activeCategory.toLowerCase()))
 
             const matchStatus =
                 statusFilter === 'Semua Status' || item.status === statusFilter
@@ -657,7 +658,7 @@ export default function AdminBeritaPage() {
             no: formattedNo,
             title: formData.title,
             excerpt: formData.excerpt || 'Ringkasan publikasi kedinasan daerah...',
-            category: formData.category,
+            categories: [formData.category],
             status: formData.status,
             date: '24 Okt 2026',
             time: '10:00 WIB',
@@ -949,13 +950,23 @@ export default function AdminBeritaPage() {
 
                                         {/* KATEGORI */}
                                         <td className="py-4 px-4 text-center whitespace-nowrap">
-                                            <span
-                                                className={`inline-flex items-center justify-center w-28 py-1 rounded-full text-[11px] font-semibold border ${getCategoryBadgeClass(
-                                                    item.category
-                                                )}`}
-                                            >
-                                                {item.category}
-                                            </span>
+                                            <div className="flex items-center justify-center gap-1.5">
+                                                <span
+                                                    className={`inline-flex items-center justify-center w-28 py-1 rounded-full text-[11px] font-semibold border ${getCategoryBadgeClass(
+                                                        item.categories[0]
+                                                    )}`}
+                                                >
+                                                    {item.categories[0]}
+                                                </span>
+                                                {item.categories.length > 1 && (
+                                                    <span
+                                                        title={item.categories.slice(1).join(', ')}
+                                                        className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200"
+                                                    >
+                                                        +{item.categories.length - 1}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
 
                                         {/* STATUS */}
@@ -1151,7 +1162,7 @@ export default function AdminBeritaPage() {
                                         onChange={(e) =>
                                             setFormData({
                                                 ...formData,
-                                                category: e.target.value as BeritaItem['category'],
+                                                category: e.target.value,
                                             })
                                         }
                                         className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#159447] bg-white"
@@ -1250,14 +1261,17 @@ export default function AdminBeritaPage() {
                             >
                                 <X size={16} />
                             </button>
-                            <div className="absolute bottom-3 left-3 flex items-center gap-2">
-                                <span
-                                    className={`inline-flex items-center justify-center w-28 py-1 rounded-full text-[11px] font-semibold border ${getCategoryBadgeClass(
-                                        previewItem.category
-                                    )}`}
-                                >
-                                    {previewItem.category}
-                                </span>
+                            <div className="absolute bottom-3 left-3 flex flex-wrap items-center gap-1.5">
+                                {previewItem.categories.map((cat, idx) => (
+                                    <span
+                                        key={idx}
+                                        className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-[11px] font-semibold border ${getCategoryBadgeClass(
+                                            cat
+                                        )}`}
+                                    >
+                                        {cat}
+                                    </span>
+                                ))}
                                 <span className="px-3 py-1 rounded-full text-[11px] font-semibold bg-white/90 text-[#172135] shadow-xs">
                                     {previewItem.status}
                                 </span>
