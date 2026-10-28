@@ -9,7 +9,6 @@ import {
     Megaphone,
     FileText,
     MonitorPlay,
-    Settings,
     LogOut,
     User
 } from 'lucide-react'
@@ -21,7 +20,6 @@ const menuItems = [
     { name: 'Pengumuman', href: '/admin/pengumuman', icon: Megaphone },
     { name: 'Transparansi Dokumen', href: '/admin/transparansi', icon: FileText },
     { name: 'Banner Beranda', href: '/admin/banner', icon: MonitorPlay },
-    { name: 'Pengaturan', href: '/admin/pengaturan', icon: Settings },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -34,24 +32,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <aside className="w-[260px] bg-[#f8fafc] border-r border-slate-200 flex flex-col shrink-0">
 
                 {/* Logo / Header Sidebar */}
-                <div className="px-6 py-6 flex items-center gap-3 border-b border-slate-200/60 mb-2">
-                    <div className="w-12 h-12 shrink-0 flex items-center justify-center">
+                <div className="px-5 py-5 flex items-center gap-3.5 border-b border-slate-200/60 mb-2">
+                    <div className="w-16 h-16 shrink-0 flex items-center justify-center">
                         <Image
                             src="/images/Lambang_Kota_Sukabumi.png"
                             alt="Lambang Kota Sukabumi"
-                            width={48}
-                            height={48}
+                            width={56}
+                            height={56}
                             className="w-full h-full object-contain drop-shadow-sm"
                             priority
                         />
                     </div>
-                    <div className="flex flex-col">
-                        <h1 className="text-[15px] font-bold text-[#172135] leading-tight tracking-tight">
-                            Admin Pemerintah Kota Sukabumi
+                    <div className="flex flex-col min-w-0">
+                        <h1 className="text-sm sm:text-xl font-bold text-[#172135] leading-tight tracking-tight">
+                            Portal Admin
                         </h1>
-                        <p className="text-[11px] text-[#566276] font-medium tracking-wide mt-0.5">
-                            Sistem Manajemen Konten
-                        </p>
                     </div>
                 </div>
 

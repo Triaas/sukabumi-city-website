@@ -114,6 +114,20 @@ export default function TambahBeritaPage() {
     const [title, setTitle] = useState(
         'Pemerintah Luncurkan Sistem Satu Data Terpadu Pelayanan'
     )
+
+    // MOCK RBAC & DATA EDIT
+    const currentUserRole: 'SUPER_ADMIN' | 'ADMIN_BERITA' | 'REPORTER' = 'SUPER_ADMIN' // Ubah jadi: 'SUPER_ADMIN' | 'ADMIN_BERITA' | 'REPORTER'
+    const currentUserName = 'Budi Santoso'
+    const isEditMode = true as boolean // Set true jika membuka draft, false jika buat baru
+    const originalReporterName = 'Budi Santoso' // Ditarik dari database jika isEditMode true
+    const originalReporterRole = 'Reporter Lapangan'
+    const reporterName = isEditMode ? originalReporterName : currentUserName
+    const reporterInitials = reporterName
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((w) => w[0].toUpperCase())
+        .join('')
     const [caption, setCaption] = useState('Wakil Gubernur bersama Kepala Dinas')
     const [sourceCredit, setSourceCredit] = useState('Biro Administrasi Pimpinan & Humas')
     const [publishDate, setPublishDate] = useState('2025-05-18')
@@ -568,6 +582,7 @@ export default function TambahBeritaPage() {
                 <div className="lg:col-span-4 space-y-6">
 
                     {/* A. Jadwal Publikasi Publik */}
+                    {currentUserRole !== 'REPORTER' && (
                     <Card>
                         <div className="p-4">
                             <div className="flex items-center gap-2 mb-3.5">
@@ -605,6 +620,7 @@ export default function TambahBeritaPage() {
                             </p>
                         </div>
                     </Card>
+                    )}
 
                     {/* B. Jurnalis / Reporter */}
                     <Card>
@@ -617,17 +633,17 @@ export default function TambahBeritaPage() {
                             <div className="flex items-center gap-3 px-3.5 py-3 bg-[#f8fafc] border border-slate-200/80 rounded-xl">
                                 {/* Avatar */}
                                 <div className="w-9 h-9 rounded-full bg-[#dcfce7] text-[#16a34a] flex items-center justify-center text-xs font-bold shrink-0">
-                                    RS
+                                    {reporterInitials}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-xs font-bold text-[#172135] truncate">
-                                        R. Suhendra Wibowo, S.I.Kom
+                                        {reporterName}
                                     </p>
-                                    <p className="text-[11px] text-slate-400 mt-0.5">Pranata Humas Madya</p>
+                                    <p className="text-[11px] text-slate-400 mt-0.5">{isEditMode ? originalReporterRole : 'Pranata Humas'}</p>
                                 </div>
                             </div>
                             <p className="text-[11px] text-slate-400 mt-2.5 leading-relaxed">
-                                Terisi otomatis dari sesi admin yang sedang aktif.
+                                {isEditMode ? 'Kreator naskah asli (terkunci).' : 'Terisi otomatis dari sesi admin yang sedang aktif.'}
                             </p>
                         </div>
                     </Card>
@@ -735,11 +751,13 @@ export default function TambahBeritaPage() {
                         {/* Terbitkan */}
                         <button
                             type="button"
+                            // TODO: Jika role REPORTER, paksa payload status menjadi 'Menunggu Review' atau 'Draft' saat disubmit.
+                            onClick={() => {}}
                             className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 bg-[#159447] hover:bg-[#12803d] active:scale-[0.99] text-white text-sm font-bold rounded-xl transition-all shadow-sm cursor-pointer"
                             style={{ backgroundColor: '#159447' }}
                         >
                             <Send size={16} />
-                            Terbitkan Berita
+                            {currentUserRole === 'REPORTER' ? 'Kirim Draf untuk Review' : 'Terbitkan Berita'}
                         </button>
 
                         {/* Secondary */}

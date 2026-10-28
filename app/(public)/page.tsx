@@ -740,10 +740,10 @@ const opdServices: { [key: string]: OpdCategory } = {
       },
     ]
   },
-  'Daerah Kecamatan': {
+  'Kecamatan': {
     groups: [
       {
-        title: 'Daerah Kecamatan',
+        title: 'Kecamatan',
         items: [
           { id: '3', image: '/images/Lambang_Kota_Sukabumi.png', title: 'Kecamatan Baros', subtitle: 'Website Kec. Baros', href: 'https://kecamatanbaros.sukabumikota.go.id' },
           { id: '4', image: '/images/CIBEUREUM-logo.png', title: 'Kecamatan Cibeureum', subtitle: 'Website Kec. Cibeureum', href: 'https://kecamatancibeureum.sukabumikota.go.id' },
@@ -956,7 +956,7 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
           <SectionHeading subtitle="Akses langsung ke portal resmi Organisasi Perangkat Daerah (OPD) dan wilayah administratif Kecamatan di lingkungan Pemerintah Kota Sukabumi.">
             Organisasi Perangkat Daerah
           </SectionHeading>
-          <div className="flex min-h-[500px] overflow-hidden rounded-xl border border-[#e2e8ed] bg-white shadow-[0_24px_40px_-28px_rgba(15,23,42,0.5)]">
+          <div className="flex min-h-[560px] overflow-hidden rounded-xl border border-[#e2e8ed] bg-white shadow-[0_24px_40px_-28px_rgba(15,23,42,0.5)]">
             {/* Sidebar */}
             <div className="flex w-full flex-col gap-5 md:w-[28%] p-5 md:p-8 border-r border-[#e5e7eb]">
               {Object.keys(opdServices).map((category) => (
@@ -975,7 +975,7 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
             </div>
 
             {/* Right Content - Service Cards */}
-            <div className="hidden flex-1 flex-col p-8 md:flex min-h-[520px]">
+            <div className="hidden flex-1 flex-col p-8 md:flex min-h-[560px]">
               {/* Animated Content Wrapper */}
               <div
                 key={`page-${activeCategory}-${cardPage}`}
@@ -988,8 +988,8 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
                 </div>
 
                 {/* Service Cards Grid */}
-                <div className="flex-1">
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 content-start">
+                <div className="flex-1 min-h-[350px]">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 content-start min-h-[350px]">
                     {currentPage.items.map((service: ServiceCard, index: number) => {
                       const outerClasses = "group p-1.5 rounded-[20px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex w-full text-left cursor-pointer"
                       const inner = (
@@ -1263,10 +1263,10 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 rounded-lg border border-white/15 bg-transparent px-3 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-                title="Buka di tab baru"
+                title="buka di tab baru"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
-                <span className="hidden sm:inline">Buka di Tab Baru</span>
+                <span className="hidden sm:inline">buka di Tab Baru</span>
               </a>
 
               {/* Security Status (Visible on larger screens) */}
@@ -1311,7 +1311,7 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
                 rel="noopener noreferrer"
                 className="shrink-0 text-xs md:text-sm font-semibold text-[#4ade80] hover:underline"
               >
-                Buka di tab baru <ArrowRight size={14} className="inline-flex items-center" />
+                buka di tab baru <ArrowRight size={14} className="inline-flex items-center" />
               </a>
             </p>
           </div>
