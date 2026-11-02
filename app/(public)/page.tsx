@@ -1013,7 +1013,7 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
                         const inner = (
                           <div className="flex items-center gap-4 flex-1 rounded-2xl bg-white border border-slate-200/90 p-4 shadow-sm transition-all duration-300 group-hover:border-[#159447]/40 w-full min-w-0">
                             {/* Icon or Image */}
-                            <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl p-1 transition-transform duration-300 group-hover:scale-105 ${service.image ? 'bg-slate-50 border border-slate-100' : 'bg-[#f0fdf4] text-[#16a34a]'}`}>
+                            <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl p-1 transition-transform duration-300 group-hover:scale-105 ${service.image ? '' : 'bg-[#f0fdf4] text-[#16a34a]'}`}>
                               {service.image ? (
                                 <img src={service.image} alt={service.title} className="h-full w-full object-contain" />
                               ) : (
@@ -1144,7 +1144,7 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
                     const inner = (
                       <div className="flex items-center gap-4 flex-1 rounded-2xl bg-white border border-slate-200/90 p-4 shadow-sm transition-all duration-300 group-hover:border-[#159447]/40 w-full min-w-0">
                         {/* Icon or Image */}
-                        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl p-1 transition-transform duration-300 group-hover:scale-105 ${item.image ? 'bg-slate-50 border border-slate-100' : 'bg-[#f0fdf4] text-[#16a34a]'}`}>
+                        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl p-1 transition-transform duration-300 group-hover:scale-105 ${item.image ? '' : 'bg-[#f0fdf4] text-[#16a34a]'}`}>
                           {item.image ? (
                             <img src={item.image} alt={item.title} className="h-full w-full object-contain" />
                           ) : (

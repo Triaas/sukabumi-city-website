@@ -89,7 +89,7 @@ export function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
 
   return (
     <header id="main-navbar" className="fixed top-4 left-0 right-0 z-50 px-4 md:px-8 lg:px-12 flex justify-center w-full">
-      <div className="w-full max-w-[1400px] bg-slate-900/70 backdrop-blur-md rounded-2xl md:rounded-3xl border border-white/10 px-6 py-3 shadow-xl transition-all duration-300 flex items-center justify-between gap-8 md:gap-12">
+      <div className="w-full max-w-[1400px] bg-slate-900/70 backdrop-blur-md rounded-2xl border border-white/10 px-6 py-3 shadow-xl transition-all duration-300 flex items-center justify-between gap-8 md:gap-12">
         <Link
           href="/"
           onClick={(e) => {
