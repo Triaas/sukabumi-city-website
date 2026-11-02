@@ -761,7 +761,15 @@ const opdServices: { [key: string]: OpdCategory } = {
     groups: [
       {
         title: 'Mitra',
-        items: []
+        items: [
+          {
+            id: '1',
+            image: '/images/dekranasda.png',
+            title: 'Dekranasda',
+            subtitle: 'portal Dewan Kerajinan Nasional Daerah sukabumi',
+            href: 'https://dekranasda.sukabumikota.go.id/'
+          }
+        ]
       }
     ]
   },
