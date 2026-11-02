@@ -116,8 +116,37 @@ export default function TambahBeritaPage() {
     )
 
     // MOCK RBAC & DATA EDIT
-    const currentUserRole: 'SUPER_ADMIN' | 'ADMIN_BERITA' | 'REPORTER' = 'SUPER_ADMIN' // Ubah jadi: 'SUPER_ADMIN' | 'ADMIN_BERITA' | 'REPORTER'
+    const [currentUserRole, setCurrentUserRole] = useState<'SUPER_ADMIN' | 'ADMIN_BERITA' | 'REPORTER'>('SUPER_ADMIN') // Ganti default ke 'SUPER_ADMIN' | 'ADMIN_BERITA' | 'REPORTER'
     const currentUserName = 'Budi Santoso'
+
+    // Waktu sekarang (WIB) sebagai batas maksimal jadwal publikasi (tidak boleh di masa depan)
+    const getNowWib = () => {
+        const parts = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Asia/Jakarta',
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', hour12: false,
+        }).formatToParts(new Date())
+        const get = (t: string) => parts.find((p) => p.type === t)?.value ?? ''
+        const hour = get('hour') === '24' ? '00' : get('hour')
+        return { date: `${get('year')}-${get('month')}-${get('day')}`, time: `${hour}:${get('minute')}` }
+    }
+    const [nowWib, setNowWib] = useState<{ date: string; time: string } | null>(null)
+    useEffect(() => {
+        setNowWib(getNowWib())
+        const id = setInterval(() => setNowWib(getNowWib()), 30000)
+        return () => clearInterval(id)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+    const handlePublishDateChange = (value: string) => {
+        const now = getNowWib()
+        const date = value > now.date ? now.date : value
+        setPublishDate(date)
+        if (date === now.date && publishTime > now.time) setPublishTime(now.time)
+    }
+    const handlePublishTimeChange = (value: string) => {
+        const now = getNowWib()
+        setPublishTime(publishDate === now.date && value > now.time ? now.time : value)
+    }
     const isEditMode = true as boolean // Set true jika membuka draft, false jika buat baru
     const originalReporterName = 'Budi Santoso' // Ditarik dari database jika isEditMode true
     const originalReporterRole = 'Reporter Lapangan'
@@ -598,7 +627,8 @@ export default function TambahBeritaPage() {
                                     <input
                                         type="date"
                                         value={publishDate}
-                                        onChange={(e) => setPublishDate(e.target.value)}
+                                        max={nowWib?.date}
+                                        onChange={(e) => handlePublishDateChange(e.target.value)}
                                         className="w-full bg-[#f8fafc] border border-slate-200/80 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] transition-all cursor-pointer"
                                     />
                                 </div>
@@ -609,14 +639,15 @@ export default function TambahBeritaPage() {
                                     <input
                                         type="time"
                                         value={publishTime}
-                                        onChange={(e) => setPublishTime(e.target.value)}
+                                        max={nowWib && publishDate === nowWib.date ? nowWib.time : undefined}
+                                        onChange={(e) => handlePublishTimeChange(e.target.value)}
                                         className="w-full bg-[#f8fafc] border border-slate-200/80 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] transition-all cursor-pointer"
                                     />
                                 </div>
                             </div>
 
                             <p className="text-[11px] text-slate-400 mt-3 leading-relaxed">
-                                Berita akan muncul langsung di feeds aplikasi warga dan portal utama sesuai jadwal.
+                                Berita akan muncul langsung di feeds aplikasi warga dan portal utama sesuai jadwal. Tanggal & waktu tidak boleh melebihi waktu saat ini.
                             </p>
                         </div>
                     </Card>

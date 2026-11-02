@@ -36,7 +36,7 @@ export interface BeritaItem {
     title: string
     excerpt: string
     categories: string[]
-    status: 'Publish' | 'Draft'
+    status: 'Published' | 'Need Review' | 'Draft'
     date: string
     time: string
     image: string
@@ -70,7 +70,7 @@ const categories = [
     'Walikota',
 ]
 
-const statusOptions = ['Semua Status', 'Publish', 'Draft']
+const statusOptions = ['Semua Status', 'Published', 'Need Review', 'Draft']
 
 // Data awal berita sesuai screenshot desain
 const initialBerita: BeritaItem[] = [
@@ -80,7 +80,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Optimalisasi MPP Digital',
         excerpt: 'Layanan terpadu cepat & ringkas',
         categories: ['Pelayanan', 'Teknologi'],
-        status: 'Publish',
+        status: 'Published',
         date: '24 Okt 2026',
         time: '08:45 WIB',
         image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=360&q=80',
@@ -97,7 +97,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Revitalisasi Pasar Induk II',
         excerpt: 'Zona sanitasi & pangan higienis',
         categories: ['Ekonomi'],
-        status: 'Publish',
+        status: 'Published',
         date: '23 Okt 2026',
         time: '16:10 WIB',
         image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=360&q=80',
@@ -114,7 +114,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Perda APBD Perubahan',
         excerpt: 'Prioritas belanja daerah difokuskan',
         categories: ['Pemerintahan', 'Layanan Publik'],
-        status: 'Draft',
+        status: 'Need Review',
         date: '22 Okt 2026',
         time: '11:00 WIB',
         image: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=360&q=80',
@@ -131,7 +131,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Gerakan Bebas Stunting',
         excerpt: 'Suplemen nutrisi & pantau gizi',
         categories: ['Kesehatan'],
-        status: 'Publish',
+        status: 'Published',
         date: '21 Okt 2026',
         time: '14:20 WIB',
         image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=360&q=80',
@@ -148,7 +148,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Uji Beban Jembatan Lingkar',
         excerpt: 'Sertifikasi kelayakan operasional',
         categories: ['Infrastruktur', 'Transportasi'],
-        status: 'Publish',
+        status: 'Published',
         date: '19 Okt 2026',
         time: '09:15 WIB',
         image: 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f7?auto=format&fit=crop&w=360&q=80',
@@ -165,7 +165,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Pelatihan UMKM Go Digital Sukabumi',
         excerpt: 'Fasilitasi pemasaran produk lokal ke marketplace',
         categories: ['Ekonomi', 'Pelayanan'],
-        status: 'Publish',
+        status: 'Published',
         date: '18 Okt 2026',
         time: '10:30 WIB',
         image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=360&q=80',
@@ -199,7 +199,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Penyaluran Bantuan Sosial Warga Lansia',
         excerpt: 'Dinsos distribusikan paket sembako di 7 kecamatan',
         categories: ['Sosial', 'Layanan Publik'],
-        status: 'Publish',
+        status: 'Published',
         date: '16 Okt 2026',
         time: '13:45 WIB',
         image: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=360&q=80',
@@ -216,7 +216,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Sosialisasi Tertib Lalu Lintas Pelajar',
         excerpt: 'Dishub edukasi keselamatan berkendara di sekolah',
         categories: ['Transportasi'],
-        status: 'Publish',
+        status: 'Published',
         date: '15 Okt 2026',
         time: '09:00 WIB',
         image: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=360&q=80',
@@ -233,7 +233,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Pameran Produk Ekonomi Kreatif Daerah',
         excerpt: 'Ajang kreasi pengrajin kriya dan batik Sukabumi',
         categories: ['Ekonomi'],
-        status: 'Publish',
+        status: 'Published',
         date: '14 Okt 2026',
         time: '15:20 WIB',
         image: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=360&q=80',
@@ -250,7 +250,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Pemeriksaan Kesehatan Gratis Warga Pesisir',
         excerpt: 'Layanan tensi, gula darah, dan konsultasi dokter',
         categories: ['Kesehatan', 'Layanan Publik'],
-        status: 'Publish',
+        status: 'Published',
         date: '13 Okt 2026',
         time: '08:15 WIB',
         image: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=360&q=80',
@@ -267,7 +267,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Penguatan Kapasitas RT dan RW Se-Kota',
         excerpt: 'Peningkatan peran pamong dalam pelayanan warga',
         categories: ['Pemerintahan'],
-        status: 'Draft',
+        status: 'Need Review',
         date: '12 Okt 2026',
         time: '10:00 WIB',
         image: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=360&q=80',
@@ -284,7 +284,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Peluncuran Aplikasi Perizinan Berusaha Terpadu',
         excerpt: 'Kemudahan izin usaha melalui platform digital',
         categories: ['Teknologi', 'Layanan Publik'],
-        status: 'Publish',
+        status: 'Published',
         date: '11 Okt 2026',
         time: '11:30 WIB',
         image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=360&q=80',
@@ -301,7 +301,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Operasi Pasar Murah Sembako Bersubsidi',
         excerpt: 'Jaga stabilitas harga bahan pokok menjelang akhir tahun',
         categories: ['Ekonomi'],
-        status: 'Publish',
+        status: 'Published',
         date: '10 Okt 2026',
         time: '07:45 WIB',
         image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=360&q=80',
@@ -318,7 +318,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Lomba Kelurahan Bersih dan Asri Tingkat Kota',
         excerpt: 'Apresiasi warga kelurahan pengelola sampah mandiri',
         categories: ['Lingkungan'],
-        status: 'Publish',
+        status: 'Published',
         date: '09 Okt 2026',
         time: '14:00 WIB',
         image: 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=360&q=80',
@@ -335,7 +335,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Penyuluhan Gizi Seimbang Ibu Hamil & Balita',
         excerpt: 'Puskesmas gelar pendampingan kesehatan keluarga terpadu',
         categories: ['Kesehatan'],
-        status: 'Publish',
+        status: 'Published',
         date: '08 Okt 2026',
         time: '09:30 WIB',
         image: 'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&w=360&q=80',
@@ -369,7 +369,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Bazar Pertanian Organik dan Sayur Segar',
         excerpt: 'Petani binaan panen raya hidroponik perkotaan',
         categories: ['Pertanian'],
-        status: 'Publish',
+        status: 'Published',
         date: '06 Okt 2026',
         time: '08:30 WIB',
         image: 'https://images.unsplash.com/photo-1615811361523-6bd03d7748e7?auto=format&fit=crop&w=360&q=80',
@@ -386,7 +386,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Rapat Koordinasi Forkopimda Triwulan IV',
         excerpt: 'Sinergi pengamanan dan kondusivitas wilayah kota',
         categories: ['Pemerintahan'],
-        status: 'Publish',
+        status: 'Published',
         date: '05 Okt 2026',
         time: '10:00 WIB',
         image: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=360&q=80',
@@ -403,7 +403,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Skrining Penyakit Tidak Menular Mobile Posbindu',
         excerpt: 'Pemeriksaan rutin jemput bola di balai kelurahan',
         categories: ['Kesehatan'],
-        status: 'Publish',
+        status: 'Published',
         date: '04 Okt 2026',
         time: '08:45 WIB',
         image: 'https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?auto=format&fit=crop&w=360&q=80',
@@ -420,7 +420,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Layanan Rekam KTP-el Jemput Bola Sekolah',
         excerpt: 'Disdukcapil percepat kepemilikan identitas pemilih pemula',
         categories: ['Pelayanan', 'Diskominfo'],
-        status: 'Publish',
+        status: 'Published',
         date: '03 Okt 2026',
         time: '11:15 WIB',
         image: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=360&q=80',
@@ -454,7 +454,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Simulasi Tanggap Darurat Bencana Banjir dan Longsor',
         excerpt: 'BPBD latih kesiapsiagaan relawan kelurahan tangguh',
         categories: ['Bencana', 'Sosial'],
-        status: 'Publish',
+        status: 'Published',
         date: '01 Okt 2026',
         time: '07:30 WIB',
         image: 'https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=360&q=80',
@@ -471,7 +471,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Promosi Wisata Budaya dan Destinasi Alam Sukabumi',
         excerpt: 'Disporapar gandeng asosiasi pariwisata tingkatkan kunjungan',
         categories: ['Pariwisata', 'Seni Budaya', 'Diskominfo'],
-        status: 'Publish',
+        status: 'Published',
         date: '29 Sep 2026',
         time: '09:00 WIB',
         image: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=360&q=80',
@@ -488,7 +488,7 @@ const initialBerita: BeritaItem[] = [
         title: 'Sosialisasi Kanal Pengaduan Warga Bebas Pulsa',
         excerpt: 'Integrasi call center tanggap darurat dan SP4N LAPOR',
         categories: ['Pelayanan'],
-        status: 'Publish',
+        status: 'Published',
         date: '28 Sep 2026',
         time: '10:15 WIB',
         image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=360&q=80',
@@ -528,7 +528,7 @@ export default function AdminBeritaPage() {
         title: '',
         excerpt: '',
         category: 'Pelayanan',
-        status: 'Publish' as BeritaItem['status'],
+        status: 'Published' as BeritaItem['status'],
         image: '',
         reporterName: 'Bambang I.',
         reporterRole: 'Wartawan Ahli',
@@ -628,7 +628,7 @@ export default function AdminBeritaPage() {
             title: '',
             excerpt: '',
             category: 'Pelayanan',
-            status: 'Publish',
+            status: 'Published',
             image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=360&q=80',
             reporterName: 'Bambang I.',
             reporterRole: 'Wartawan Ahli',
@@ -971,12 +971,19 @@ export default function AdminBeritaPage() {
 
                                         {/* STATUS */}
                                         <td className="py-4 px-4 text-center whitespace-nowrap">
-                                            {item.status === 'Publish' ? (
+                                            {item.status === 'Published' && (
                                                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f0fdf4] border border-[#dcfce7] text-[#16a34a] text-[11px] font-semibold">
                                                     <span className="w-1.5 h-1.5 rounded-full bg-[#16a34a]" />
-                                                    Publish
+                                                    Published
                                                 </span>
-                                            ) : (
+                                            )}
+                                            {item.status === 'Need Review' && (
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-600 text-[11px] font-semibold">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                                                    Need Review
+                                                </span>
+                                            )}
+                                            {item.status === 'Draft' && (
                                                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fffbeb] border border-[#fef3c7] text-[#d97706] text-[11px] font-semibold">
                                                     <span className="w-1.5 h-1.5 rounded-full bg-[#d97706]" />
                                                     Draft
@@ -1186,7 +1193,8 @@ export default function AdminBeritaPage() {
                                         }
                                         className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#159447] bg-white"
                                     >
-                                        <option value="Publish">Publish</option>
+                                        <option value="Published">Published</option>
+                                        <option value="Need Review">Need Review</option>
                                         <option value="Draft">Draft</option>
                                     </select>
                                 </div>

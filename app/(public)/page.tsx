@@ -547,21 +547,7 @@ const opdServices: { [key: string]: OpdCategory } = {
           },
         ]
       },
-      // {
-      //   title: 'Perencanaan & Aparatur Daerah',
-      //   items: [
-      //     
-      //       ]
-      //     },
-      //   ]
-      // },
-      // {
-      //   title: 'Informasi & Kesatuan Bangsa',
-      //   items: [
-      //     
-      //     { id: '10', image: '/images/Bakesbangpol-logo.png', title: 'Bakesbangpol', subtitle: 'Portal Bakesbangpol Kota Sukabumi', href: 'https://kesbangpol.sukabumikota.go.id/' },
-      //   ]
-      // }
+ 
     ]
   },
   'Sekretariat Dewan': {
@@ -771,6 +757,14 @@ const opdServices: { [key: string]: OpdCategory } = {
       }
     ]
   },
+  'Mitra': {
+    groups: [
+      {
+        title: 'Mitra',
+        items: []
+      }
+    ]
+  },
 }
 
 function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void }) {
@@ -877,14 +871,22 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
     categoryData.groups.forEach((group, groupIndex) => {
       const groupItems = group.items || []
 
-      // Chunk the group items into pages of max cardsPerPage
-      for (let i = 0; i < groupItems.length; i += cardsPerPage) {
-        const chunk = groupItems.slice(i, i + cardsPerPage)
+      if (groupItems.length === 0) {
         processedPages.push({
           title: group.title,
-          items: chunk,
+          items: [],
           groupIndex
         })
+      } else {
+        // Chunk the group items into pages of max cardsPerPage
+        for (let i = 0; i < groupItems.length; i += cardsPerPage) {
+          const chunk = groupItems.slice(i, i + cardsPerPage)
+          processedPages.push({
+            title: group.title,
+            items: chunk,
+            groupIndex
+          })
+        }
       }
     })
   }
@@ -984,59 +986,68 @@ function Opd({ onIframeToggle }: { onIframeToggle?: (isOpen: boolean) => void })
                 {/* Dynamic Heading */}
                 <div className="mb-4">
                   <h3 className="text-2xl font-bold text-[#1b293c]">{currentPage.title}</h3>
-                  <p className="text-sm text-[#66758a] mt-1">{activeCategory}</p>
                 </div>
 
                 {/* Service Cards Grid */}
                 <div className="flex-1 min-h-[350px]">
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 content-start min-h-[350px]">
-                    {currentPage.items.map((service: ServiceCard, index: number) => {
-                      const outerClasses = "group p-1.5 rounded-[20px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex w-full text-left cursor-pointer"
-                      const inner = (
-                        <div className="flex items-center gap-4 flex-1 rounded-2xl bg-white border border-slate-200/90 p-4 shadow-sm transition-all duration-300 group-hover:border-[#159447]/40 w-full min-w-0">
-                          {/* Icon or Image */}
-                          <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl p-1 transition-transform duration-300 group-hover:scale-105 ${service.image ? 'bg-slate-50 border border-slate-100' : 'bg-[#f0fdf4] text-[#16a34a]'}`}>
-                            {service.image ? (
-                              <img src={service.image} alt={service.title} className="h-full w-full object-contain" />
-                            ) : (
-                              service.icon
-                            )}
+                  {currentPage.items.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full min-h-[350px] text-center p-8 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                      <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+                        <Building size={24} className="text-slate-400" />
+                      </div>
+                      <p className="text-sm font-semibold text-slate-600">Belum ada daftar mitra</p>
+                      <p className="text-xs text-slate-400 mt-1">Daftar portal dan layanan mitra akan segera ditambahkan.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 content-start min-h-[350px]">
+                      {currentPage.items.map((service: ServiceCard, index: number) => {
+                        const outerClasses = "group p-1.5 rounded-[20px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex w-full text-left cursor-pointer"
+                        const inner = (
+                          <div className="flex items-center gap-4 flex-1 rounded-2xl bg-white border border-slate-200/90 p-4 shadow-sm transition-all duration-300 group-hover:border-[#159447]/40 w-full min-w-0">
+                            {/* Icon or Image */}
+                            <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl p-1 transition-transform duration-300 group-hover:scale-105 ${service.image ? 'bg-slate-50 border border-slate-100' : 'bg-[#f0fdf4] text-[#16a34a]'}`}>
+                              {service.image ? (
+                                <img src={service.image} alt={service.title} className="h-full w-full object-contain" />
+                              ) : (
+                                service.icon
+                              )}
+                            </div>
+                            {/* Title & Subtitle */}
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-bold text-[#1b293c] group-hover:text-[#159447] transition-colors">{service.title}</h4>
+                              <p className="text-sm text-[#66758a] mt-0.5 truncate">{service.subtitle}</p>
+                            </div>
+                            {/* Chevron */}
+                            <ChevronRight size={20} className="shrink-0 text-[#cbd5e1] group-hover:text-[#159447] group-hover:translate-x-0.5 transition-all" />
                           </div>
-                          {/* Title & Subtitle */}
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-[#1b293c] group-hover:text-[#159447] transition-colors">{service.title}</h4>
-                            <p className="text-sm text-[#66758a] mt-0.5 truncate">{service.subtitle}</p>
-                          </div>
-                          {/* Chevron */}
-                          <ChevronRight size={20} className="shrink-0 text-[#cbd5e1] group-hover:text-[#159447] group-hover:translate-x-0.5 transition-all" />
-                        </div>
-                      )
+                        )
 
-                      const itemKey = `${service.id || 'service'}-${index}`
+                        const itemKey = `${service.id || 'service'}-${index}`
 
-                      if (service.subItems && service.subItems.length > 0) {
+                        if (service.subItems && service.subItems.length > 0) {
+                          return (
+                            <button
+                              key={itemKey}
+                              onClick={() => openModal(service)}
+                              className={outerClasses}
+                            >
+                              {inner}
+                            </button>
+                          )
+                        }
+
                         return (
                           <button
                             key={itemKey}
-                            onClick={() => openModal(service)}
+                            onClick={() => service.href && service.href !== '#' ? openIframeModal(service.href, service.title) : undefined}
                             className={outerClasses}
                           >
                             {inner}
                           </button>
                         )
-                      }
-
-                      return (
-                        <button
-                          key={itemKey}
-                          onClick={() => service.href && service.href !== '#' ? openIframeModal(service.href, service.title) : undefined}
-                          className={outerClasses}
-                        >
-                          {inner}
-                        </button>
-                      )
-                    })}
-                  </div>
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Pagination Controls */}

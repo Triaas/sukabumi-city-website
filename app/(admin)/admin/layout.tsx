@@ -24,6 +24,18 @@ const menuItems = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
+    const currentUserRole = 'SUPER_ADMIN' as 'SUPER_ADMIN' | 'ADMIN_BERITA' // Ganti-ganti untuk testing
+
+    const filteredMenuItems = menuItems.filter(item => {
+        if (currentUserRole === 'SUPER_ADMIN') return true;
+
+        // Jika role adalah ADMIN_BERITA, hanya tampilkan menu Dashboard dan Berita
+        if (currentUserRole === 'ADMIN_BERITA') {
+            return ['Dashboard', 'Berita'].includes(item.name);
+        }
+
+        return false;
+    });
 
     return (
         <div className="flex h-screen w-full bg-[#f4f7f6] overflow-hidden" style={{ fontFamily: "'Inter', Arial, sans-serif" }}>
@@ -56,7 +68,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         Menu Utama
                     </div>
 
-                    {menuItems.map((item) => {
+                    {filteredMenuItems.map((item) => {
                         // Deteksi menu mana yang sedang aktif
                         const isActive =
                             pathname === item.href ||
@@ -92,7 +104,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                     Trias Firmansyah
                                 </p>
                                 <p className="text-[10px] text-[#566276] font-medium">
-                                    Admin
+                                    {currentUserRole === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin Berita'}
                                 </p>
                             </div>
                         </div>

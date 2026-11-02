@@ -74,14 +74,15 @@ const chartData = {
 }
 
 const popularNews = [
-  { title: 'Pemkot Sukabumi Luncurkan Layanan Perizinan Digital Terpadu', views: '1.200x tayang' },
-  { title: 'Wali Kota Sukabumi Resmikan Revitalisasi Alun-Alun Kota', views: '980x tayang' },
-  { title: 'Dishub Benahi Tata Kelola Parkir Untuk Mendukung Peningkatan PAD', views: '845x tayang' },
-  { title: 'Peringatan Harhubnas Merupakan Momentum Untuk Memperkuat Peran Transportasi', views: '710x tayang' },
-  { title: 'Pendaftaran Seleksi Calon Dewas dan Direksi BPR Kota Sukabumi Dibuka', views: '655x tayang' },
+  { title: 'Pemkot Sukabumi Luncurkan Layanan Perizinan Digital Terpadu', views: '1.200x dilihat' },
+  { title: 'Wali Kota Sukabumi Resmikan Revitalisasi Alun-Alun Kota', views: '980x dilihat' },
+  { title: 'Dishub Benahi Tata Kelola Parkir Untuk Mendukung Peningkatan PAD', views: '845x dilihat' },
+  { title: 'Peringatan Harhubnas Merupakan Momentum Untuk Memperkuat Peran Transportasi', views: '710x dilihat' },
+  { title: 'Pendaftaran Seleksi Calon Dewas dan Direksi BPR Kota Sukabumi Dibuka', views: '655x dilihat' },
 ]
 
 export default function AdminDashboardPage() {
+  const currentUserRole = 'SUPER_ADMIN' as 'SUPER_ADMIN' | 'ADMIN_BERITA' // Ubah untuk testing
   const [timeFilter, setTimeFilter] = useState<'7d' | '30d' | '1y'>('7d')
   const [activeIdx, setActiveIdx] = useState<number | null>(3)
 
@@ -151,8 +152,10 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Top Cards */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        {stats.map((stat) => {
+      <div className={`grid grid-cols-1 gap-4 ${currentUserRole === 'SUPER_ADMIN' ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+        {stats
+          .filter(stat => currentUserRole === 'SUPER_ADMIN' || stat.id !== 'pengunjung bulan ini')
+          .map((stat) => {
           const Icon = stat.icon
           return (
             <div
