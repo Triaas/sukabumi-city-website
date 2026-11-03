@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Eye, FileText, Users } from 'lucide-react'
+import { Eye, FileText, Users, Megaphone, Clock3 } from 'lucide-react'
 
 const stats = [
   {
@@ -24,6 +24,20 @@ const stats = [
     value: '7',
     icon: FileText,
     iconClass: 'bg-orange-50 text-orange-500',
+  },
+  {
+    id: 'Pengumuman diterbitkan',
+    label: 'Pengumuman Diterbitkan',
+    value: '24',
+    icon: Megaphone,
+    iconClass: 'bg-purple-50 text-purple-600',
+  },
+  {
+    id: 'Peninjauan pengumuman',
+    label: 'Peninjauan Pengumuman',
+    value: '3',
+    icon: Clock3,
+    iconClass: 'bg-amber-50 text-amber-600',
   },
 ]
 
@@ -152,9 +166,12 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Top Cards */}
-      <div className={`grid grid-cols-1 gap-4 ${currentUserRole === 'SUPER_ADMIN' ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+      <div className={`grid grid-cols-1 gap-4 ${currentUserRole === 'SUPER_ADMIN' ? 'sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5' : 'md:grid-cols-2'}`}>
         {stats
-          .filter(stat => currentUserRole === 'SUPER_ADMIN' || stat.id !== 'pengunjung bulan ini')
+          .filter(stat => {
+            if (currentUserRole === 'SUPER_ADMIN') return true
+            return stat.id === 'Berita diterbitkan' || stat.id === 'Draft Berita'
+          })
           .map((stat) => {
           const Icon = stat.icon
           return (

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+
 import {
   FileText,
   Scale,
@@ -21,7 +22,6 @@ import {
   Award,
   Building,
   Navigation,
-  Globe,
   ChevronRight,
   ChevronLeft,
   ArrowLeft,
@@ -29,7 +29,6 @@ import {
   Camera,
   CircleUserRound,
   Megaphone,
-  Play,
   X,
   Image as ImageIcon,
 } from 'lucide-react';
@@ -1758,6 +1757,191 @@ function Partners() {
   );
 }
 
+function MediaSection() {
+  const widgetViewportRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const container = document.getElementById('gpr-kominfo-widget-container')
+    if (!container) return
+
+    // Bersihkan isi container jika ada sisa render sebelumnya
+    container.innerHTML = ''
+
+    // Hapus script lama jika sebelumnya sudah ada di DOM
+    const oldScript = document.getElementById('gpr-kominfo-script')
+    if (oldScript) {
+      oldScript.remove()
+    }
+
+    // Buat dan sisipkan tag script baru agar dieksekusi browser setiap kali komponen di-mount
+    const script = document.createElement('script')
+    script.id = 'gpr-kominfo-script'
+    script.src = 'https://widget.komdigi.go.id/gpr-widget-kominfo.min.js'
+    script.type = 'text/javascript'
+    script.async = true
+
+    document.body.appendChild(script)
+
+    // Sesuaikan tinggi area scroll berita & perkecil footer biru widget agar pas di dalam frame
+    const adjustWidgetLayout = () => {
+      const viewport = widgetViewportRef.current
+      if (!viewport || !container) return
+
+      const viewportH = viewport.clientHeight
+      if (viewportH <= 0) return
+
+      const allEls = Array.from(container.querySelectorAll<HTMLElement>('*'))
+      // Cari elemen daftar berita yang punya overflow-y scroll/auto bawaan widget
+      const scrollableList = allEls.find((el) => {
+        const s = window.getComputedStyle(el)
+        return (
+          (s.overflowY === 'auto' || s.overflowY === 'scroll') &&
+          el.clientHeight > 100
+        )
+      })
+
+      if (!scrollableList) return
+
+      // Perkecil footer/elemen di bawah daftar berita agar tidak makan space berlebihan
+      const footerEl = container.querySelector<HTMLElement>(
+        '#gpr-kominfo-widget-footer, .gpr-kominfo-widget-footer'
+      )
+      if (footerEl) {
+        footerEl.style.paddingTop = '6px'
+        footerEl.style.paddingBottom = '6px'
+        footerEl.style.minHeight = '0px'
+        footerEl.style.height = 'auto'
+      }
+
+      const viewportRect = viewport.getBoundingClientRect()
+      const listRect = scrollableList.getBoundingClientRect()
+      const topOffset = Math.max(0, listRect.top - viewportRect.top)
+
+      // Sisakan tepat ~14px di bagian bawah sebagai bingkai/footer biru yang tipis dan rapi
+      const bottomFooterSpace = 14
+      const targetListHeight = Math.max(
+        180,
+        viewportH - topOffset - bottomFooterSpace
+      )
+
+      scrollableList.style.height = `${targetListHeight}px`
+      scrollableList.style.maxHeight = `${targetListHeight}px`
+
+      // Pastikan wrapper induk widget pas dengan tinggi viewport
+      const rootWidget = container.firstElementChild as HTMLElement | null
+      if (rootWidget) {
+        rootWidget.style.height = `${viewportH}px`
+        rootWidget.style.maxHeight = `${viewportH}px`
+        rootWidget.style.overflow = 'hidden'
+        rootWidget.style.paddingBottom = `${bottomFooterSpace}px`
+        rootWidget.style.boxSizing = 'border-box'
+      }
+    }
+
+    const mutationObserver = new MutationObserver(() => {
+      adjustWidgetLayout()
+    })
+    mutationObserver.observe(container, { childList: true, subtree: true })
+
+    const resizeObserver = new ResizeObserver(() => {
+      adjustWidgetLayout()
+    })
+    if (widgetViewportRef.current) {
+      resizeObserver.observe(widgetViewportRef.current)
+    }
+
+    window.addEventListener('resize', adjustWidgetLayout)
+
+    return () => {
+      mutationObserver.disconnect()
+      resizeObserver.disconnect()
+      window.removeEventListener('resize', adjustWidgetLayout)
+      const s = document.getElementById('gpr-kominfo-script')
+      if (s) {
+        s.remove()
+      }
+    }
+  }, [])
+
+  return (
+    <section className="bg-white px-4 pb-10 md:px-8 lg:px-12 md:pb-16">
+      <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
+        {/* Kolom Kiri: GPR Komdigi */}
+        <div className="lg:col-span-4 lg:relative lg:h-full">
+          {/* Outer Transparent Wrapper (Double-Bezel) */}
+          <div className="group p-1.5 rounded-[22px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex flex-col lg:absolute lg:inset-0">
+            {/* Inner Main Card */}
+            <div className="flex flex-col flex-1 h-full rounded-2xl bg-white border border-slate-200/90 p-5 shadow-sm transition-all duration-300 group-hover:border-[#159447]/40">
+              {/* Card Header */}
+              <div className="flex items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-100 shrink-0">
+                <div>
+                  <h3 className="text-sm font-bold tracking-wide text-[#172135] uppercase">
+                    GPR KOMDIGI
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Kanal Berita Nasional
+                  </p>
+                </div>
+                <a
+                  href="https://www.komdigi.go.id"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-[#172135] transition-colors hover:border-[#159447] hover:text-[#159447]"
+                >
+                  Portal
+                  <svg
+                    className="h-3 w-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 17L17 7M17 7H8M17 7V16"
+                    />
+                  </svg>
+                </a>
+              </div>
+
+              {/* Widget Container */}
+              <div
+                ref={widgetViewportRef}
+                className="relative w-full flex-1 min-h-[380px] lg:min-h-0 overflow-hidden rounded-xl bg-[#1e1b6e]"
+              >
+                <div
+                  id="gpr-kominfo-widget-container"
+                  className="w-full h-full"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Kolom Kanan: YouTube Player (Versi Sebelumnya) */}
+        <div className="lg:col-span-8">
+          {/* Outer Transparent Wrapper (Double-Bezel) */}
+          <div className="group p-1.5 rounded-[22px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex flex-col">
+            {/* Inner Main Card */}
+            <div className="aspect-video w-full overflow-hidden rounded-2xl border border-slate-200/90 bg-slate-900 shadow-sm transition-all duration-300 group-hover:border-[#159447]/40">
+              <iframe
+                src="https://www.youtube.com/embed/p2gcx5S5QJE"
+                title="Profil Kota Sukabumi"
+                className="h-full w-full border-0"
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 export default function Page() {
   const [isIframeOpen, setIsIframeOpen] = useState(false)
 
@@ -1771,6 +1955,7 @@ export default function Page() {
         <Profile />
         <EventSlider />
         <News />
+        <MediaSection />
         <Opd onIframeToggle={setIsIframeOpen} />
         <TransparansiDokumen />
       </div>
