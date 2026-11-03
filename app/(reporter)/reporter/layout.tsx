@@ -146,7 +146,7 @@ export default function ReporterLayout({ children }: { children: React.ReactNode
                                     Budi Santoso
                                 </p>
                                 <p className="text-[10px] text-[#566276] font-medium">
-                                    Reporter Lapangan
+                                    Reporter
                                 </p>
                             </div>
                         </div>
