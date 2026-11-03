@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Eye, FileText, Users, Megaphone, Clock3 } from 'lucide-react'
+import { Eye, FileText, Users, Megaphone, Clock3, FileCheck } from 'lucide-react'
+import { initialTransparansi } from './transparansi/page'
 
 const stats = [
   {
@@ -19,8 +20,8 @@ const stats = [
     iconClass: 'bg-green-50 text-[#159447]',
   },
   {
-    id: 'Draft Berita',
-    label: 'Draft Berita',
+    id: 'Peninjauan Berita',
+    label: 'Peninjauan Berita',
     value: '7',
     icon: FileText,
     iconClass: 'bg-orange-50 text-orange-500',
@@ -38,6 +39,13 @@ const stats = [
     value: '3',
     icon: Clock3,
     iconClass: 'bg-amber-50 text-amber-600',
+  },
+  {
+    id: 'Dokumen diterbitkan',
+    label: 'Dokumen Diterbitkan',
+    value: String(initialTransparansi.length),
+    icon: FileCheck,
+    iconClass: 'bg-teal-50 text-teal-600',
   },
 ]
 
@@ -99,8 +107,20 @@ export default function AdminDashboardPage() {
   const currentUserRole = 'SUPER_ADMIN' as 'SUPER_ADMIN' | 'ADMIN_BERITA' // Ubah untuk testing
   const [timeFilter, setTimeFilter] = useState<'7d' | '30d' | '1y'>('7d')
   const [activeIdx, setActiveIdx] = useState<number | null>(3)
+  const [publishedDocsCount, setPublishedDocsCount] = useState<number>(initialTransparansi.length)
 
   const activeData = chartData[timeFilter]
+
+  useEffect(() => {
+    fetch('/api/transparansi-dokumen')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setPublishedDocsCount(data.length)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     // TODO: Lakukan fetch data ke /api/analytics?range=${timeFilter} untuk meng-update array dailyVisits saat koneksi GA4 sudah terpasang.
@@ -166,14 +186,20 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Top Cards */}
-      <div className={`grid grid-cols-1 gap-4 ${currentUserRole === 'SUPER_ADMIN' ? 'sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5' : 'md:grid-cols-2'}`}>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {stats
           .filter(stat => {
             if (currentUserRole === 'SUPER_ADMIN') return true
-            return stat.id === 'Berita diterbitkan' || stat.id === 'Draft Berita'
+            return (
+              stat.id === 'pengunjung bulan ini' ||
+              stat.id === 'Berita diterbitkan' ||
+              stat.id === 'Peninjauan Berita'
+            )
           })
           .map((stat) => {
           const Icon = stat.icon
+          const displayValue =
+            stat.id === 'Dokumen diterbitkan' ? String(publishedDocsCount) : stat.value
           return (
             <div
               key={stat.id}
@@ -183,7 +209,7 @@ export default function AdminDashboardPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm font-medium text-[#566276]">{stat.label}</p>
-                  <p className="mt-2 text-3xl font-bold tracking-tight text-[#172135]">{stat.value}</p>
+                  <p className="mt-2 text-3xl font-bold tracking-tight text-[#172135]">{displayValue}</p>
                 </div>
                 <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${stat.iconClass}`}>
                   <Icon size={22} />

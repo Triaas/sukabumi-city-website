@@ -29,7 +29,7 @@ export interface TransparansiItem {
 }
 
 // ─── Data Dummy Awal Transparansi Dokumen (Minimal 5 Item) ───────────────────
-const initialTransparansi: TransparansiItem[] = [
+export const initialTransparansi: TransparansiItem[] = [
     {
         id: '1',
         no: '01',

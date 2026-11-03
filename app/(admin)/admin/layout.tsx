@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
@@ -9,6 +10,8 @@ import {
     Megaphone,
     FileText,
     MonitorPlay,
+    ChevronUp,
+    Settings,
     LogOut,
     User
 } from 'lucide-react'
@@ -25,6 +28,30 @@ const menuItems = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
     const currentUserRole = 'SUPER_ADMIN' as 'SUPER_ADMIN' | 'ADMIN_BERITA' // Ganti-ganti untuk testing
+    const [isProfileOpen, setIsProfileOpen] = useState(false)
+    const profileMenuRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+                setIsProfileOpen(false)
+            }
+        }
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                setIsProfileOpen(false)
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside)
+        document.addEventListener('keydown', handleKeyDown)
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside)
+            document.removeEventListener('keydown', handleKeyDown)
+        }
+    }, [])
 
     const filteredMenuItems = menuItems.filter(item => {
         if (currentUserRole === 'SUPER_ADMIN') return true;
@@ -93,8 +120,50 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </nav>
 
                 {/* Profil & Logout Area (Bawah) */}
-                <div className="p-4 border-t border-slate-200">
-                    <div className="bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between shadow-sm transition-hover hover:border-slate-300">
+                <div ref={profileMenuRef} className="relative p-4 border-t border-slate-200">
+                    {/* Menu Dropup Popover */}
+                    <div
+                        role="menu"
+                        aria-hidden={!isProfileOpen}
+                        className={`absolute bottom-full left-4 right-4 mb-2 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg transition-all duration-200 ease-out origin-bottom ${isProfileOpen
+                            ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto'
+                            : 'opacity-0 translate-y-2 scale-95 pointer-events-none'
+                            }`}
+                    >
+                        <Link
+                            href="/admin/profil"
+                            onClick={() => setIsProfileOpen(false)}
+                            role="menuitem"
+                            className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-[#172135] hover:bg-slate-100 transition-colors"
+                        >
+                            <Settings size={15} className="text-[#566276]" />
+                            Edit Profil
+                        </Link>
+
+                        <div className="my-1 h-px bg-slate-100" />
+
+                        <button
+                            type="button"
+                            onClick={() => setIsProfileOpen(false)}
+                            role="menuitem"
+                            className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                        >
+                            <LogOut size={15} className="text-red-500" />
+                            Keluar
+                        </button>
+                    </div>
+
+                    {/* Tombol Trigger Profil */}
+                    <button
+                        type="button"
+                        onClick={() => setIsProfileOpen((prev) => !prev)}
+                        aria-expanded={isProfileOpen}
+                        aria-haspopup="menu"
+                        className={`w-full border rounded-xl p-3 flex items-center justify-between shadow-sm transition-all duration-200 cursor-pointer text-left ${isProfileOpen
+                            ? 'bg-slate-100 border-[#159447]/40 ring-2 ring-[#159447]/10'
+                            : 'bg-white border-slate-200 hover:bg-slate-50 hover:border-slate-300'
+                            }`}
+                    >
                         <div className="flex items-center gap-3 min-w-0">
                             <div className="bg-[#159447] w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0 shadow-sm">
                                 <User size={16} />
@@ -108,13 +177,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 </p>
                             </div>
                         </div>
-                        <button
-                            className="text-slate-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors shrink-0"
-                            title="Keluar"
+                        <span
+                            className={`text-slate-400 p-1.5 rounded-lg transition-transform duration-200 shrink-0 ${isProfileOpen ? 'rotate-180 text-[#159447]' : ''
+                                }`}
                         >
-                            <LogOut size={16} />
-                        </button>
-                    </div>
+                            <ChevronUp size={16} />
+                        </span>
+                    </button>
                 </div>
             </aside>
 
