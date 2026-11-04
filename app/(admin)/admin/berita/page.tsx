@@ -5,6 +5,7 @@ import {
     Eye,
     Pencil,
     Trash2,
+    ArrowDownToLine,
     Image as ImageIcon,
     FileText,
     Clock,
@@ -18,6 +19,7 @@ import {
     type NewsStatus,
 } from '@/lib/types/berita'
 import { CATEGORY_FILTER_OPTIONS } from '@/lib/constants/categories'
+import { unpublishNewsAction } from './actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -230,7 +232,7 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                                 <th className="py-4 px-4 text-center w-36">STATUS</th>
                                 <th className="py-4 px-4 text-left w-36">TANGGAL</th>
                                 <th className="py-4 px-4 text-left w-48">PENULIS / REPORTER</th>
-                                <th className="py-4 px-4 text-center w-28">AKSI</th>
+                                <th className="py-4 px-4 text-center w-36">AKSI</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 text-xs text-slate-600">
@@ -250,6 +252,10 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                                     )
                                     const displayDateSource =
                                         row.published_at || row.created_at
+                                    const isPublished = row.status === 'PUBLISHED'
+                                    const viewHref = isPublished
+                                        ? `/berita/${row.slug}`
+                                        : `/berita/${row.slug}?preview=true`
 
                                     return (
                                         <tr
@@ -282,7 +288,7 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                                             {/* JUDUL */}
                                             <td className="py-4 px-4 text-left">
                                                 <Link
-                                                    href={`/berita/${row.slug}`}
+                                                    href={viewHref}
                                                     className="font-bold text-[#172135] text-xs sm:text-[13px] hover:text-[#159447] transition-colors line-clamp-2"
                                                 >
                                                     {row.title}
@@ -323,7 +329,7 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                                                 </div>
                                             </td>
 
-                                            {/* PENULIS / REPORTER */}
+                                            {/* PENULIS / REPORTER (Hanya Avatar & Nama Dinamis) */}
                                             <td className="py-4 px-4 text-left">
                                                 <div className="flex items-center gap-2.5">
                                                     <div className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 bg-[#dcfce7] text-[#16a34a]">
@@ -333,9 +339,6 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                                                         <p className="font-bold text-[#172135] text-xs truncate">
                                                             {row.author_name}
                                                         </p>
-                                                        <p className="text-[11px] text-[#566276] truncate">
-                                                            Redaksi Berita
-                                                        </p>
                                                     </div>
                                                 </div>
                                             </td>
@@ -343,27 +346,61 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                                             {/* AKSI */}
                                             <td className="py-4 px-4 text-center whitespace-nowrap">
                                                 <div className="flex items-center justify-center gap-1.5">
-                                                    <Link
-                                                        href={`/berita/${row.slug}`}
-                                                        title="Lihat Berita"
-                                                        className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-[#159447] hover:border-[#159447]/40 hover:bg-green-50/50 flex items-center justify-center transition-colors"
-                                                    >
-                                                        <Eye size={14} />
-                                                    </Link>
+                                                    {/* 1. Mata (Preview): Aktif HANYA jika status BUKAN 'PUBLISHED' */}
+                                                    {!isPublished ? (
+                                                        <Link
+                                                            href={`/berita/${row.slug}?preview=true`}
+                                                            title="Pratinjau Naskah"
+                                                            className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-[#159447] hover:border-[#159447]/40 hover:bg-green-50/50 flex items-center justify-center transition-colors"
+                                                        >
+                                                            <Eye size={14} />
+                                                        </Link>
+                                                    ) : (
+                                                        <Link
+                                                            href={`/berita/${row.slug}`}
+                                                            title="Lihat Berita Tayang"
+                                                            className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-[#159447] hover:border-[#159447]/40 hover:bg-green-50/50 flex items-center justify-center transition-colors"
+                                                        >
+                                                            <Eye size={14} />
+                                                        </Link>
+                                                    )}
+
+                                                    {/* 2. Pena (Edit): SELALU AKTIF di semua status */}
                                                     <Link
                                                         href={`/admin/berita/tambah?id=${row.id}`}
                                                         title="Edit Berita"
-                                                        className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50 flex items-center justify-center transition-colors"
+                                                        className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50 flex items-center justify-center transition-colors"
                                                     >
                                                         <Pencil size={14} />
                                                     </Link>
+
+                                                    {/* 3. Tong Sampah (Hapus): SELALU AKTIF di semua status */}
                                                     <button
                                                         type="button"
                                                         title="Hapus Berita"
-                                                        className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-red-600 hover:border-red-200 hover:bg-red-50 flex items-center justify-center transition-colors cursor-pointer"
+                                                        className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-red-600 hover:border-red-200 hover:bg-red-50 flex items-center justify-center transition-colors cursor-pointer"
                                                     >
                                                         <Trash2 size={14} />
                                                     </button>
+
+                                                    {/* 4. Unpublish (Turunkan Tayang): HANYA muncul jika status === 'PUBLISHED' */}
+                                                    {isPublished && (
+                                                        <form
+                                                            action={async () => {
+                                                                'use server'
+                                                                await unpublishNewsAction(row.id)
+                                                            }}
+                                                            className="inline-flex"
+                                                        >
+                                                            <button
+                                                                type="submit"
+                                                                title="Turunkan Tayang ke Draf (Unpublish)"
+                                                                className="w-7 h-7 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-300 flex items-center justify-center transition-colors cursor-pointer"
+                                                            >
+                                                                <ArrowDownToLine size={14} />
+                                                            </button>
+                                                        </form>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>

@@ -54,26 +54,46 @@ function extractCategoryList(rawCategory: string | null | undefined): string[] {
 // 1. Ambil Detail Berita Berdasarkan Slug
 //    Alur: Cari di tabel mandiri `public.berita` terlebih dahulu;
 //          jika tidak ditemukan (atau tabel belum dimigrasikan), fallback ke `wp_posts`.
-export async function getNewsBySlug(slug: string): Promise<BeritaDetailPublic | null> {
+//          Jika `isPreview === true`, syarat status PUBLISHED & published_at <= NOW() diabaikan.
+export async function getNewsBySlug(
+  slug: string,
+  isPreview: boolean = false
+): Promise<BeritaDetailPublic | null> {
   // Tahap A: Coba ambil dari tabel baru `public.berita`
   try {
-    const nativeQuery = `
-      SELECT 
-        b.title::text AS title,
-        b.content::text AS content,
-        COALESCE(b.published_at, b.created_at) AS date,
-        b.image_url::text AS featured_image,
-        b.author_name::text AS author_name,
-        b.caption::text AS caption,
-        b.source_credit::text AS source_credit,
-        c.name::text AS category
-      FROM public.berita b
-      LEFT JOIN public.categories c ON b.category_id = c.id
-      WHERE b.slug = $1
-        AND b.status = 'PUBLISHED'
-        AND (b.published_at IS NULL OR b.published_at <= NOW())
-      LIMIT 1
-    `;
+    const nativeQuery = isPreview
+      ? `
+        SELECT 
+          b.title::text AS title,
+          b.content::text AS content,
+          COALESCE(b.published_at, b.created_at) AS date,
+          b.image_url::text AS featured_image,
+          b.author_name::text AS author_name,
+          b.caption::text AS caption,
+          b.source_credit::text AS source_credit,
+          c.name::text AS category
+        FROM public.berita b
+        LEFT JOIN public.categories c ON b.category_id = c.id
+        WHERE b.slug = $1
+        LIMIT 1
+      `
+      : `
+        SELECT 
+          b.title::text AS title,
+          b.content::text AS content,
+          COALESCE(b.published_at, b.created_at) AS date,
+          b.image_url::text AS featured_image,
+          b.author_name::text AS author_name,
+          b.caption::text AS caption,
+          b.source_credit::text AS source_credit,
+          c.name::text AS category
+        FROM public.berita b
+        LEFT JOIN public.categories c ON b.category_id = c.id
+        WHERE b.slug = $1
+          AND b.status = 'PUBLISHED'
+          AND (b.published_at IS NULL OR b.published_at <= NOW())
+        LIMIT 1
+      `;
 
     const { rows: nativeRows } = await pool.query(nativeQuery, [slug]);
 
@@ -396,14 +416,52 @@ export async function getTransparansiDokumen() {
   }
 }
 
-// 6. Ambil Daftar Berita untuk Tabel Manajemen Admin & Reporter (public.berita)
+// 6. Helper Migrasi Otomatis Kolom Penanda Visibilitas (`was_published` & `author_role`)
+let visibilityColumnsEnsured = false;
+
+export async function ensureBeritaVisibilityColumns(): Promise<void> {
+  if (visibilityColumnsEnsured) return;
+  try {
+    await pool.query(`
+      ALTER TABLE public.berita ADD COLUMN IF NOT EXISTS was_published BOOLEAN DEFAULT FALSE;
+      ALTER TABLE public.berita ADD COLUMN IF NOT EXISTS author_role VARCHAR(50) DEFAULT 'REPORTER';
+      UPDATE public.berita SET was_published = TRUE WHERE status = 'PUBLISHED' AND (was_published IS NULL OR was_published = FALSE);
+    `);
+    visibilityColumnsEnsured = true;
+  } catch (err: any) {
+    if (err?.code !== '42P01') {
+      console.warn('Warning ensuring berita visibility columns:', err?.message);
+    }
+  }
+}
+
+// 7. Ambil Daftar Berita untuk Tabel Manajemen Admin & Reporter (public.berita)
 export async function getAdminNewsList(options?: {
   role?: UserRole;
   authorName?: string;
 }): Promise<BeritaAdminRow[]> {
   try {
-    const isReporterFilter =
-      options?.role === 'REPORTER' && Boolean(options?.authorName?.trim());
+    await ensureBeritaVisibilityColumns();
+
+    const isReporter = options?.role === 'REPORTER';
+    const hasAuthorFilter = isReporter && Boolean(options?.authorName?.trim());
+
+    let whereClause = '';
+    const params: any[] = [];
+
+    if (isReporter) {
+      if (hasAuthorFilter) {
+        whereClause = 'WHERE b.author_name = $1';
+        params.push(options!.authorName!.trim());
+      }
+    } else {
+      // Role Admin / Super Admin:
+      // Draf milik Reporter yang belum pernah terbit / baru di-unsubmit TIDAK ditampilkan di meja Admin.
+      whereClause = `
+        WHERE b.status IN ('SUBMITTED', 'PUBLISHED')
+           OR (b.status = 'DRAFT' AND (b.author_role IN ('SUPER_ADMIN', 'ADMIN_BERITA') OR b.was_published = TRUE))
+      `;
+    }
 
     const query = `
       SELECT
@@ -420,14 +478,15 @@ export async function getAdminNewsList(options?: {
         b.created_at,
         b.updated_at,
         b.author_name,
+        b.author_role,
+        b.was_published,
         COALESCE(c.name, 'Informasi') AS category_name
       FROM public.berita b
       LEFT JOIN public.categories c ON b.category_id = c.id
-      ${isReporterFilter ? 'WHERE b.author_name = $1' : ''}
+      ${whereClause}
       ORDER BY COALESCE(b.published_at, b.created_at) DESC, b.id DESC
     `;
 
-    const params = isReporterFilter ? [options!.authorName!.trim()] : [];
     const { rows } = await pool.query(query, params);
 
     return rows.map((row: any, index: number): BeritaAdminRow => {

@@ -6,13 +6,17 @@ import FallbackImage from '@/components/FallbackImage'
 
 export default async function ArticlePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>
+  searchParams?: Promise<{ preview?: string }>
 }) {
   const { slug } = await params
+  const resolvedSearchParams = searchParams ? await searchParams : {}
+  const isPreview = resolvedSearchParams.preview === 'true'
 
-  // Ambil data langsung dari database
-  const article = await getNewsBySlug(slug)
+  // Ambil data langsung dari database (longgarkan filter status jika mode preview aktif)
+  const article = await getNewsBySlug(slug, isPreview)
 
   if (!article) {
     return (

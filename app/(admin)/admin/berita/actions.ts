@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import pool from '@/lib/db';
+import pool, { ensureBeritaVisibilityColumns } from '@/lib/db';
 import { saveBeritaImage } from '@/lib/upload';
 import { toCategorySlug } from '@/lib/constants/categories';
 import type { NewsStatus, UserRole } from '@/lib/types/berita';
@@ -203,6 +203,9 @@ export async function createBeritaAction(
       isPublishedNow = false;
     }
 
+    // Pastikan kolom penanda visibilitas tersedia di tabel public.berita
+    await ensureBeritaVisibilityColumns();
+
     // Eksekusi INSERT ke tabel public.berita
     const insertQuery = `
       INSERT INTO public.berita (
@@ -214,7 +217,9 @@ export async function createBeritaAction(
         source_credit,
         category_id,
         author_name,
+        author_role,
         status,
+        was_published,
         published_at,
         created_at,
         updated_at
@@ -229,7 +234,9 @@ export async function createBeritaAction(
         $7,
         $8,
         $9,
-        CASE WHEN $10::boolean THEN NOW() ELSE NULL END,
+        $10,
+        $11::boolean,
+        CASE WHEN $11::boolean THEN NOW() ELSE NULL END,
         NOW(),
         NOW()
       )
@@ -245,6 +252,7 @@ export async function createBeritaAction(
       sourceCredit,
       categoryId,
       authorName,
+      userRole,
       status,
       isPublishedNow,
     ]);
@@ -279,4 +287,94 @@ export async function createBeritaAction(
     };
   }
 }
+
+/**
+ * Server Action untuk menarik kembali naskah berstatus 'SUBMITTED' menjadi 'DRAFT' (Khusus Reporter).
+ */
+export async function unsubmitNewsAction(id: number | string): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    const numericId = Number(id);
+    if (!Number.isFinite(numericId)) {
+      return { success: false, error: 'ID berita tidak valid.' };
+    }
+
+    await ensureBeritaVisibilityColumns();
+
+    await pool.query(
+      `UPDATE public.berita
+       SET status = 'DRAFT',
+           was_published = FALSE,
+           updated_at = NOW()
+       WHERE id = $1
+         AND status = 'SUBMITTED'`,
+      [numericId]
+    );
+
+    revalidatePath('/reporter/berita');
+    revalidatePath('/admin/berita');
+    revalidatePath('/berita');
+    revalidatePath('/');
+
+    return { success: true };
+  } catch (error: unknown) {
+    console.error('Error in unsubmitNewsAction:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Gagal menarik naskah berita.',
+    };
+  }
+}
+
+/**
+ * Server Action untuk menurunkan berita tayang ('PUBLISHED') kembali menjadi 'DRAFT'
+ * dan mengosongkan `published_at`, namun mempertahankan `was_published = TRUE`
+ * agar tetap terlihat di meja redaksi Admin (Fitur Takedown Admin).
+ */
+export async function unpublishNewsAction(id: number | string): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    const numericId = Number(id);
+    if (!Number.isFinite(numericId)) {
+      return { success: false, error: 'ID berita tidak valid.' };
+    }
+
+    await ensureBeritaVisibilityColumns();
+
+    await pool.query(
+      `UPDATE public.berita
+       SET status = 'DRAFT',
+           published_at = NULL,
+           was_published = TRUE,
+           updated_at = NOW()
+       WHERE id = $1
+         AND status = 'PUBLISHED'`,
+      [numericId]
+    );
+
+    revalidatePath('/admin/berita');
+    revalidatePath('/reporter/berita');
+    revalidatePath('/berita');
+    revalidatePath('/');
+
+    return { success: true };
+  } catch (error: unknown) {
+    console.error('Error in unpublishNewsAction:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Gagal menurunkan penayangan berita.',
+    };
+  }
+}
+
 

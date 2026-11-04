@@ -5,6 +5,7 @@ import {
     Eye,
     Pencil,
     Trash2,
+    Download,
     Image as ImageIcon,
     FileText,
     Clock,
@@ -18,6 +19,7 @@ import {
     type NewsStatus,
 } from '@/lib/types/berita'
 import { CATEGORY_FILTER_OPTIONS } from '@/lib/constants/categories'
+import { unsubmitNewsAction } from '@/app/(admin)/admin/berita/actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,17 +46,6 @@ function formatWibTime(isoDate: string | null | undefined): string {
     return `${formatted} WIB`
 }
 
-function getInitials(name: string): string {
-    return (
-        name
-            .split(' ')
-            .filter(Boolean)
-            .slice(0, 2)
-            .map((part) => part[0].toUpperCase())
-            .join('') || 'RP'
-    )
-}
-
 interface ReporterBeritaPageProps {
     searchParams?: Promise<{
         q?: string
@@ -78,8 +69,7 @@ export default async function ReporterBeritaPage({
     const filteredRows = allRows.filter((row) => {
         const matchSearch =
             !searchQuery ||
-            row.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            row.author_name.toLowerCase().includes(searchQuery.toLowerCase())
+            row.title.toLowerCase().includes(searchQuery.toLowerCase())
 
         const matchCategory =
             selectedCategory === 'Semua kategori' ||
@@ -223,18 +213,17 @@ export default async function ReporterBeritaPage({
                             <tr className="border-b border-slate-100 bg-white text-[11px] font-bold text-[#566276]/60 uppercase tracking-wider">
                                 <th className="py-4 px-4 text-center w-14">NO</th>
                                 <th className="py-4 px-4 text-center w-32">GAMBAR</th>
-                                <th className="py-4 px-4 text-left min-w-[250px]">JUDUL</th>
+                                <th className="py-4 px-4 text-left min-w-[260px]">JUDUL</th>
                                 <th className="py-4 px-4 text-center w-36">KATEGORI</th>
                                 <th className="py-4 px-4 text-center w-36">STATUS</th>
                                 <th className="py-4 px-4 text-left w-36">TANGGAL</th>
-                                <th className="py-4 px-4 text-left w-44">PENULIS</th>
-                                <th className="py-4 px-4 text-center w-32">AKSI</th>
+                                <th className="py-4 px-4 text-center w-36">AKSI</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 text-xs text-slate-600">
                             {filteredRows.length === 0 ? (
                                 <tr>
-                                    <td colSpan={8} className="py-12 text-center text-slate-400">
+                                    <td colSpan={7} className="py-12 text-center text-slate-400">
                                         Belum ada data berita di database atau tidak ada yang cocok dengan filter.
                                     </td>
                                 </tr>
@@ -249,6 +238,7 @@ export default async function ReporterBeritaPage({
                                     const displayDateSource =
                                         row.published_at || row.created_at
                                     const isDraft = row.status === 'DRAFT'
+                                    const isSubmitted = row.status === 'SUBMITTED'
 
                                     return (
                                         <tr
@@ -281,7 +271,7 @@ export default async function ReporterBeritaPage({
                                             {/* JUDUL */}
                                             <td className="py-4 px-4 text-left">
                                                 <Link
-                                                    href={`/berita/${row.slug}`}
+                                                    href={`/berita/${row.slug}?preview=true`}
                                                     className="font-bold text-[#172135] text-[13px] hover:text-[#159447] transition-colors line-clamp-2"
                                                 >
                                                     {row.title}
@@ -322,60 +312,74 @@ export default async function ReporterBeritaPage({
                                                 </div>
                                             </td>
 
-                                            {/* PENULIS */}
-                                            <td className="py-4 px-4 text-left">
-                                                <div className="flex items-center gap-2.5">
-                                                    <div className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 bg-[#dcfce7] text-[#16a34a]">
-                                                        {getInitials(row.author_name)}
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <p className="font-bold text-[#172135] text-xs truncate">
-                                                            {row.author_name}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </td>
-
                                             {/* AKSI */}
                                             <td className="py-4 px-4 text-center whitespace-nowrap">
                                                 <div className="flex items-center justify-center gap-1.5">
+                                                    {/* 1. Mata (Preview): Selalu aktif ke /berita/[slug]?preview=true */}
                                                     <Link
-                                                        href={`/berita/${row.slug}`}
-                                                        title="Lihat Berita"
-                                                        className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 text-slate-500 hover:text-[#159447] transition-colors"
+                                                        href={`/berita/${row.slug}?preview=true`}
+                                                        title="Pratinjau Naskah"
+                                                        className="w-7 h-7 rounded-lg border border-slate-200 bg-white flex items-center justify-center hover:bg-green-50/50 hover:border-[#159447]/40 text-slate-500 hover:text-[#159447] transition-colors"
                                                     >
                                                         <Eye size={14} />
                                                     </Link>
 
+                                                    {/* 2. Pena (Edit): Aktif HANYA jika status === 'DRAFT' */}
                                                     {isDraft ? (
                                                         <Link
                                                             href={`/reporter/berita/tambah?id=${row.id}`}
                                                             title="Edit Draf"
-                                                            className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors"
+                                                            className="w-7 h-7 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-colors"
                                                         >
                                                             <Pencil size={14} />
                                                         </Link>
                                                     ) : (
-                                                        <span
-                                                            title="Hanya draf yang dapat diedit"
-                                                            className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-300 bg-slate-50 cursor-not-allowed"
+                                                        <button
+                                                            type="button"
+                                                            disabled
+                                                            title="Hanya naskah berstatus Draf yang dapat diedit"
+                                                            className="w-7 h-7 rounded-lg border border-slate-200 bg-slate-50 text-slate-300 opacity-60 flex items-center justify-center cursor-not-allowed"
                                                         >
                                                             <Pencil size={14} />
-                                                        </span>
+                                                        </button>
                                                     )}
 
+                                                    {/* 3. Tong Sampah (Hapus): Aktif HANYA jika status === 'DRAFT' */}
                                                     <button
                                                         type="button"
                                                         disabled={!isDraft}
-                                                        title="Hapus Draf"
-                                                        className={`w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center ${
+                                                        title={
                                                             isDraft
-                                                                ? 'text-slate-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200 cursor-pointer'
-                                                                : 'text-slate-300 bg-slate-50 cursor-not-allowed'
+                                                                ? 'Hapus Draf'
+                                                                : 'Hanya naskah berstatus Draf yang dapat dihapus'
+                                                        }
+                                                        className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-colors ${
+                                                            isDraft
+                                                                ? 'border-slate-200 bg-white text-slate-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200 cursor-pointer'
+                                                                : 'border-slate-200 bg-slate-50 text-slate-300 opacity-60 cursor-not-allowed'
                                                         }`}
                                                     >
                                                         <Trash2 size={14} />
                                                     </button>
+
+                                                    {/* 4. Unsubmit (Tarik Naskah): HANYA muncul jika status === 'SUBMITTED' */}
+                                                    {isSubmitted && (
+                                                        <form
+                                                            action={async () => {
+                                                                'use server'
+                                                                await unsubmitNewsAction(row.id)
+                                                            }}
+                                                            className="inline-flex"
+                                                        >
+                                                            <button
+                                                                type="submit"
+                                                                title="Tarik Naskah ke Draf (Unsubmit)"
+                                                                className="w-7 h-7 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-300 flex items-center justify-center transition-colors cursor-pointer"
+                                                            >
+                                                                <Download size={14} />
+                                                            </button>
+                                                        </form>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
