@@ -83,15 +83,19 @@ export interface BeritaAdminRow {
   excerpt?: string;
   content?: string;
   image: string | null;
+  image_url: string | null;
   caption?: string | null;
   sourceCredit?: string | null;
   categoryId?: number | null;
   categoryName: string;
+  category_name: string;
   categories: string[];
   authorName: string;
+  author_name: string;
   status: NewsStatus;
   publishedAt: string | null;
+  published_at: string | null;
   createdAt: string;
+  created_at: string;
   updatedAt: string;
 }
-

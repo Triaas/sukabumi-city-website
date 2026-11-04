@@ -1,5 +1,11 @@
 import { Pool } from 'pg';
-import type { BeritaPublic, BeritaDetailPublic } from './types/berita';
+import type {
+  BeritaPublic,
+  BeritaDetailPublic,
+  BeritaAdminRow,
+  NewsStatus,
+  UserRole,
+} from './types/berita';
 
 const pool = new Pool({
   host: process.env.DB_HOST || 'localhost',
@@ -389,3 +395,91 @@ export async function getTransparansiDokumen() {
     return [];
   }
 }
+
+// 6. Ambil Daftar Berita untuk Tabel Manajemen Admin & Reporter (public.berita)
+export async function getAdminNewsList(options?: {
+  role?: UserRole;
+  authorName?: string;
+}): Promise<BeritaAdminRow[]> {
+  try {
+    const isReporterFilter =
+      options?.role === 'REPORTER' && Boolean(options?.authorName?.trim());
+
+    const query = `
+      SELECT
+        b.id,
+        b.title,
+        b.slug,
+        b.content,
+        b.image_url,
+        b.caption,
+        b.source_credit,
+        b.category_id,
+        b.status,
+        b.published_at,
+        b.created_at,
+        b.updated_at,
+        b.author_name,
+        COALESCE(c.name, 'Informasi') AS category_name
+      FROM public.berita b
+      LEFT JOIN public.categories c ON b.category_id = c.id
+      ${isReporterFilter ? 'WHERE b.author_name = $1' : ''}
+      ORDER BY COALESCE(b.published_at, b.created_at) DESC, b.id DESC
+    `;
+
+    const params = isReporterFilter ? [options!.authorName!.trim()] : [];
+    const { rows } = await pool.query(query, params);
+
+    return rows.map((row: any, index: number): BeritaAdminRow => {
+      const plainExcerpt = (row.content || '')
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 140);
+
+      const normalizedImg = normalizeImageUrl(row.image_url) ?? null;
+      const categoryName = row.category_name || 'Informasi';
+      const authorName = row.author_name || 'Diskominfo Kota Sukabumi';
+      const publishedIso = row.published_at
+        ? new Date(row.published_at).toISOString()
+        : null;
+      const createdIso = row.created_at
+        ? new Date(row.created_at).toISOString()
+        : new Date().toISOString();
+      const updatedIso = row.updated_at
+        ? new Date(row.updated_at).toISOString()
+        : createdIso;
+
+      return {
+        id: row.id,
+        no: String(index + 1).padStart(2, '0'),
+        title: row.title,
+        slug: row.slug,
+        excerpt: plainExcerpt,
+        content: row.content || '',
+        image: normalizedImg,
+        image_url: normalizedImg,
+        caption: row.caption || null,
+        sourceCredit: row.source_credit || null,
+        categoryId: row.category_id ?? null,
+        categoryName,
+        category_name: categoryName,
+        categories: [categoryName],
+        authorName,
+        author_name: authorName,
+        status: (row.status as NewsStatus) || 'DRAFT',
+        publishedAt: publishedIso,
+        published_at: publishedIso,
+        createdAt: createdIso,
+        created_at: createdIso,
+        updatedAt: updatedIso,
+      };
+    });
+  } catch (error: any) {
+    if (error?.code !== '42P01') {
+      console.error('Error fetching admin news list:', error);
+    }
+    return [];
+  }
+}
+
