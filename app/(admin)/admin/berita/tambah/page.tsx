@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
     ArrowLeft,
     Bold,
@@ -18,51 +19,25 @@ import {
     Maximize2,
     ImageIcon,
     CloudUpload,
-    RefreshCw,
     Trash2,
-    Check,
     Plus,
     Send,
     Save,
     Eye,
     User,
-    BadgeCheck,
     Clock3,
     AlignLeft,
     FileText,
     X,
     Search,
     ChevronDown,
+    Loader2,
+    AlertCircle,
+    CheckCircle2,
 } from 'lucide-react'
-
-// ─── Master Data Kategori (22 Kategori) ─────────────────────────────────────────
-const MASTER_CATEGORIES = [
-    'Agama',
-    'Artikel',
-    'Bencana',
-    'Diskominfo',
-    'Ekonomi',
-    'Hukum',
-    'Infrastruktur',
-    'Kesehatan',
-    'Pelayanan Publik',
-    'Legislatif',
-    'Lingkungan',
-    'Olahraga',
-    'Pariwisata',
-    'Pendidikan',
-    'Pertanian',
-    'Politik',
-    'Seni Budaya',
-    'Sosial',
-    'Teknologi',
-    'Transportasi',
-    'Umum',
-    'Walikota',
-]
-
-// ─── Dummy narasi ──────────────────────────────────────────────────────────
-const DUMMY_NARASI = `<p><strong>SEMARANG</strong> — Pemerintah Daerah secara resmi meluncurkan integrasi ekosistem <strong><em>Satu Data Terpadu</em></strong> yang menyatukan basis layanan perizinan, kependudukan, dan bantuan sosial dalam satu arsitektur cloud terproteksi. Langkah ini dirancang guna memangkas durasi birokrasi permohonan publik dari rata-rata 5 hari kerja menjadi hitungan menit.</p><blockquote style="border-left:4px solid #cbd5e1;padding-left:1rem;color:#64748b;font-style:italic;margin:1rem 0">"Keterbukaan informasi bukan sekadar jargon administratif, melainkan fondasi akuntabilitas publik. Dengan sistem ini, seluruh aliran progres permohonan warga dapat dimonitor secara real-time tanpa celah pungutan liar."<br/><small style="font-style:normal;font-weight:600;color:#475569;display:block;margin-top:0.25rem">— Kepala Dinas Komunikasi dan Informatika</small></blockquote><p>Dalam tahap awal, terdapat 14 Organisasi Perangkat Daerah (OPD) yang langsung terhubung ke sistem komputasi bersama. Fasilitas ini didukung oleh enkripsi berlapis dan audit jejak digital berkala guna menjamin kerahasiaan identitas masyarakat sesuai regulasi Perlindungan Data Pribadi (UU PDP).</p>`
+import { OFFICIAL_CATEGORIES } from '@/lib/constants/categories'
+import type { UserRole } from '@/lib/types/berita'
+import { createBeritaAction, type BeritaActionType } from '../actions'
 
 // ─── Toolbar Button ───────────────────────────────────────────────────────────
 function ToolbarBtn({
@@ -109,15 +84,17 @@ function FieldLabel({ children, right }: { children: React.ReactNode; right?: Re
     )
 }
 
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5 MB
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function TambahBeritaPage() {
-    const [title, setTitle] = useState(
-        'Pemerintah Luncurkan Sistem Satu Data Terpadu Pelayanan'
-    )
+    const router = useRouter()
+    const [title, setTitle] = useState('')
 
-    // MOCK RBAC & DATA EDIT
-    const [currentUserRole, setCurrentUserRole] = useState<'SUPER_ADMIN' | 'ADMIN_BERITA' | 'REPORTER'>('SUPER_ADMIN') // Ganti default ke 'SUPER_ADMIN' | 'ADMIN_BERITA' | 'REPORTER'
-    const currentUserName = 'Budi Santoso'
+    // Konteks Sesi Pengguna (Default Admin)
+    const [currentUserRole] = useState<UserRole>('SUPER_ADMIN')
+    const currentUserName = 'Trias Firmansyah'
 
     // Waktu sekarang (WIB) sebagai batas maksimal jadwal publikasi (tidak boleh di masa depan)
     const getNowWib = () => {
@@ -131,12 +108,18 @@ export default function TambahBeritaPage() {
         return { date: `${get('year')}-${get('month')}-${get('day')}`, time: `${hour}:${get('minute')}` }
     }
     const [nowWib, setNowWib] = useState<{ date: string; time: string } | null>(null)
+    const [publishDate, setPublishDate] = useState('')
+    const [publishTime, setPublishTime] = useState('')
+
     useEffect(() => {
-        setNowWib(getNowWib())
+        const initialNow = getNowWib()
+        setNowWib(initialNow)
+        setPublishDate(initialNow.date)
+        setPublishTime(initialNow.time)
         const id = setInterval(() => setNowWib(getNowWib()), 30000)
         return () => clearInterval(id)
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
+
     const handlePublishDateChange = (value: string) => {
         const now = getNowWib()
         const date = value > now.date ? now.date : value
@@ -147,8 +130,9 @@ export default function TambahBeritaPage() {
         const now = getNowWib()
         setPublishTime(publishDate === now.date && value > now.time ? now.time : value)
     }
-    const isEditMode = true as boolean // Set true jika membuka draft, false jika buat baru
-    const originalReporterName = 'Budi Santoso' // Ditarik dari database jika isEditMode true
+
+    const isEditMode = false
+    const originalReporterName = 'Budi Santoso'
     const originalReporterRole = 'Reporter Lapangan'
     const reporterName = isEditMode ? originalReporterName : currentUserName
     const reporterInitials = reporterName
@@ -157,30 +141,60 @@ export default function TambahBeritaPage() {
         .slice(0, 2)
         .map((w) => w[0].toUpperCase())
         .join('')
-    const [caption, setCaption] = useState('Wakil Gubernur bersama Kepala Dinas')
-    const [sourceCredit, setSourceCredit] = useState('Biro Administrasi Pimpinan & Humas')
-    const [publishDate, setPublishDate] = useState('2025-05-18')
-    const [publishTime, setPublishTime] = useState('14:30')
-    const [selectedTags, setSelectedTags] = useState<string[]>(['Pelayanan Publik'])
+
+    const [caption, setCaption] = useState('')
+    const [sourceCredit, setSourceCredit] = useState('')
+    const [selectedTags, setSelectedTags] = useState<string[]>([])
     const [tagSearch, setTagSearch] = useState('')
     const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false)
     const tagDropdownRef = useRef<HTMLDivElement>(null)
 
-    // Image Upload State
+    // Image Upload State (menyimpan file fisik + preview lokal)
+    const [imageFile, setImageFile] = useState<File | null>(null)
     const [imagePreview, setImagePreview] = useState<string | null>(null)
     const [imageFileName, setImageFileName] = useState<string>('')
     const [isDragging, setIsDragging] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
+    // Submission & Feedback State
+    const [submittingAction, setSubmittingAction] = useState<BeritaActionType | null>(null)
+    const [errorMessage, setErrorMessage] = useState<string | null>(null)
+    const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
+    const applySelectedFile = (file: File) => {
+        setErrorMessage(null)
+
+        if (!ALLOWED_IMAGE_TYPES.includes(file.type.toLowerCase())) {
+            setErrorMessage('Format berkas tidak didukung. Gunakan format JPG, PNG, atau WebP.')
+            return
+        }
+
+        if (file.size > MAX_IMAGE_SIZE) {
+            setErrorMessage('Ukuran berkas gambar melebihi batas maksimal 5 MB.')
+            return
+        }
+
+        if (imagePreview) {
+            URL.revokeObjectURL(imagePreview)
+        }
+
+        setImageFile(file)
+        setImagePreview(URL.createObjectURL(file))
+        setImageFileName(file.name)
+    }
+
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (file) {
-            setImagePreview(URL.createObjectURL(file))
-            setImageFileName(file.name)
+            applySelectedFile(file)
         }
     }
 
     const handleRemoveImage = () => {
+        if (imagePreview) {
+            URL.revokeObjectURL(imagePreview)
+        }
+        setImageFile(null)
         setImagePreview(null)
         setImageFileName('')
         if (fileInputRef.current) {
@@ -202,9 +216,8 @@ export default function TambahBeritaPage() {
         e.preventDefault()
         setIsDragging(false)
         const file = e.dataTransfer.files?.[0]
-        if (file && file.type.startsWith('image/')) {
-            setImagePreview(URL.createObjectURL(file))
-            setImageFileName(file.name)
+        if (file) {
+            applySelectedFile(file)
         }
     }
 
@@ -220,11 +233,6 @@ export default function TambahBeritaPage() {
             setWordCount(words.length)
         }
     }
-
-    // Hitung kata saat komponen pertama kali dirender
-    useEffect(() => {
-        updateWordCount()
-    }, [])
 
     // Fungsi bantuan eksekusi format teks
     const execFormat = (command: string, value: string = '') => {
@@ -254,7 +262,7 @@ export default function TambahBeritaPage() {
         setIsTagDropdownOpen(false)
     }
 
-    const filteredCategories = MASTER_CATEGORIES.filter(
+    const filteredCategories = OFFICIAL_CATEGORIES.filter(
         (cat) =>
             !selectedTags.includes(cat) &&
             cat.toLowerCase().includes(tagSearch.toLowerCase().trim())
@@ -282,9 +290,84 @@ export default function TambahBeritaPage() {
         const target = e.target as HTMLElement
         const anchor = target.closest('a')
         if (anchor && anchor.href) {
-            // Cegah behavior default dan buka link di tab baru
             e.preventDefault()
             window.open(anchor.href, '_blank', 'noopener,noreferrer')
+        }
+    }
+
+    // Handler Submit ke Server Action
+    const handleSubmit = async (actionType: BeritaActionType) => {
+        if (submittingAction) return
+
+        setErrorMessage(null)
+        setSuccessMessage(null)
+
+        const trimmedTitle = title.trim()
+        const editorHtml = editorRef.current?.innerHTML?.trim() || ''
+        const editorText = editorRef.current?.innerText?.trim() || ''
+
+        if (!trimmedTitle) {
+            setErrorMessage('Judul berita utama wajib diisi.')
+            return
+        }
+
+        if (actionType !== 'DRAFT') {
+            if (!imageFile) {
+                setErrorMessage('Gambar utama berita wajib diunggah sebelum menerbitkan atau mengirim berita.')
+                return
+            }
+            if (!editorText) {
+                setErrorMessage('Naskah narasi berita wajib diisi sebelum menerbitkan atau mengirim berita.')
+                return
+            }
+            if (selectedTags.length === 0) {
+                setErrorMessage('Pilih minimal 1 kategori berita sebelum menerbitkan atau mengirim berita.')
+                return
+            }
+        }
+
+        try {
+            setSubmittingAction(actionType)
+
+            const formData = new FormData()
+            formData.append('title', trimmedTitle)
+            formData.append('content', editorHtml)
+            formData.append('category_id', selectedTags[0] || '')
+            formData.append('caption', caption.trim())
+            formData.append('source_credit', sourceCredit.trim())
+            formData.append('action_type', actionType)
+            formData.append('author_name', reporterName)
+            formData.append('user_role', currentUserRole)
+
+            if (imageFile) {
+                formData.append('image', imageFile)
+            }
+
+            const result = await createBeritaAction(formData)
+
+            if (!result.success) {
+                setErrorMessage(result.error || 'Gagal menyimpan berita.')
+                setSubmittingAction(null)
+                return
+            }
+
+            const msg =
+                actionType === 'DRAFT'
+                    ? 'Draf berita berhasil disimpan.'
+                    : currentUserRole === 'REPORTER'
+                      ? 'Berita berhasil dikirim untuk peninjauan redaksi.'
+                      : 'Berita berhasil diterbitkan ke portal publik.'
+
+            setSuccessMessage(msg)
+            router.push('/admin/berita')
+            router.refresh()
+        } catch (err: unknown) {
+            setErrorMessage(
+                err instanceof Error
+                    ? err.message
+                    : 'Terjadi kesalahan saat menghubungi server.'
+            )
+            setSubmittingAction(null)
         }
     }
 
@@ -324,6 +407,30 @@ export default function TambahBeritaPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Notifikasi Error / Sukses */}
+            {errorMessage && (
+                <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium">
+                    <div className="flex items-center gap-2">
+                        <AlertCircle size={16} className="shrink-0 text-red-500" />
+                        <span>{errorMessage}</span>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setErrorMessage(null)}
+                        className="text-red-400 hover:text-red-600 cursor-pointer"
+                    >
+                        <X size={14} />
+                    </button>
+                </div>
+            )}
+
+            {successMessage && (
+                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium">
+                    <CheckCircle2 size={16} className="shrink-0 text-emerald-600" />
+                    <span>{successMessage}</span>
+                </div>
+            )}
 
             {/* ── MAIN GRID ─────────────────────────────────────────────── */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -370,7 +477,7 @@ export default function TambahBeritaPage() {
                             {/* Hidden file input */}
                             <input
                                 type="file"
-                                accept="image/*"
+                                accept="image/jpeg,image/png,image/webp"
                                 ref={fileInputRef}
                                 onChange={handleImageChange}
                                 className="hidden"
@@ -388,7 +495,7 @@ export default function TambahBeritaPage() {
                                 </span>
                             </div>
                             <p className="text-[11px] text-slate-400 mb-3 leading-relaxed">
-                                Format disarankan: JPG, WebP rasio 16:9 beresolusi minimal 1280×720 px.
+                                Format disarankan: JPG, PNG, atau WebP rasio 16:9 beresolusi minimal 1280×720 px.
                             </p>
 
                             {/* Image Preview OR Upload Placeholder */}
@@ -590,9 +697,8 @@ export default function TambahBeritaPage() {
                             ref={editorRef}
                             onInput={updateWordCount}
                             onClick={handleEditorClick}
-                            className="px-5 py-5 min-h-[320px] bg-[#f8fafc] text-sm leading-relaxed text-slate-700 editor-content [&_a]:text-blue-600 [&_a]:underline [&_a]:cursor-pointer hover:[&_a]:text-blue-800"
-                            // eslint-disable-next-line react/no-danger
-                            dangerouslySetInnerHTML={{ __html: DUMMY_NARASI }}
+                            data-placeholder="Tulis naskah berita lengkap di sini..."
+                            className="px-5 py-5 min-h-[320px] bg-[#f8fafc] text-sm leading-relaxed text-slate-700 editor-content [&_a]:text-blue-600 [&_a]:underline [&_a]:cursor-pointer hover:[&_a]:text-blue-800 empty:before:content-[attr(data-placeholder)] empty:before:text-slate-300 empty:before:pointer-events-none"
                             suppressContentEditableWarning
                             contentEditable
                             style={{ outline: 'none' }}
@@ -612,45 +718,45 @@ export default function TambahBeritaPage() {
 
                     {/* A. Jadwal Publikasi Publik */}
                     {currentUserRole !== 'REPORTER' && (
-                    <Card>
-                        <div className="p-4">
-                            <div className="flex items-center gap-2 mb-3.5">
-                                <Clock3 size={14} className="text-[#159447]" />
-                                <span className="text-xs font-bold text-[#172135]">Jadwal Publikasi Publik</span>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-[11px] font-semibold text-slate-500 mb-1.5">
-                                        Tanggal
-                                    </label>
-                                    <input
-                                        type="date"
-                                        value={publishDate}
-                                        max={nowWib?.date}
-                                        onChange={(e) => handlePublishDateChange(e.target.value)}
-                                        className="w-full bg-[#f8fafc] border border-slate-200/80 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] transition-all cursor-pointer"
-                                    />
+                        <Card>
+                            <div className="p-4">
+                                <div className="flex items-center gap-2 mb-3.5">
+                                    <Clock3 size={14} className="text-[#159447]" />
+                                    <span className="text-xs font-bold text-[#172135]">Jadwal Publikasi Publik</span>
                                 </div>
-                                <div>
-                                    <label className="block text-[11px] font-semibold text-slate-500 mb-1.5">
-                                        Waktu (WIB)
-                                    </label>
-                                    <input
-                                        type="time"
-                                        value={publishTime}
-                                        max={nowWib && publishDate === nowWib.date ? nowWib.time : undefined}
-                                        onChange={(e) => handlePublishTimeChange(e.target.value)}
-                                        className="w-full bg-[#f8fafc] border border-slate-200/80 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] transition-all cursor-pointer"
-                                    />
-                                </div>
-                            </div>
 
-                            <p className="text-[11px] text-slate-400 mt-3 leading-relaxed">
-                                Berita akan muncul langsung di feeds aplikasi warga dan portal utama sesuai jadwal. Tanggal & waktu tidak boleh melebihi waktu saat ini.
-                            </p>
-                        </div>
-                    </Card>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-[11px] font-semibold text-slate-500 mb-1.5">
+                                            Tanggal
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={publishDate}
+                                            max={nowWib?.date}
+                                            onChange={(e) => handlePublishDateChange(e.target.value)}
+                                            className="w-full bg-[#f8fafc] border border-slate-200/80 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] transition-all cursor-pointer"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[11px] font-semibold text-slate-500 mb-1.5">
+                                            Waktu (WIB)
+                                        </label>
+                                        <input
+                                            type="time"
+                                            value={publishTime}
+                                            max={nowWib && publishDate === nowWib.date ? nowWib.time : undefined}
+                                            onChange={(e) => handlePublishTimeChange(e.target.value)}
+                                            className="w-full bg-[#f8fafc] border border-slate-200/80 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] transition-all cursor-pointer"
+                                        />
+                                    </div>
+                                </div>
+
+                                <p className="text-[11px] text-slate-400 mt-3 leading-relaxed">
+                                    Berita akan muncul langsung di feeds aplikasi warga dan portal utama sesuai jadwal. Tanggal & waktu tidak boleh melebihi waktu saat ini.
+                                </p>
+                            </div>
+                        </Card>
                     )}
 
                     {/* B. Jurnalis / Reporter */}
@@ -779,30 +885,59 @@ export default function TambahBeritaPage() {
 
                     {/* D. Action Buttons */}
                     <div className="space-y-2.5">
-                        {/* Terbitkan */}
+                        {/* Tombol Utama: Terbitkan Berita / Kirim Draf untuk Review */}
                         <button
                             type="button"
-                            // TODO: Jika role REPORTER, paksa payload status menjadi 'Menunggu Review' atau 'Draft' saat disubmit.
-                            onClick={() => {}}
-                            className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 bg-[#159447] hover:bg-[#12803d] active:scale-[0.99] text-white text-sm font-bold rounded-xl transition-all shadow-sm cursor-pointer"
+                            disabled={submittingAction !== null}
+                            onClick={() =>
+                                handleSubmit(
+                                    currentUserRole === 'REPORTER' ? 'SUBMIT' : 'PUBLISH'
+                                )
+                            }
+                            className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 bg-[#159447] hover:bg-[#12803d] active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-all shadow-sm cursor-pointer"
                             style={{ backgroundColor: '#159447' }}
                         >
-                            <Send size={16} />
-                            {currentUserRole === 'REPORTER' ? 'Kirim Draf untuk Review' : 'Terbitkan Berita'}
+                            {submittingAction === 'PUBLISH' || submittingAction === 'SUBMIT' ? (
+                                <>
+                                    <Loader2 size={16} className="animate-spin" />
+                                    <span>Memproses...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Send size={16} />
+                                    <span>
+                                        {currentUserRole === 'REPORTER'
+                                            ? 'Kirim Draf untuk Review'
+                                            : 'Terbitkan Berita'}
+                                    </span>
+                                </>
+                            )}
                         </button>
 
                         {/* Secondary */}
                         <div className="grid grid-cols-2 gap-2.5">
                             <button
                                 type="button"
-                                className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#f8fafc] border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-600 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                                disabled={submittingAction !== null}
+                                onClick={() => handleSubmit('DRAFT')}
+                                className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#f8fafc] border border-slate-200 hover:bg-slate-100 hover:border-slate-300 disabled:opacity-60 disabled:cursor-not-allowed text-slate-600 text-xs font-semibold rounded-xl transition-all cursor-pointer"
                             >
-                                <Save size={14} />
-                                Simpan Draf
+                                {submittingAction === 'DRAFT' ? (
+                                    <>
+                                        <Loader2 size={14} className="animate-spin" />
+                                        <span>Menyimpan...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save size={14} />
+                                        <span>Simpan Draf</span>
+                                    </>
+                                )}
                             </button>
                             <button
                                 type="button"
-                                className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#f8fafc] border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-600 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                                disabled={submittingAction !== null}
+                                className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#f8fafc] border border-slate-200 hover:bg-slate-100 hover:border-slate-300 disabled:opacity-60 text-slate-600 text-xs font-semibold rounded-xl transition-all cursor-pointer"
                             >
                                 <Eye size={14} />
                                 Pratinjau
