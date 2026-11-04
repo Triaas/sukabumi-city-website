@@ -26,7 +26,7 @@ export default async function ArticlePage({
   }
 
   // Ekstrak nama reporter dari konten HTML dan bersihkan dari artikel
-  let reporterName = 'Diskominfo Kota Sukabumi';
+  let reporterName = article.author || 'Diskominfo Kota Sukabumi';
   let cleanContent = article.content;
 
   const reporterRegex = /(?:Reporter|Penulis)\s*:\s*([A-Za-z\s'.,]+)/i;
@@ -79,7 +79,7 @@ export default async function ArticlePage({
                     <Calendar size={16} /> {article.date}
                   </span>
                   <span className="inline-flex items-center gap-1.5">
-                    <User size={16} /> Diskominfo Kota Sukabumi
+                    <User size={16} /> {article.author}
                   </span>
                 </div>
 
@@ -88,11 +88,11 @@ export default async function ArticlePage({
 
               {/* Featured Image */}
               <figure className="mb-10 w-full">
-                <div className="relative w-full rounded-xl bg-slate-100 flex items-center justify-center overflow-hidden shadow-sm mb-3 border border-slate-200">
+                <div className="relative w-full rounded-xl overflow-hidden shadow-sm mb-3 border border-slate-200 bg-slate-100 flex items-center justify-center">
                   {article.image ? (
                     <FallbackImage
                       src={article.image}
-                      alt={article.title}
+                      alt={article.caption || article.title}
                       className="w-full h-auto max-h-[650px] object-contain"
                     />
                   ) : (
@@ -101,7 +101,19 @@ export default async function ArticlePage({
                       <span className="mt-2 text-sm">Tidak ada gambar sampul</span>
                     </div>
                   )}
+
+                  {article.sourceCredit && (
+                    <span className="absolute bottom-3 right-3 rounded-md bg-black/70 px-2.5 py-1 text-[11px] font-medium tracking-wide text-white backdrop-blur-xs">
+                      {article.sourceCredit}
+                    </span>
+                  )}
                 </div>
+
+                {article.caption && (
+                  <figcaption className="text-center text-xs md:text-sm text-slate-500 leading-relaxed">
+                    {article.caption}
+                  </figcaption>
+                )}
               </figure>
 
               {/* Content Typography dengan dangerouslySetInnerHTML */}
