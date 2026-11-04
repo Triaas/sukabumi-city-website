@@ -1,4 +1,5 @@
 import { Pool } from 'pg';
+import type { BeritaPublic, BeritaDetailPublic } from './types/berita';
 
 const pool = new Pool({
   host: process.env.DB_HOST || 'localhost',
@@ -11,10 +12,90 @@ const pool = new Pool({
 
 export default pool;
 
+/**
+ * Helper normalisasi URL gambar (menghapus domain lama portal.sukabumikota.go.id
+ * agar menggunakan path relatif yang seragam).
+ */
+function normalizeImageUrl(rawUrl: string | null | undefined): string | undefined {
+  if (!rawUrl) return undefined;
+  return rawUrl
+    .replace('https://portal.sukabumikota.go.id', '')
+    .replace('http://portal.sukabumikota.go.id', '');
+}
+
+/**
+ * Helper format tanggal ke Bahasa Indonesia (contoh: "24 Oktober 2026").
+ */
+function formatIndoDate(dateInput: Date | string): string {
+  return new Date(dateInput).toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+/**
+ * Helper pembersihan daftar kategori (membuang kategori generik 'berita kota').
+ */
+function extractCategoryList(rawCategory: string | null | undefined): string[] {
+  if (!rawCategory) return [];
+  return rawCategory
+    .split(',')
+    .map((c: string) => c.trim())
+    .filter((c: string) => c.toLowerCase() !== 'berita kota' && c.length > 0);
+}
+
 // 1. Ambil Detail Berita Berdasarkan Slug
-export async function getNewsBySlug(slug: string) {
+//    Alur: Cari di tabel mandiri `public.berita` terlebih dahulu;
+//          jika tidak ditemukan (atau tabel belum dimigrasikan), fallback ke `wp_posts`.
+export async function getNewsBySlug(slug: string): Promise<BeritaDetailPublic | null> {
+  // Tahap A: Coba ambil dari tabel baru `public.berita`
   try {
-    const query = `
+    const nativeQuery = `
+      SELECT 
+        b.title::text AS title,
+        b.content::text AS content,
+        COALESCE(b.published_at, b.created_at) AS date,
+        b.image_url::text AS featured_image,
+        b.author_name::text AS author_name,
+        b.caption::text AS caption,
+        b.source_credit::text AS source_credit,
+        c.name::text AS category
+      FROM public.berita b
+      LEFT JOIN public.categories c ON b.category_id = c.id
+      WHERE b.slug = $1
+        AND b.status = 'PUBLISHED'
+        AND (b.published_at IS NULL OR b.published_at <= NOW())
+      LIMIT 1
+    `;
+
+    const { rows: nativeRows } = await pool.query(nativeQuery, [slug]);
+
+    if (nativeRows.length > 0) {
+      const news = nativeRows[0];
+      const categories = extractCategoryList(news.category);
+
+      return {
+        title: news.title,
+        content: news.content,
+        date: formatIndoDate(news.date),
+        image: normalizeImageUrl(news.featured_image),
+        author: news.author_name || 'Diskominfo Kota Sukabumi',
+        categories,
+        caption: news.caption || null,
+        sourceCredit: news.source_credit || null,
+      };
+    }
+  } catch (nativeError: any) {
+    // 42P01 = undefined_table (jika migrasi 001_create_berita_table.sql belum dijalankan di DB)
+    if (nativeError?.code !== '42P01') {
+      console.warn('Warning querying public.berita in getNewsBySlug, falling back to wp_posts:', nativeError?.message);
+    }
+  }
+
+  // Tahap B: Fallback ke arsip lama `wp_posts`
+  try {
+    const wpQuery = `
       SELECT 
         p.post_title AS title,
         p.post_content AS content,
@@ -34,37 +115,18 @@ export async function getNewsBySlug(slug: string) {
       LIMIT 1
     `;
 
-    const { rows } = await pool.query(query, [slug]);
+    const { rows } = await pool.query(wpQuery, [slug]);
 
     if (rows.length === 0) return null;
 
     const news = rows[0];
-
-    let imageUrl = news.featured_image || null;
-    if (imageUrl) {
-      imageUrl = imageUrl.replace('https://portal.sukabumikota.go.id', '');
-      imageUrl = imageUrl.replace('http://portal.sukabumikota.go.id', '');
-    }
-
-    const formattedDate = new Date(news.date).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-
-    let categories: string[] = [];
-    if (news.category) {
-      categories = news.category
-        .split(',')
-        .map((c: string) => c.trim())
-        .filter((c: string) => c.toLowerCase() !== 'berita kota' && c.length > 0);
-    }
+    const categories = extractCategoryList(news.category);
 
     return {
       title: news.title,
       content: news.content,
-      date: formattedDate,
-      image: imageUrl,
+      date: formatIndoDate(news.date),
+      image: normalizeImageUrl(news.featured_image),
       author: 'Diskominfo Kota Sukabumi',
       categories,
     };
@@ -74,10 +136,157 @@ export async function getNewsBySlug(slug: string) {
   }
 }
 
-// 2. Ambil Semua Berita (Untuk Halaman /berita)
-export async function getAllNews() {
+// 2. Ambil Semua Berita (Untuk Halaman /berita & Landing Page)
+//    Menggunakan UNION ALL antara tabel mandiri `public.berita` dan arsip `wp_posts`.
+export async function getAllNews(): Promise<BeritaPublic[]> {
+  // Query gabungan (UNION ALL):
+  // - Bagian 1: Berita baru dari `public.berita` yang berstatus 'PUBLISHED' dan sudah memasuki jadwal terbit.
+  // - Bagian 2: Arsip berita lama dari `wp_posts` yang berstatus 'publish'.
+  // Seluruh kolom di-CAST secara eksplisit ke tipe `text` dan `timestamptz` agar skema kedua sumber selaras.
+  const unionQuery = `
+    SELECT
+      title,
+      slug,
+      date,
+      featured_image,
+      category
+    FROM (
+      -- Sumber 1: Tabel mandiri baru (public.berita)
+      SELECT
+        b.title::text AS title,
+        b.slug::text AS slug,
+        COALESCE(b.published_at, b.created_at)::timestamptz AS date,
+        b.image_url::text AS featured_image,
+        COALESCE(c.name, 'Informasi')::text AS category
+      FROM public.berita b
+      LEFT JOIN public.categories c ON b.category_id = c.id
+      WHERE b.status = 'PUBLISHED'
+        AND (b.published_at IS NULL OR b.published_at <= NOW())
+
+      UNION ALL
+
+      -- Sumber 2: Tabel arsip lama WordPress (wp_posts)
+      SELECT
+        p.post_title::text AS title,
+        p.post_name::text AS slug,
+        p.post_date::timestamptz AS date,
+        (SELECT guid FROM wp_posts WHERE id::text = (
+            SELECT meta_value FROM wp_postmeta WHERE post_id = p.id AND meta_key = '_thumbnail_id' LIMIT 1
+        ) LIMIT 1)::text AS featured_image,
+        (SELECT STRING_AGG(t.name, ', ')
+         FROM wp_terms t
+         INNER JOIN wp_term_taxonomy tt ON t.term_id = tt.term_id
+         INNER JOIN wp_term_relationships tr ON tr.term_taxonomy_id = tt.term_taxonomy_id
+         WHERE tr.object_id = p.id AND tt.taxonomy = 'category')::text AS category
+      FROM wp_posts p
+      WHERE p.post_type = 'post'
+        AND p.post_status = 'publish'
+    ) combined_news
+    ORDER BY date DESC
+  `;
+
+  // Query fallback ke wp_posts saja apabila tabel public.berita belum dieksekusi di DB
+  const wpOnlyQuery = `
+    SELECT 
+      p.post_title AS title,
+      p.post_name AS slug,
+      p.post_date AS date,
+      (SELECT guid FROM wp_posts WHERE id::text = (
+          SELECT meta_value FROM wp_postmeta WHERE post_id = p.id AND meta_key = '_thumbnail_id' LIMIT 1
+      ) LIMIT 1) AS featured_image,
+      (SELECT STRING_AGG(t.name, ', ') 
+       FROM wp_terms t 
+       INNER JOIN wp_term_taxonomy tt ON t.term_id = tt.term_id 
+       INNER JOIN wp_term_relationships tr ON tr.term_taxonomy_id = tt.term_taxonomy_id 
+       WHERE tr.object_id = p.id AND tt.taxonomy = 'category') AS category
+    FROM wp_posts p
+    WHERE p.post_type = 'post' 
+      AND p.post_status = 'publish'
+    ORDER BY p.post_date DESC
+  `;
+
   try {
-    const query = `
+    let rows: any[] = [];
+    try {
+      const result = await pool.query(unionQuery);
+      rows = result.rows;
+    } catch (unionError: any) {
+      if (unionError?.code === '42P01') {
+        const fallbackResult = await pool.query(wpOnlyQuery);
+        rows = fallbackResult.rows;
+      } else {
+        throw unionError;
+      }
+    }
+
+    return rows.map((news: any): BeritaPublic => {
+      const filteredCategories = extractCategoryList(news.category);
+      const finalCategory =
+        filteredCategories.length > 0 ? filteredCategories.join(', ') : 'Informasi';
+
+      return {
+        title: news.title,
+        slug: news.slug,
+        category: finalCategory,
+        date: formatIndoDate(news.date),
+        image: normalizeImageUrl(news.featured_image),
+      };
+    });
+  } catch (error) {
+    console.error("Error fetching news list:", error);
+    return [];
+  }
+}
+
+// 3. Ambil Berita Terkait Berdasarkan Kategori
+export async function getRelatedNews(
+  category: string,
+  currentSlug: string,
+  limit: number = 4
+): Promise<BeritaPublic[]> {
+  // Gabungkan kandidat berita terkait dari public.berita dan wp_posts via UNION ALL
+  const unionRelatedQuery = `
+    SELECT * FROM (
+      -- Sumber 1: Tabel mandiri baru (public.berita)
+      SELECT
+        b.title::text AS title,
+        b.slug::text AS slug,
+        COALESCE(b.published_at, b.created_at)::timestamptz AS date,
+        b.image_url::text AS featured_image,
+        COALESCE(c.name, 'Informasi')::text AS category
+      FROM public.berita b
+      LEFT JOIN public.categories c ON b.category_id = c.id
+      WHERE b.status = 'PUBLISHED'
+        AND (b.published_at IS NULL OR b.published_at <= NOW())
+        AND b.slug != $1
+
+      UNION ALL
+
+      -- Sumber 2: Tabel arsip lama WordPress (wp_posts)
+      SELECT 
+        p.post_title::text AS title,
+        p.post_name::text AS slug,
+        p.post_date::timestamptz AS date,
+        (SELECT guid FROM wp_posts WHERE id::text = (
+            SELECT meta_value FROM wp_postmeta WHERE post_id = p.id AND meta_key = '_thumbnail_id' LIMIT 1
+        ) LIMIT 1)::text AS featured_image,
+        (SELECT STRING_AGG(t.name, ', ') 
+         FROM wp_terms t 
+         INNER JOIN wp_term_taxonomy tt ON t.term_id = tt.term_id 
+         INNER JOIN wp_term_relationships tr ON tr.term_taxonomy_id = tt.term_taxonomy_id 
+         WHERE tr.object_id = p.id AND tt.taxonomy = 'category')::text AS category
+      FROM wp_posts p
+      WHERE p.post_type = 'post' 
+        AND p.post_status = 'publish'
+        AND p.post_name != $1
+    ) sub
+    WHERE sub.category ILIKE $2
+    ORDER BY sub.date DESC
+    LIMIT $3
+  `;
+
+  const wpOnlyRelatedQuery = `
+    SELECT * FROM (
       SELECT 
         p.post_title AS title,
         p.post_name AS slug,
@@ -93,102 +302,38 @@ export async function getAllNews() {
       FROM wp_posts p
       WHERE p.post_type = 'post' 
         AND p.post_status = 'publish'
-      ORDER BY p.post_date DESC
-    `;
+        AND p.post_name != $1
+    ) sub
+    WHERE sub.category ILIKE $2
+    ORDER BY sub.date DESC
+    LIMIT $3
+  `;
 
-    const { rows } = await pool.query(query);
-
-    return rows.map((news: any) => {
-      let imageUrl = news.featured_image || null;
-      if (imageUrl) {
-        imageUrl = imageUrl.replace('https://portal.sukabumikota.go.id', '');
-        imageUrl = imageUrl.replace('http://portal.sukabumikota.go.id', '');
-      }
-
-      let finalCategory = 'Informasi';
-      if (news.category) {
-        const categoryArray = news.category.split(',').map((cat: string) => cat.trim());
-        const filteredCategories = categoryArray.filter((cat: string) => cat.toLowerCase() !== 'berita kota');
-
-        if (filteredCategories.length > 0) {
-          finalCategory = filteredCategories.join(', ');
-        }
-      }
-
-      return {
-        title: news.title,
-        slug: news.slug,
-        category: finalCategory,
-        date: new Date(news.date).toLocaleDateString('id-ID', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        }),
-        image: imageUrl
-      };
-    });
-  } catch (error) {
-    console.error("Error fetching news list:", error);
-    return [];
-  }
-}
-
-// 3. Ambil Berita Terkait Berdasarkan Kategori
-export async function getRelatedNews(category: string, currentSlug: string, limit: number = 4) {
   try {
-    const query = `
-      SELECT * FROM (
-        SELECT 
-          p.post_title AS title,
-          p.post_name AS slug,
-          p.post_date AS date,
-          (SELECT guid FROM wp_posts WHERE id::text = (
-              SELECT meta_value FROM wp_postmeta WHERE post_id = p.id AND meta_key = '_thumbnail_id' LIMIT 1
-          ) LIMIT 1) AS featured_image,
-          (SELECT STRING_AGG(t.name, ', ') 
-           FROM wp_terms t 
-           INNER JOIN wp_term_taxonomy tt ON t.term_id = tt.term_id 
-           INNER JOIN wp_term_relationships tr ON tr.term_taxonomy_id = tt.term_taxonomy_id 
-           WHERE tr.object_id = p.id AND tt.taxonomy = 'category') AS category
-        FROM wp_posts p
-        WHERE p.post_type = 'post' 
-          AND p.post_status = 'publish'
-          AND p.post_name != $1
-      ) sub
-      WHERE sub.category ILIKE $2
-      ORDER BY sub.date DESC
-      LIMIT $3
-    `;
-
-    const { rows } = await pool.query(query, [currentSlug, `%${category}%`, limit]);
-
-    return rows.map((news: any) => {
-      let imageUrl = news.featured_image || null;
-      if (imageUrl) {
-        imageUrl = imageUrl.replace('https://portal.sukabumikota.go.id', '');
-        imageUrl = imageUrl.replace('http://portal.sukabumikota.go.id', '');
+    let rows: any[] = [];
+    try {
+      const result = await pool.query(unionRelatedQuery, [currentSlug, `%${category}%`, limit]);
+      rows = result.rows;
+    } catch (unionError: any) {
+      if (unionError?.code === '42P01') {
+        const fallbackResult = await pool.query(wpOnlyRelatedQuery, [currentSlug, `%${category}%`, limit]);
+        rows = fallbackResult.rows;
+      } else {
+        throw unionError;
       }
+    }
 
-      let finalCategory = 'Informasi';
-      if (news.category) {
-        const categoryArray = news.category.split(',').map((cat: string) => cat.trim());
-        const filteredCategories = categoryArray.filter((cat: string) => cat.toLowerCase() !== 'berita kota');
-
-        if (filteredCategories.length > 0) {
-          finalCategory = filteredCategories.join(', ');
-        }
-      }
+    return rows.map((news: any): BeritaPublic => {
+      const filteredCategories = extractCategoryList(news.category);
+      const finalCategory =
+        filteredCategories.length > 0 ? filteredCategories.join(', ') : 'Informasi';
 
       return {
         title: news.title,
         slug: news.slug,
         category: finalCategory,
-        date: new Date(news.date).toLocaleDateString('id-ID', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        }),
-        image: imageUrl
+        date: formatIndoDate(news.date),
+        image: normalizeImageUrl(news.featured_image),
       };
     });
   } catch (error) {
