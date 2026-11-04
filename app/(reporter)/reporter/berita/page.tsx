@@ -20,6 +20,7 @@ import {
 } from '@/lib/types/berita'
 import { CATEGORY_FILTER_OPTIONS } from '@/lib/constants/categories'
 import { unsubmitNewsAction } from '@/app/(admin)/admin/berita/actions'
+import DeleteNewsButton from '@/components/DeleteNewsButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -345,22 +346,12 @@ export default async function ReporterBeritaPage({
                                                     )}
 
                                                     {/* 3. Tong Sampah (Hapus): Aktif HANYA jika status === 'DRAFT' */}
-                                                    <button
-                                                        type="button"
+                                                    <DeleteNewsButton
+                                                        id={row.id}
+                                                        title={row.title}
                                                         disabled={!isDraft}
-                                                        title={
-                                                            isDraft
-                                                                ? 'Hapus Draf'
-                                                                : 'Hanya naskah berstatus Draf yang dapat dihapus'
-                                                        }
-                                                        className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-colors ${
-                                                            isDraft
-                                                                ? 'border-slate-200 bg-white text-slate-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200 cursor-pointer'
-                                                                : 'border-slate-200 bg-slate-50 text-slate-300 opacity-60 cursor-not-allowed'
-                                                        }`}
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </button>
+                                                        disabledTitle="Hanya naskah berstatus Draf yang dapat dihapus"
+                                                    />
 
                                                     {/* 4. Unsubmit (Tarik Naskah): HANYA muncul jika status === 'SUBMITTED' */}
                                                     {isSubmitted && (

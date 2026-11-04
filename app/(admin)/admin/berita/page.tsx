@@ -20,6 +20,7 @@ import {
 } from '@/lib/types/berita'
 import { CATEGORY_FILTER_OPTIONS } from '@/lib/constants/categories'
 import { unpublishNewsAction } from './actions'
+import DeleteNewsButton from '@/components/DeleteNewsButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -375,13 +376,10 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                                                     </Link>
 
                                                     {/* 3. Tong Sampah (Hapus): SELALU AKTIF di semua status */}
-                                                    <button
-                                                        type="button"
-                                                        title="Hapus Berita"
-                                                        className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-red-600 hover:border-red-200 hover:bg-red-50 flex items-center justify-center transition-colors cursor-pointer"
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </button>
+                                                    <DeleteNewsButton
+                                                        id={row.id}
+                                                        title={row.title}
+                                                    />
 
                                                     {/* 4. Unpublish (Turunkan Tayang): HANYA muncul jika status === 'PUBLISHED' */}
                                                     {isPublished && (

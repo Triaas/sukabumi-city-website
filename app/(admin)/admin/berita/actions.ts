@@ -377,4 +377,38 @@ export async function unpublishNewsAction(id: number | string): Promise<{
   }
 }
 
+/**
+ * Server Action untuk menghapus berita secara permanen dari database (`public.berita`).
+ */
+export async function deleteNewsAction(id: number | string): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    const numericId = Number(id);
+    if (!Number.isFinite(numericId)) {
+      return { success: false, error: 'ID berita tidak valid.' };
+    }
+
+    await pool.query('DELETE FROM public.berita WHERE id = $1', [numericId]);
+
+    revalidatePath('/admin/berita');
+    revalidatePath('/reporter/berita');
+    revalidatePath('/berita');
+    revalidatePath('/');
+
+    return { success: true };
+  } catch (error: unknown) {
+    console.error('Error in deleteNewsAction:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Gagal menghapus berita dari database.',
+    };
+  }
+}
+
+
 
