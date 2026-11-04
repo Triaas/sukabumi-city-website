@@ -21,6 +21,7 @@ import {
 import { CATEGORY_FILTER_OPTIONS } from '@/lib/constants/categories'
 import { unpublishNewsAction } from './actions'
 import DeleteNewsButton from '@/components/DeleteNewsButton'
+import BeritaFilterBar from '@/components/BeritaFilterBar'
 
 export const dynamic = 'force-dynamic'
 
@@ -152,73 +153,15 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                 </div>
             </div>
 
-            {/* 3. CARD PENCARIAN & FILTER */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5">
-                <form
-                    method="GET"
-                    action="/admin/berita"
-                    className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3"
-                >
-                    {/* Input Search */}
-                    <div className="relative flex-1 min-w-[240px]">
-                        <Search
-                            size={16}
-                            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-                        />
-                        <input
-                            type="text"
-                            name="q"
-                            defaultValue={searchQuery}
-                            placeholder="Cari judul berita atau nama penulis..."
-                            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 bg-white text-[#172135] placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] transition-all"
-                        />
-                    </div>
-
-                    {/* Grup Filter */}
-                    <div className="flex flex-wrap items-center gap-2 shrink-0">
-                        <select
-                            name="category"
-                            defaultValue={selectedCategory}
-                            className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] cursor-pointer"
-                        >
-                            {CATEGORY_FILTER_OPTIONS.map((cat) => (
-                                <option key={cat} value={cat}>
-                                    {cat}
-                                </option>
-                            ))}
-                        </select>
-
-                        <select
-                            name="status"
-                            defaultValue={selectedStatus}
-                            className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] cursor-pointer"
-                        >
-                            <option value="ALL">Semua Status</option>
-                            <option value="PUBLISHED">Diterbitkan</option>
-                            <option value="SUBMITTED">Perlu Peninjauan</option>
-                            <option value="DRAFT">Draf</option>
-                        </select>
-
-                        <button
-                            type="submit"
-                            className="px-4 py-2 rounded-xl bg-[#159447] hover:bg-[#12803d] text-white text-xs font-semibold transition-colors cursor-pointer"
-                        >
-                            Terapkan
-                        </button>
-
-                        {(searchQuery ||
-                            selectedCategory !== 'Semua kategori' ||
-                            selectedStatus !== 'ALL') && (
-                            <Link
-                                href="/admin/berita"
-                                className="px-3 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold transition-colors"
-                            >
-                                Reset
-                            </Link>
-                        )}
-                    </div>
-                </form>
-            </div>
+            {/* 3. CARD PENCARIAN & FILTER (DROPDOWN GAYA PENGUMUMAN) */}
+            <BeritaFilterBar
+                basePath="/admin/berita"
+                searchQuery={searchQuery}
+                selectedCategory={selectedCategory}
+                selectedStatus={selectedStatus}
+                role="ADMIN_BERITA"
+                placeholder="Cari judul berita atau nama penulis..."
+            />
 
             {/* 4. TABEL DATA BERITA */}
             <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
