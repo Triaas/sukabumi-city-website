@@ -3,6 +3,7 @@ import type {
   BeritaPublic,
   BeritaDetailPublic,
   BeritaAdminRow,
+  BeritaEditData,
   NewsStatus,
   UserRole,
 } from './types/berita';
@@ -541,4 +542,65 @@ export async function getAdminNewsList(options?: {
     return [];
   }
 }
+
+// 8. Ambil Data Tunggal Naskah Berdasarkan ID untuk Pre-fill Form Edit (public.berita)
+export async function getNewsById(id: number): Promise<BeritaEditData | null> {
+  if (!Number.isFinite(id)) return null;
+
+  try {
+    await ensureBeritaVisibilityColumns();
+
+    const query = `
+      SELECT
+        b.id,
+        b.title,
+        b.slug,
+        b.content,
+        b.category_id,
+        b.image_url,
+        b.caption,
+        b.source_credit,
+        b.author_name,
+        b.author_role,
+        b.status,
+        b.published_at,
+        COALESCE(c.name, '') AS category_name
+      FROM public.berita b
+      LEFT JOIN public.categories c ON b.category_id = c.id
+      WHERE b.id = $1
+      LIMIT 1
+    `;
+
+    const { rows } = await pool.query(query, [id]);
+    if (rows.length === 0) return null;
+
+    const row = rows[0];
+    const normalizedImg = normalizeImageUrl(row.image_url) ?? null;
+    const publishedIso = row.published_at
+      ? new Date(row.published_at).toISOString()
+      : null;
+
+    return {
+      id: Number(row.id),
+      title: row.title || '',
+      slug: row.slug || '',
+      content: row.content || '',
+      category_id: row.category_id ?? null,
+      category_name: row.category_name || '',
+      image_url: normalizedImg,
+      caption: row.caption || null,
+      source_credit: row.source_credit || null,
+      author_name: row.author_name || 'Diskominfo Kota Sukabumi',
+      author_role: (row.author_role as UserRole) || 'REPORTER',
+      status: (row.status as NewsStatus) || 'DRAFT',
+      published_at: publishedIso,
+    };
+  } catch (error: any) {
+    if (error?.code !== '42P01') {
+      console.error('Error fetching news by id:', error);
+    }
+    return null;
+  }
+}
+
 

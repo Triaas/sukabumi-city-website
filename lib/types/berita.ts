@@ -99,3 +99,22 @@ export interface BeritaAdminRow {
   created_at: string;
   updatedAt: string;
 }
+
+/**
+ * Struktur data naskah tunggal untuk pre-fill form Edit Berita.
+ */
+export interface BeritaEditData {
+  id: number;
+  title: string;
+  slug: string;
+  content: string;
+  category_id: number | null;
+  category_name: string;
+  image_url: string | null;
+  caption: string | null;
+  source_credit: string | null;
+  author_name: string;
+  author_role: UserRole;
+  status: NewsStatus;
+  published_at: string | null;
+}

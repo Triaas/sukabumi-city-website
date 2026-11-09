@@ -410,5 +410,172 @@ export async function deleteNewsAction(id: number | string): Promise<{
   }
 }
 
+/**
+ * Server Action untuk memperbarui berita eksisting di tabel `public.berita`.
+ * CATATAN PENTING: Kolom `author_name` dan `author_role` bersifat immutable (tidak boleh diubah saat UPDATE).
+ */
+export async function updateBeritaAction(
+  id: number,
+  formData: FormData
+): Promise<CreateBeritaResult> {
+  try {
+    const numericId = Number(id);
+    if (!Number.isFinite(numericId)) {
+      return {
+        success: false,
+        error: 'ID berita tidak valid.',
+      };
+    }
+
+    const title = ((formData.get('title') as string) || '').trim();
+    const content = ((formData.get('content') as string) || '').trim();
+    const rawCategory = (formData.get('category_id') as string) || '';
+    const caption = ((formData.get('caption') as string) || '').trim() || null;
+    const sourceCredit =
+      ((formData.get('source_credit') as string) || '').trim() || null;
+    const actionType = ((formData.get('action_type') as BeritaActionType) ||
+      'DRAFT') as BeritaActionType;
+    const userRole = ((formData.get('user_role') as UserRole) ||
+      'REPORTER') as UserRole;
+    const imageEntry = formData.get('image');
+    const existingImageUrlRaw = (formData.get('existing_image_url') as string) || '';
+
+    if (!title) {
+      return {
+        success: false,
+        error: 'Judul berita wajib diisi.',
+      };
+    }
+
+    await ensureBeritaVisibilityColumns();
+
+    // Ambil data naskah saat ini untuk pengecekan status dan gambar eksisting
+    const currentCheck = await pool.query(
+      'SELECT slug, status, image_url FROM public.berita WHERE id = $1 LIMIT 1',
+      [numericId]
+    );
+
+    if ((currentCheck.rowCount ?? 0) === 0) {
+      return {
+        success: false,
+        error: 'Data berita tidak ditemukan di database.',
+      };
+    }
+
+    const currentRow = currentCheck.rows[0];
+    const currentSlug = currentRow.slug as string;
+    const currentStatus = (currentRow.status as NewsStatus) || 'DRAFT';
+
+    // Reporter hanya diizinkan mengedit jika naskah masih berstatus DRAFT
+    if (userRole === 'REPORTER' && currentStatus !== 'DRAFT') {
+      return {
+        success: false,
+        error: 'Hanya naskah berstatus Draf yang dapat diedit oleh Reporter.',
+      };
+    }
+
+    const plainTextContent = content.replace(/<[^>]*>/g, '').trim();
+    if (actionType !== 'DRAFT' && !plainTextContent) {
+      return {
+        success: false,
+        error: 'Naskah narasi berita wajib diisi sebelum dikirim atau diterbitkan.',
+      };
+    }
+
+    // Penanganan gambar (File fisik baru atau mempertahankan URL gambar eksisting)
+    let imageUrl: string | null = null;
+    if (imageEntry instanceof File && imageEntry.size > 0) {
+      imageUrl = await saveBeritaImage(imageEntry);
+    } else if (typeof imageEntry === 'string' && imageEntry.trim().length > 0) {
+      imageUrl = imageEntry.trim();
+    } else if (existingImageUrlRaw.trim().length > 0) {
+      imageUrl = existingImageUrlRaw.trim();
+    }
+
+    if (actionType !== 'DRAFT' && !imageUrl) {
+      return {
+        success: false,
+        error: 'Gambar utama berita wajib diunggah sebelum dikirim atau diterbitkan.',
+      };
+    }
+
+    const categoryId = await resolveCategoryId(rawCategory);
+
+    // Aturan Status:
+    // - Jika Admin/Super Admin menekan PUBLISH: status = 'PUBLISHED', was_published = TRUE, published_at = COALESCE(published_at, NOW())
+    // - Jika Reporter menekan SUBMIT: status = 'SUBMITTED'
+    // - Jika Reporter menyimpan edit (DRAFT): status tetap 'DRAFT'
+    // - Jika Admin menyimpan draf (DRAFT): status = 'DRAFT'
+    let status: NewsStatus = 'DRAFT';
+    let isPublishingNow = false;
+
+    if (
+      (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN_BERITA') &&
+      actionType === 'PUBLISH'
+    ) {
+      status = 'PUBLISHED';
+      isPublishingNow = true;
+    } else if (userRole === 'REPORTER') {
+      status = actionType === 'SUBMIT' ? 'SUBMITTED' : 'DRAFT';
+      isPublishingNow = false;
+    } else {
+      status = 'DRAFT';
+      isPublishingNow = false;
+    }
+
+    // Query UPDATE TIDAK mengubah author_name dan author_role
+    const updateQuery = `
+      UPDATE public.berita
+      SET
+        title = $2,
+        content = $3,
+        image_url = $4,
+        caption = $5,
+        source_credit = $6,
+        category_id = $7,
+        status = $8,
+        was_published = CASE WHEN $9::boolean THEN TRUE ELSE COALESCE(was_published, FALSE) END,
+        published_at = CASE WHEN $9::boolean THEN COALESCE(published_at, NOW()) ELSE published_at END,
+        updated_at = NOW()
+      WHERE id = $1
+      RETURNING slug
+    `;
+
+    const updated = await pool.query(updateQuery, [
+      numericId,
+      title,
+      content,
+      imageUrl,
+      caption,
+      sourceCredit,
+      categoryId,
+      status,
+      isPublishingNow,
+    ]);
+
+    const finalSlug = (updated.rows[0]?.slug as string) || currentSlug;
+
+    revalidatePath('/berita');
+    revalidatePath(`/berita/${finalSlug}`);
+    revalidatePath('/');
+    revalidatePath('/admin/berita');
+    revalidatePath('/reporter/berita');
+
+    return {
+      success: true,
+      slug: finalSlug,
+    };
+  } catch (error: any) {
+    console.error('Error in updateBeritaAction:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Terjadi kesalahan saat memperbarui berita di database.',
+    };
+  }
+}
+
 
 
