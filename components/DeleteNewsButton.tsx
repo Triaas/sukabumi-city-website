@@ -81,13 +81,13 @@ export default function DeleteNewsButton({
                             </h3>
 
                             {/* Pesan Keterangan */}
-                            <p className="mb-3 text-sm text-[#66758a]">
+                            <p className="mb-3 text-sm text-[#66758a] whitespace-normal">
                                 Apakah yakin ingin menghapus berita ini?
                             </p>
 
                             {/* Preview Singkat Judul Berita */}
                             {title && (
-                                <p className="mb-6 text-xs text-slate-600 font-medium bg-slate-50 border border-slate-200/80 rounded-lg px-3 py-2 line-clamp-2 w-full text-center">
+                                <p className="mb-6 text-xs text-slate-600 font-medium bg-slate-50 border border-slate-200/80 rounded-lg px-3 py-2 line-clamp-2 w-full text-center whitespace-normal">
                                     &ldquo;{title}&rdquo;
                                 </p>
                             )}

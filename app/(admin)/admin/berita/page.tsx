@@ -5,7 +5,6 @@ import {
     Eye,
     Pencil,
     Trash2,
-    Undo2,
     Image as ImageIcon,
     FileText,
     Clock,
@@ -19,8 +18,8 @@ import {
     type NewsStatus,
 } from '@/lib/types/berita'
 import { CATEGORY_FILTER_OPTIONS } from '@/lib/constants/categories'
-import { unpublishNewsAction } from './actions'
 import DeleteNewsButton from '@/components/DeleteNewsButton'
+import UnsubmitNewsButton from '@/components/UnsubmitNewsButton'
 import BeritaFilterBar from '@/components/BeritaFilterBar'
 import BeritaNotification from '@/components/BeritaNotification'
 
@@ -351,21 +350,11 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
 
                                                     {/* 4. Unpublish (Turunkan Tayang): HANYA muncul jika status === 'PUBLISHED' */}
                                                     {isPublished && (
-                                                        <form
-                                                            action={async () => {
-                                                                'use server'
-                                                                await unpublishNewsAction(row.id)
-                                                            }}
-                                                            className="inline-flex"
-                                                        >
-                                                            <button
-                                                                type="submit"
-                                                                title="Turunkan Tayang ke Draf (Unpublish)"
-                                                                className="w-7 h-7 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-300 flex items-center justify-center transition-colors cursor-pointer"
-                                                            >
-                                                                <Undo2 size={14} />
-                                                            </button>
-                                                        </form>
+                                                        <UnsubmitNewsButton
+                                                            id={row.id}
+                                                            title={row.title}
+                                                            mode="UNPUBLISH"
+                                                        />
                                                     )}
                                                 </div>
                                             </td>
