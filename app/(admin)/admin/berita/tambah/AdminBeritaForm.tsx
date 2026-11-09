@@ -1051,7 +1051,7 @@ export default function AdminBeritaForm({
                                             : isEditMode
                                               ? currentStatus === 'PUBLISHED'
                                                   ? 'Simpan & Perbarui Tayangan'
-                                                  : 'Setujui & Terbitkan Berita'
+                                                  : 'Terbitkan Berita'
                                               : 'Terbitkan Berita'}
                                     </span>
                                 </>

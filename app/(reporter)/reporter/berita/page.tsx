@@ -66,6 +66,7 @@ export default async function ReporterBeritaPage({
 
     const allRows: BeritaAdminRow[] = await getAdminNewsList({
         role: 'REPORTER',
+        authorName: 'Budi Santoso',
     })
 
     const filteredRows = allRows.filter((row) => {
@@ -84,8 +85,9 @@ export default async function ReporterBeritaPage({
     })
 
     const totalNaskah = allRows.length
-    const totalSubmitted = allRows.filter((b) => b.status === 'SUBMITTED').length
     const totalPublished = allRows.filter((b) => b.status === 'PUBLISHED').length
+    const totalSubmitted = allRows.filter((b) => b.status === 'SUBMITTED').length
+    const totalDraft = allRows.filter((b) => b.status === 'DRAFT').length
 
     return (
         <div className="w-full space-y-6 pb-10">
@@ -111,7 +113,7 @@ export default async function ReporterBeritaPage({
             </div>
 
             {/* 2. MINI STATS */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-white rounded-2xl border border-slate-200 p-4 flex items-center gap-4 shadow-sm">
                     <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                         <FileText size={20} />
@@ -119,6 +121,15 @@ export default async function ReporterBeritaPage({
                     <div>
                         <p className="text-xs font-semibold text-slate-500">Total Naskah</p>
                         <p className="text-xl font-bold text-[#172135]">{totalNaskah}</p>
+                    </div>
+                </div>
+                <div className="bg-white rounded-2xl border border-slate-200 p-4 flex items-center gap-4 shadow-sm">
+                    <div className="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center shrink-0">
+                        <CheckCircle2 size={20} />
+                    </div>
+                    <div>
+                        <p className="text-xs font-semibold text-slate-500">Diterbitkan</p>
+                        <p className="text-xl font-bold text-[#172135]">{totalPublished}</p>
                     </div>
                 </div>
                 <div className="bg-white rounded-2xl border border-slate-200 p-4 flex items-center gap-4 shadow-sm">
@@ -131,12 +142,12 @@ export default async function ReporterBeritaPage({
                     </div>
                 </div>
                 <div className="bg-white rounded-2xl border border-slate-200 p-4 flex items-center gap-4 shadow-sm">
-                    <div className="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center shrink-0">
-                        <CheckCircle2 size={20} />
+                    <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                        <Pencil size={20} />
                     </div>
                     <div>
-                        <p className="text-xs font-semibold text-slate-500">Diterbitkan</p>
-                        <p className="text-xl font-bold text-[#172135]">{totalPublished}</p>
+                        <p className="text-xs font-semibold text-slate-500">Draf</p>
+                        <p className="text-xl font-bold text-[#172135]">{totalDraft}</p>
                     </div>
                 </div>
             </div>

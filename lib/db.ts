@@ -452,8 +452,10 @@ export async function getAdminNewsList(options?: {
 
     if (isReporter) {
       if (hasAuthorFilter) {
-        whereClause = 'WHERE b.author_name = $1';
+        whereClause = `WHERE b.author_role = 'REPORTER' AND b.author_name = $1`;
         params.push(options!.authorName!.trim());
+      } else {
+        whereClause = `WHERE b.author_role = 'REPORTER'`;
       }
     } else {
       // Role Admin / Super Admin:

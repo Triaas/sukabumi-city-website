@@ -94,8 +94,9 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
     })
 
     const totalNaskah = allRows.length
-    const totalNeedReview = allRows.filter((r) => r.status === 'SUBMITTED').length
     const totalPublished = allRows.filter((r) => r.status === 'PUBLISHED').length
+    const totalNeedReview = allRows.filter((r) => r.status === 'SUBMITTED').length
+    const totalDraft = allRows.filter((r) => r.status === 'DRAFT').length
 
     return (
         <div className="w-full space-y-6 pb-10">
@@ -123,7 +124,7 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
             </div>
 
             {/* 2. RINGKASAN STATISTIK */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-white rounded-2xl border border-slate-200/80 p-4 flex items-center gap-4 shadow-xs">
                     <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                         <FileText size={20} />
@@ -131,6 +132,15 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                     <div>
                         <p className="text-xs font-semibold text-slate-500">Total Naskah</p>
                         <p className="text-xl font-bold text-[#172135]">{totalNaskah}</p>
+                    </div>
+                </div>
+                <div className="bg-white rounded-2xl border border-slate-200/80 p-4 flex items-center gap-4 shadow-xs">
+                    <div className="w-10 h-10 rounded-xl bg-green-50 text-[#159447] flex items-center justify-center shrink-0">
+                        <CheckCircle2 size={20} />
+                    </div>
+                    <div>
+                        <p className="text-xs font-semibold text-slate-500">Diterbitkan</p>
+                        <p className="text-xl font-bold text-[#172135]">{totalPublished}</p>
                     </div>
                 </div>
                 <div className="bg-white rounded-2xl border border-slate-200/80 p-4 flex items-center gap-4 shadow-xs">
@@ -143,12 +153,12 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                     </div>
                 </div>
                 <div className="bg-white rounded-2xl border border-slate-200/80 p-4 flex items-center gap-4 shadow-xs">
-                    <div className="w-10 h-10 rounded-xl bg-green-50 text-[#159447] flex items-center justify-center shrink-0">
-                        <CheckCircle2 size={20} />
+                    <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                        <Pencil size={20} />
                     </div>
                     <div>
-                        <p className="text-xs font-semibold text-slate-500">Diterbitkan</p>
-                        <p className="text-xl font-bold text-[#172135]">{totalPublished}</p>
+                        <p className="text-xs font-semibold text-slate-500">Draf</p>
+                        <p className="text-xl font-bold text-[#172135]">{totalDraft}</p>
                     </div>
                 </div>
             </div>
