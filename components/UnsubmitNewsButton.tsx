@@ -11,20 +11,25 @@ interface UnsubmitNewsButtonProps {
     id: number | string
     title: string
     mode: 'UNPUBLISH' | 'UNSUBMIT'
+    authorRole?: string
 }
 
 export default function UnsubmitNewsButton({
     id,
     title,
     mode,
+    authorRole,
 }: UnsubmitNewsButtonProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [isPending, startTransition] = useTransition()
 
     const isUnpublish = mode === 'UNPUBLISH'
+    const isReporterAuthored = authorRole === 'REPORTER'
 
     const buttonTooltip = isUnpublish
-        ? 'Turunkan Tayang ke Draf (Unpublish)'
+        ? isReporterAuthored
+            ? 'Turunkan Tayang ke Perlu Peninjauan (Unpublish)'
+            : 'Turunkan Tayang ke Draf (Unpublish)'
         : 'Tarik Naskah ke Draf (Unsubmit)'
 
     const modalTitle = isUnpublish
@@ -32,7 +37,9 @@ export default function UnsubmitNewsButton({
         : 'Konfirmasi Tarik Naskah'
 
     const modalMessage = isUnpublish
-        ? 'Apakah yakin ingin menurunkan berita ini kembali ke draf?'
+        ? isReporterAuthored
+            ? 'Apakah yakin ingin menurunkan berita ini kembali ke status Perlu Peninjauan?'
+            : 'Apakah yakin ingin menurunkan berita ini kembali ke draf?'
         : 'Apakah yakin ingin menarik naskah ini kembali ke draf?'
 
     const loadingText = isUnpublish ? 'Menurunkan...' : 'Menarik...'

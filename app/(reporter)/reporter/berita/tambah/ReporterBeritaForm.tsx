@@ -114,7 +114,7 @@ export default function ReporterBeritaForm({
 }: ReporterBeritaFormProps) {
     const router = useRouter()
     const isEditMode = Boolean(initialData)
-    const [activeId] = useState<number | null>(initialData?.id ?? null)
+    const [activeId, setActiveId] = useState<number | null>(initialData?.id ?? null)
 
     const [title, setTitle] = useState(initialData?.title ?? '')
 
@@ -378,25 +378,37 @@ export default function ReporterBeritaForm({
         const editorHtml = editorRef.current?.innerHTML?.trim() || ''
         const editorText = editorRef.current?.innerText?.trim() || ''
         const hasAnyImage = Boolean(imageFile || existingImageUrl)
+        const trimmedCaption = caption.trim()
+        const trimmedSourceCredit = sourceCredit.trim()
 
         if (!trimmedTitle) {
             setErrorMessage('Judul berita utama wajib diisi.')
             return
         }
 
-        if (actionType !== 'DRAFT') {
-            if (!hasAnyImage) {
-                setErrorMessage('Gambar utama berita wajib diunggah sebelum mengirim berita.')
-                return
-            }
-            if (!editorText) {
-                setErrorMessage('Naskah narasi berita wajib diisi sebelum mengirim berita.')
-                return
-            }
-            if (selectedTags.length === 0) {
-                setErrorMessage('Pilih minimal 1 kategori berita sebelum mengirim berita.')
-                return
-            }
+        if (!hasAnyImage) {
+            setErrorMessage('Gambar utama berita wajib diunggah.')
+            return
+        }
+
+        if (!trimmedCaption) {
+            setErrorMessage('Keterangan / caption foto wajib diisi.')
+            return
+        }
+
+        if (!trimmedSourceCredit) {
+            setErrorMessage('Sumber foto / atribusi wajib diisi.')
+            return
+        }
+
+        if (!editorText) {
+            setErrorMessage('Naskah narasi berita wajib diisi.')
+            return
+        }
+
+        if (selectedTags.length === 0) {
+            setErrorMessage('Pilih minimal 1 kategori berita.')
+            return
         }
 
         try {
@@ -430,6 +442,10 @@ export default function ReporterBeritaForm({
                 setErrorMessage(result.error || 'Gagal menyimpan berita.')
                 setSubmittingAction(null)
                 return
+            }
+
+            if (result.id && !activeId) {
+                setActiveId(result.id)
             }
 
             if (openPreview && result.slug) {
@@ -497,22 +513,22 @@ export default function ReporterBeritaForm({
                 {/* Status Indicator */}
                 <div className="flex items-center shrink-0 self-start sm:self-center mt-1 sm:mt-0">
                     <div
-                        className={`flex items-center gap-2 px-3 py-1.5 border rounded-full shadow-xs ${
+                        className={`inline-flex items-center gap-2.5 px-3.5 py-2 border rounded-full shadow-2xs transition-all ${
                             isEditMode
                                 ? `${statusBadgeStyle.bg} ${statusBadgeStyle.border}`
-                                : 'bg-white border-slate-200/80'
+                                : 'bg-amber-50 border-amber-200'
                         }`}
                     >
                         <span
-                            className={`w-2 h-2 rounded-full ${
+                            className={`w-2.5 h-2.5 rounded-full shrink-0 ${
                                 isEditMode
                                     ? statusBadgeStyle.dot
-                                    : 'bg-amber-400 animate-pulse'
+                                    : 'bg-amber-500 animate-pulse'
                             }`}
                         />
                         <span
-                            className={`text-[11px] font-semibold ${
-                                isEditMode ? statusBadgeStyle.text : 'text-amber-600'
+                            className={`text-[13px] font-bold tracking-tight ${
+                                isEditMode ? statusBadgeStyle.text : 'text-amber-700'
                             }`}
                         >
                             {statusBadgeText}
@@ -681,7 +697,7 @@ export default function ReporterBeritaForm({
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-4">
                                 <div>
                                     <label className="block text-[11px] font-semibold text-slate-500 mb-1.5">
-                                        Keterangan / Caption Foto
+                                        Keterangan / Caption Foto <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="text"
@@ -693,7 +709,7 @@ export default function ReporterBeritaForm({
                                 </div>
                                 <div>
                                     <label className="block text-[11px] font-semibold text-slate-500 mb-1.5">
-                                        Sumber Foto / Atribusi
+                                        Sumber Foto / Atribusi <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="text"
@@ -927,7 +943,9 @@ export default function ReporterBeritaForm({
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-2">
                                     <FileText size={14} className="text-[#159447]" />
-                                    <span className="text-xs font-bold text-[#172135]">Tag Kategori Berita</span>
+                                    <span className="text-xs font-bold text-[#172135]">
+                                        Tag Kategori Berita <span className="text-red-500">*</span>
+                                    </span>
                                 </div>
                                 <span className="text-[11px] text-slate-400 font-medium">
                                     {selectedTags.length} Dipilih

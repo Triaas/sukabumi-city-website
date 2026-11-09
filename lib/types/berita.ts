@@ -92,6 +92,8 @@ export interface BeritaAdminRow {
   categories: string[];
   authorName: string;
   author_name: string;
+  authorRole?: UserRole;
+  author_role?: UserRole;
   status: NewsStatus;
   publishedAt: string | null;
   published_at: string | null;

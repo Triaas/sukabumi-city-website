@@ -10,6 +10,7 @@ export type BeritaActionType = 'DRAFT' | 'SUBMIT' | 'PUBLISH';
 
 export interface CreateBeritaResult {
   success: boolean;
+  id?: number;
   slug?: string;
   error?: string;
 }
@@ -123,6 +124,38 @@ async function resolveCategoryId(
 }
 
 /**
+ * Mengonversi pasangan tanggal (YYYY-MM-DD) dan waktu (HH:mm) WIB (UTC+7)
+ * menjadi ISO string timestamp yang valid, atau mengembalikan null jika tidak valid.
+ */
+function parseCustomPublishTimestamp(
+  publishDate?: string | null,
+  publishTime?: string | null
+): string | null {
+  const datePart = (publishDate || '').trim();
+  const timePart = (publishTime || '').trim() || '00:00';
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+    return null;
+  }
+
+  const normalizedTime = /^\d{2}:\d{2}$/.test(timePart)
+    ? `${timePart}:00`
+    : /^\d{2}:\d{2}:\d{2}$/.test(timePart)
+      ? timePart
+      : '00:00:00';
+
+  const parsed = new Date(`${datePart}T${normalizedTime}+07:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  // Batasi agar tidak melebihi waktu saat ini (sesuai aturan form)
+  const now = new Date();
+  const finalDate = parsed.getTime() > now.getTime() ? now : parsed;
+  return finalDate.toISOString();
+}
+
+/**
  * Server Action untuk menyimpan atau menerbitkan berita baru ke tabel `public.berita`.
  */
 export async function createBeritaAction(
@@ -132,9 +165,8 @@ export async function createBeritaAction(
     const title = ((formData.get('title') as string) || '').trim();
     const content = ((formData.get('content') as string) || '').trim();
     const rawCategory = (formData.get('category_id') as string) || '';
-    const caption = ((formData.get('caption') as string) || '').trim() || null;
-    const sourceCredit =
-      ((formData.get('source_credit') as string) || '').trim() || null;
+    const caption = ((formData.get('caption') as string) || '').trim();
+    const sourceCredit = ((formData.get('source_credit') as string) || '').trim();
     const actionType = ((formData.get('action_type') as BeritaActionType) ||
       'DRAFT') as BeritaActionType;
     const authorName =
@@ -142,21 +174,15 @@ export async function createBeritaAction(
       'Diskominfo Kota Sukabumi';
     const userRole = ((formData.get('user_role') as UserRole) ||
       'REPORTER') as UserRole;
+    const publishDateRaw = (formData.get('publish_date') as string) || '';
+    const publishTimeRaw = (formData.get('publish_time') as string) || '';
     const imageEntry = formData.get('image');
 
-    // Validasi input dasar
+    // Validasi input wajib untuk semua naskah
     if (!title) {
       return {
         success: false,
-        error: 'Judul berita wajib diisi.',
-      };
-    }
-
-    const plainTextContent = content.replace(/<[^>]*>/g, '').trim();
-    if (actionType !== 'DRAFT' && !plainTextContent) {
-      return {
-        success: false,
-        error: 'Naskah narasi berita wajib diisi sebelum dikirim atau diterbitkan.',
+        error: 'Judul berita utama wajib diisi.',
       };
     }
 
@@ -168,18 +194,46 @@ export async function createBeritaAction(
       imageUrl = imageEntry.trim();
     }
 
-    if (actionType !== 'DRAFT' && !imageUrl) {
+    if (!imageUrl) {
       return {
         success: false,
-        error: 'Gambar utama berita wajib diunggah sebelum dikirim atau diterbitkan.',
+        error: 'Gambar utama berita wajib diunggah.',
+      };
+    }
+
+    if (!caption) {
+      return {
+        success: false,
+        error: 'Keterangan / caption foto wajib diisi.',
+      };
+    }
+
+    if (!sourceCredit) {
+      return {
+        success: false,
+        error: 'Sumber foto / atribusi wajib diisi.',
+      };
+    }
+
+    const plainTextContent = content.replace(/<[^>]*>/g, '').trim();
+    if (!plainTextContent) {
+      return {
+        success: false,
+        error: 'Naskah narasi berita wajib diisi.',
+      };
+    }
+
+    // Resolusi category_id ke tabel public.categories
+    const categoryId = await resolveCategoryId(rawCategory);
+    if (!categoryId) {
+      return {
+        success: false,
+        error: 'Pilih minimal 1 kategori berita.',
       };
     }
 
     // Buat slug unik
     const newSlug = await generateUniqueSlug(title);
-
-    // Resolusi category_id ke tabel public.categories
-    const categoryId = await resolveCategoryId(rawCategory);
 
     // Tentukan status berdasarkan action_type & user_role
     let status: NewsStatus = 'DRAFT';
@@ -202,6 +256,11 @@ export async function createBeritaAction(
       status = 'SUBMITTED';
       isPublishedNow = false;
     }
+
+    const customPublishedAt = parseCustomPublishTimestamp(
+      publishDateRaw,
+      publishTimeRaw
+    );
 
     // Pastikan kolom penanda visibilitas tersedia di tabel public.berita
     await ensureBeritaVisibilityColumns();
@@ -236,14 +295,14 @@ export async function createBeritaAction(
         $9,
         $10,
         $11::boolean,
-        CASE WHEN $11::boolean THEN NOW() ELSE NULL END,
-        NOW(),
+        COALESCE($12::timestamptz, CASE WHEN $11::boolean THEN NOW() ELSE NULL END),
+        COALESCE($12::timestamptz, NOW()),
         NOW()
       )
-      RETURNING slug
+      RETURNING id, slug
     `;
 
-    await pool.query(insertQuery, [
+    const insertedBerita = await pool.query(insertQuery, [
       title,
       newSlug,
       content,
@@ -255,7 +314,12 @@ export async function createBeritaAction(
       userRole,
       status,
       isPublishedNow,
+      customPublishedAt,
     ]);
+
+    const insertedId = insertedBerita.rows[0]?.id
+      ? Number(insertedBerita.rows[0].id)
+      : undefined;
 
     // Revalidasi cache halaman publik dan dashboard
     revalidatePath('/berita');
@@ -265,6 +329,7 @@ export async function createBeritaAction(
 
     return {
       success: true,
+      id: insertedId,
       slug: newSlug,
     };
   } catch (error: any) {
@@ -332,9 +397,10 @@ export async function unsubmitNewsAction(id: number | string): Promise<{
 }
 
 /**
- * Server Action untuk menurunkan berita tayang ('PUBLISHED') kembali menjadi 'DRAFT'
- * dan mengosongkan `published_at`, namun mempertahankan `was_published = TRUE`
- * agar tetap terlihat di meja redaksi Admin (Fitur Takedown Admin).
+ * Server Action untuk menurunkan berita tayang ('PUBLISHED') dan mengosongkan `published_at`.
+ * - Jika berita ditulis oleh Reporter (`author_role = 'REPORTER'`), status dikembalikan ke `'SUBMITTED'`
+ *   (tampil sebagai "Perlu Peninjauan" di Admin dan "Diserahkan" di Reporter).
+ * - Jika berita ditulis oleh Admin/Super Admin, status dikembalikan ke `'DRAFT'`.
  */
 export async function unpublishNewsAction(id: number | string): Promise<{
   success: boolean;
@@ -348,15 +414,24 @@ export async function unpublishNewsAction(id: number | string): Promise<{
 
     await ensureBeritaVisibilityColumns();
 
+    const checkRow = await pool.query(
+      'SELECT author_role FROM public.berita WHERE id = $1 LIMIT 1',
+      [numericId]
+    );
+
+    const authorRole = (checkRow.rows[0]?.author_role as string) || 'REPORTER';
+    const nextStatus: NewsStatus =
+      authorRole === 'REPORTER' ? 'SUBMITTED' : 'DRAFT';
+
     await pool.query(
       `UPDATE public.berita
-       SET status = 'DRAFT',
+       SET status = $2,
            published_at = NULL,
            was_published = TRUE,
            updated_at = NOW()
        WHERE id = $1
          AND status = 'PUBLISHED'`,
-      [numericId]
+      [numericId, nextStatus]
     );
 
     revalidatePath('/admin/berita');
@@ -430,28 +505,29 @@ export async function updateBeritaAction(
     const title = ((formData.get('title') as string) || '').trim();
     const content = ((formData.get('content') as string) || '').trim();
     const rawCategory = (formData.get('category_id') as string) || '';
-    const caption = ((formData.get('caption') as string) || '').trim() || null;
-    const sourceCredit =
-      ((formData.get('source_credit') as string) || '').trim() || null;
+    const caption = ((formData.get('caption') as string) || '').trim();
+    const sourceCredit = ((formData.get('source_credit') as string) || '').trim();
     const actionType = ((formData.get('action_type') as BeritaActionType) ||
       'DRAFT') as BeritaActionType;
     const userRole = ((formData.get('user_role') as UserRole) ||
       'REPORTER') as UserRole;
+    const publishDateRaw = (formData.get('publish_date') as string) || '';
+    const publishTimeRaw = (formData.get('publish_time') as string) || '';
     const imageEntry = formData.get('image');
     const existingImageUrlRaw = (formData.get('existing_image_url') as string) || '';
 
     if (!title) {
       return {
         success: false,
-        error: 'Judul berita wajib diisi.',
+        error: 'Judul berita utama wajib diisi.',
       };
     }
 
     await ensureBeritaVisibilityColumns();
 
-    // Ambil data naskah saat ini untuk pengecekan status dan gambar eksisting
+    // Ambil data naskah saat ini untuk pengecekan status, peran penulis asli, dan gambar eksisting
     const currentCheck = await pool.query(
-      'SELECT slug, status, image_url FROM public.berita WHERE id = $1 LIMIT 1',
+      'SELECT slug, status, image_url, author_role FROM public.berita WHERE id = $1 LIMIT 1',
       [numericId]
     );
 
@@ -465,20 +541,13 @@ export async function updateBeritaAction(
     const currentRow = currentCheck.rows[0];
     const currentSlug = currentRow.slug as string;
     const currentStatus = (currentRow.status as NewsStatus) || 'DRAFT';
+    const originalAuthorRole = (currentRow.author_role as UserRole) || 'REPORTER';
 
     // Reporter hanya diizinkan mengedit jika naskah masih berstatus DRAFT
     if (userRole === 'REPORTER' && currentStatus !== 'DRAFT') {
       return {
         success: false,
         error: 'Hanya naskah berstatus Draf yang dapat diedit oleh Reporter.',
-      };
-    }
-
-    const plainTextContent = content.replace(/<[^>]*>/g, '').trim();
-    if (actionType !== 'DRAFT' && !plainTextContent) {
-      return {
-        success: false,
-        error: 'Naskah narasi berita wajib diisi sebelum dikirim atau diterbitkan.',
       };
     }
 
@@ -492,20 +561,50 @@ export async function updateBeritaAction(
       imageUrl = existingImageUrlRaw.trim();
     }
 
-    if (actionType !== 'DRAFT' && !imageUrl) {
+    if (!imageUrl) {
       return {
         success: false,
-        error: 'Gambar utama berita wajib diunggah sebelum dikirim atau diterbitkan.',
+        error: 'Gambar utama berita wajib diunggah.',
+      };
+    }
+
+    if (!caption) {
+      return {
+        success: false,
+        error: 'Keterangan / caption foto wajib diisi.',
+      };
+    }
+
+    if (!sourceCredit) {
+      return {
+        success: false,
+        error: 'Sumber foto / atribusi wajib diisi.',
+      };
+    }
+
+    const plainTextContent = content.replace(/<[^>]*>/g, '').trim();
+    if (!plainTextContent) {
+      return {
+        success: false,
+        error: 'Naskah narasi berita wajib diisi.',
       };
     }
 
     const categoryId = await resolveCategoryId(rawCategory);
+    if (!categoryId) {
+      return {
+        success: false,
+        error: 'Pilih minimal 1 kategori berita.',
+      };
+    }
 
     // Aturan Status:
     // - Jika Admin/Super Admin menekan PUBLISH: status = 'PUBLISHED', was_published = TRUE, published_at = COALESCE(published_at, NOW())
+    // - Jika Admin menyimpan perubahan tanpa menerbitkan (DRAFT) pada naskah milik Reporter:
+    //   status tetap 'SUBMITTED' ("Perlu Peninjauan" di Admin, "Diserahkan" di Reporter).
+    // - Jika Admin menyimpan draf (DRAFT) pada naskah milik Admin sendiri: status = 'DRAFT'
     // - Jika Reporter menekan SUBMIT: status = 'SUBMITTED'
     // - Jika Reporter menyimpan edit (DRAFT): status tetap 'DRAFT'
-    // - Jika Admin menyimpan draf (DRAFT): status = 'DRAFT'
     let status: NewsStatus = 'DRAFT';
     let isPublishingNow = false;
 
@@ -519,9 +618,14 @@ export async function updateBeritaAction(
       status = actionType === 'SUBMIT' ? 'SUBMITTED' : 'DRAFT';
       isPublishingNow = false;
     } else {
-      status = 'DRAFT';
+      status = originalAuthorRole === 'REPORTER' ? 'SUBMITTED' : 'DRAFT';
       isPublishingNow = false;
     }
+
+    const customPublishedAt = parseCustomPublishTimestamp(
+      publishDateRaw,
+      publishTimeRaw
+    );
 
     // Query UPDATE TIDAK mengubah author_name dan author_role
     const updateQuery = `
@@ -535,10 +639,10 @@ export async function updateBeritaAction(
         category_id = $7,
         status = $8,
         was_published = CASE WHEN $9::boolean THEN TRUE ELSE COALESCE(was_published, FALSE) END,
-        published_at = CASE WHEN $9::boolean THEN COALESCE(published_at, NOW()) ELSE published_at END,
+        published_at = COALESCE($10::timestamptz, published_at, CASE WHEN $9::boolean THEN NOW() ELSE NULL END),
         updated_at = NOW()
       WHERE id = $1
-      RETURNING slug
+      RETURNING id, slug
     `;
 
     const updated = await pool.query(updateQuery, [
@@ -551,6 +655,7 @@ export async function updateBeritaAction(
       categoryId,
       status,
       isPublishingNow,
+      customPublishedAt,
     ]);
 
     const finalSlug = (updated.rows[0]?.slug as string) || currentSlug;
@@ -563,6 +668,7 @@ export async function updateBeritaAction(
 
     return {
       success: true,
+      id: numericId,
       slug: finalSlug,
     };
   } catch (error: any) {

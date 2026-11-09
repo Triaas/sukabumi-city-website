@@ -529,6 +529,8 @@ export async function getAdminNewsList(options?: {
         categories: [categoryName],
         authorName,
         author_name: authorName,
+        authorRole: (row.author_role as UserRole) || 'REPORTER',
+        author_role: (row.author_role as UserRole) || 'REPORTER',
         status: (row.status as NewsStatus) || 'DRAFT',
         publishedAt: publishedIso,
         published_at: publishedIso,

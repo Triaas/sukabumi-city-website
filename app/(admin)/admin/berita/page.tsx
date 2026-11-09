@@ -354,6 +354,7 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                                                             id={row.id}
                                                             title={row.title}
                                                             mode="UNPUBLISH"
+                                                            authorRole={row.author_role}
                                                         />
                                                     )}
                                                 </div>
