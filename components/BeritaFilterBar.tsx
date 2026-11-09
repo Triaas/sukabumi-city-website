@@ -73,22 +73,24 @@ export default function BeritaFilterBar({
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5">
             <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
                 {/* 1. Input Pencarian */}
-                <div className="relative flex-1 min-w-[240px]">
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault()
+                        applyFilters({ q: searchInput })
+                    }}
+                    role="search"
+                    className="relative flex-1 min-w-[240px]"
+                >
                     <Search
                         size={16}
                         className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
                     />
                     <input
-                        type="text"
+                        type="search"
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                                e.preventDefault()
-                                applyFilters({ q: searchInput })
-                            }
-                        }}
                         placeholder={placeholder}
+                        aria-label="Cari berita"
                         className="w-full pl-9 pr-8 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 bg-white text-[#172135] placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] transition-all"
                     />
                     {searchInput && (
@@ -98,12 +100,13 @@ export default function BeritaFilterBar({
                                 setSearchInput('')
                                 applyFilters({ q: '' })
                             }}
+                            aria-label="Hapus pencarian"
                             className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
                         >
                             <X size={14} />
                         </button>
                     )}
-                </div>
+                </form>
 
                 {/* 2. Grup Dropdown Kategori & Status (Desain Pengumuman) */}
                 <div className="flex flex-wrap items-center gap-2 shrink-0">
@@ -212,21 +215,12 @@ export default function BeritaFilterBar({
                         )}
                     </div>
 
-                    {/* Tombol Terapkan Search (jika user mengubah teks di input) */}
-                    <button
-                        type="button"
-                        onClick={() => applyFilters({ q: searchInput })}
-                        className="px-4 py-2 rounded-xl bg-[#159447] hover:bg-[#12803d] text-white text-xs font-semibold transition-colors cursor-pointer"
-                    >
-                        Terapkan
-                    </button>
-
                     {/* Tombol Reset Filter */}
                     {hasActiveFilter && (
                         <Link
                             href={basePath}
                             onClick={() => setSearchInput('')}
-                            className="px-3 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold transition-colors"
+                            className="px-3 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold transition-colors cursor-pointer"
                         >
                             Reset
                         </Link>
