@@ -22,6 +22,7 @@ import { CATEGORY_FILTER_OPTIONS } from '@/lib/constants/categories'
 import { unpublishNewsAction } from './actions'
 import DeleteNewsButton from '@/components/DeleteNewsButton'
 import BeritaFilterBar from '@/components/BeritaFilterBar'
+import BeritaNotification from '@/components/BeritaNotification'
 
 export const dynamic = 'force-dynamic'
 
@@ -64,6 +65,7 @@ interface AdminBeritaPageProps {
         q?: string
         category?: string
         status?: string
+        notif?: string
     }>
 }
 
@@ -72,6 +74,7 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
     const searchQuery = (resolvedParams.q || '').trim()
     const selectedCategory = resolvedParams.category || 'Semua kategori'
     const selectedStatus = resolvedParams.status || 'ALL'
+    const notifKey = resolvedParams.notif
 
     const allRows: BeritaAdminRow[] = await getAdminNewsList({
         role: 'ADMIN_BERITA',
@@ -122,6 +125,9 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                     </Link>
                 </div>
             </div>
+
+            {/* NOTIFIKASI STATUS AKSI */}
+            <BeritaNotification notifKey={notifKey} />
 
             {/* 2. RINGKASAN STATISTIK */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

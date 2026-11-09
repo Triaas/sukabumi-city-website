@@ -22,6 +22,7 @@ import { CATEGORY_FILTER_OPTIONS } from '@/lib/constants/categories'
 import { unsubmitNewsAction } from '@/app/(admin)/admin/berita/actions'
 import DeleteNewsButton from '@/components/DeleteNewsButton'
 import BeritaFilterBar from '@/components/BeritaFilterBar'
+import BeritaNotification from '@/components/BeritaNotification'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,6 +54,7 @@ interface ReporterBeritaPageProps {
         q?: string
         category?: string
         status?: string
+        notif?: string
     }>
 }
 
@@ -63,6 +65,7 @@ export default async function ReporterBeritaPage({
     const searchQuery = (resolvedParams.q || '').trim()
     const selectedCategory = resolvedParams.category || 'Semua kategori'
     const selectedStatus = resolvedParams.status || 'ALL'
+    const notifKey = resolvedParams.notif
 
     const allRows: BeritaAdminRow[] = await getAdminNewsList({
         role: 'REPORTER',
@@ -111,6 +114,9 @@ export default async function ReporterBeritaPage({
                     </Link>
                 </div>
             </div>
+
+            {/* NOTIFIKASI STATUS AKSI */}
+            <BeritaNotification notifKey={notifKey} />
 
             {/* 2. MINI STATS */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

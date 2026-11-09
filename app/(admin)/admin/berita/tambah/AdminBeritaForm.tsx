@@ -440,19 +440,18 @@ export default function AdminBeritaForm({
                 return
             }
 
-            const msg =
+            const notifParam =
                 actionType === 'DRAFT'
                     ? activeId
-                        ? 'Perubahan draf berita berhasil disimpan.'
-                        : 'Draf berita berhasil disimpan.'
+                        ? 'draft_updated'
+                        : 'draft_saved'
                     : currentUserRole === 'REPORTER'
-                      ? 'Berita berhasil dikirim untuk peninjauan redaksi.'
+                      ? 'submitted'
                       : activeId
-                        ? 'Berita berhasil diperbarui dan diterbitkan ke portal publik.'
-                        : 'Berita berhasil diterbitkan ke portal publik.'
+                        ? 'published_updated'
+                        : 'published'
 
-            setSuccessMessage(msg)
-            router.push('/admin/berita')
+            router.push(`/admin/berita?notif=${notifParam}`)
             router.refresh()
         } catch (err: unknown) {
             setErrorMessage(

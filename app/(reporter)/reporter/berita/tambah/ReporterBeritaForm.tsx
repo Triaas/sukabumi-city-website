@@ -439,15 +439,14 @@ export default function ReporterBeritaForm({
                 return
             }
 
-            const msg =
+            const notifParam =
                 actionType === 'DRAFT'
                     ? activeId
-                        ? 'Perubahan draf berita berhasil disimpan.'
-                        : 'Draf berita berhasil disimpan.'
-                    : 'Berita berhasil dikirim untuk peninjauan redaksi.'
+                        ? 'draft_updated'
+                        : 'draft_saved'
+                    : 'submitted'
 
-            setSuccessMessage(msg)
-            router.push('/reporter/berita')
+            router.push(`/reporter/berita?notif=${notifParam}`)
             router.refresh()
         } catch (err: unknown) {
             setErrorMessage(
