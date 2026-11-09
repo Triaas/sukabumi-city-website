@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import pool, { ensureBeritaVisibilityColumns } from '@/lib/db';
+import pool from '@/lib/db';
 import { saveBeritaImage } from '@/lib/upload';
 import { toCategorySlug } from '@/lib/constants/categories';
 import type { NewsStatus, UserRole } from '@/lib/types/berita';
@@ -262,9 +262,6 @@ export async function createBeritaAction(
       publishTimeRaw
     );
 
-    // Pastikan kolom penanda visibilitas tersedia di tabel public.berita
-    await ensureBeritaVisibilityColumns();
-
     // Eksekusi INSERT ke tabel public.berita
     const insertQuery = `
       INSERT INTO public.berita (
@@ -366,8 +363,6 @@ export async function unsubmitNewsAction(id: number | string): Promise<{
       return { success: false, error: 'ID berita tidak valid.' };
     }
 
-    await ensureBeritaVisibilityColumns();
-
     await pool.query(
       `UPDATE public.berita
        SET status = 'DRAFT',
@@ -411,8 +406,6 @@ export async function unpublishNewsAction(id: number | string): Promise<{
     if (!Number.isFinite(numericId)) {
       return { success: false, error: 'ID berita tidak valid.' };
     }
-
-    await ensureBeritaVisibilityColumns();
 
     const checkRow = await pool.query(
       'SELECT author_role FROM public.berita WHERE id = $1 LIMIT 1',
@@ -522,8 +515,6 @@ export async function updateBeritaAction(
         error: 'Judul berita utama wajib diisi.',
       };
     }
-
-    await ensureBeritaVisibilityColumns();
 
     // Ambil data naskah saat ini untuk pengecekan status, peran penulis asli, dan gambar eksisting
     const currentCheck = await pool.query(
