@@ -5,7 +5,7 @@ import {
     Eye,
     Pencil,
     Trash2,
-    Download,
+    Undo2,
     Image as ImageIcon,
     FileText,
     Clock,
@@ -196,6 +196,10 @@ export default async function ReporterBeritaPage({
                                         row.published_at || row.created_at
                                     const isDraft = row.status === 'DRAFT'
                                     const isSubmitted = row.status === 'SUBMITTED'
+                                    const isPublished = row.status === 'PUBLISHED'
+                                    const viewHref = isPublished
+                                        ? `/berita/${row.slug}`
+                                        : `/berita/${row.slug}?preview=true`
 
                                     return (
                                         <tr
@@ -228,7 +232,7 @@ export default async function ReporterBeritaPage({
                                             {/* JUDUL */}
                                             <td className="py-4 px-4 text-left">
                                                 <Link
-                                                    href={`/berita/${row.slug}?preview=true`}
+                                                    href={viewHref}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="font-bold text-[#172135] text-[13px] hover:text-[#159447] transition-colors line-clamp-2"
@@ -274,16 +278,31 @@ export default async function ReporterBeritaPage({
                                             {/* AKSI */}
                                             <td className="py-4 px-4 text-center whitespace-nowrap">
                                                 <div className="flex items-center justify-center gap-1.5">
-                                                    {/* 1. Mata (Preview): Selalu aktif ke /berita/[slug]?preview=true */}
-                                                    <Link
-                                                        href={`/berita/${row.slug}?preview=true`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        title="Pratinjau Naskah"
-                                                        className="w-7 h-7 rounded-lg border border-slate-200 bg-white flex items-center justify-center hover:bg-green-50/50 hover:border-[#159447]/40 text-slate-500 hover:text-[#159447] transition-colors"
-                                                    >
-                                                        <Eye size={14} />
-                                                    </Link>
+                                                    {/* 1. Mata (Preview): Aktif HANYA jika status BUKAN 'PUBLISHED' */}
+                                                    {!isPublished ? (
+                                                        <Link
+                                                            href={`/berita/${row.slug}?preview=true`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            title="Pratinjau Naskah"
+                                                            className="w-7 h-7 rounded-lg border border-slate-200 bg-white flex items-center justify-center hover:bg-green-50/50 hover:border-[#159447]/40 text-slate-500 hover:text-[#159447] transition-colors"
+                                                        >
+                                                            <Eye size={14} />
+                                                        </Link>
+                                                    ) : (
+                                                        <div
+                                                            title="Judul berita dapat diklik untuk melihat berita tayang"
+                                                            className="inline-flex cursor-not-allowed"
+                                                        >
+                                                            <button
+                                                                type="button"
+                                                                disabled
+                                                                className="w-7 h-7 rounded-lg border border-slate-200 bg-slate-50 text-slate-300 opacity-60 flex items-center justify-center cursor-not-allowed pointer-events-none"
+                                                            >
+                                                                <Eye size={14} />
+                                                            </button>
+                                                        </div>
+                                                    )}
 
                                                     {/* 2. Pena (Edit): Aktif HANYA jika status === 'DRAFT' */}
                                                     {isDraft ? (
@@ -327,7 +346,7 @@ export default async function ReporterBeritaPage({
                                                                 title="Tarik Naskah ke Draf (Unsubmit)"
                                                                 className="w-7 h-7 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-300 flex items-center justify-center transition-colors cursor-pointer"
                                                             >
-                                                                <Download size={14} />
+                                                                <Undo2 size={14} />
                                                             </button>
                                                         </form>
                                                     )}

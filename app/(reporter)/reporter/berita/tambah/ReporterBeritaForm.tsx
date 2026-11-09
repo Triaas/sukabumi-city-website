@@ -97,6 +97,12 @@ function FieldLabel({ children, right }: { children: React.ReactNode; right?: Re
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5 MB
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 
+function getRolePositionLabel(role?: UserRole): string {
+    if (role === 'SUPER_ADMIN') return 'Super Admin'
+    if (role === 'ADMIN_BERITA') return 'Admin Berita'
+    return 'Reporter'
+}
+
 interface ReporterBeritaFormProps {
     initialData?: BeritaEditData | null
     notFoundId?: number | null
@@ -160,6 +166,9 @@ export default function ReporterBeritaForm({
     const reporterName = isEditMode && initialData
         ? initialData.author_name
         : currentUserName
+    const reporterRoleLabel = isEditMode && initialData
+        ? getRolePositionLabel(initialData.author_role)
+        : getRolePositionLabel(currentUserRole)
     const reporterInitials =
         reporterName
             .split(' ')
@@ -892,7 +901,9 @@ export default function ReporterBeritaForm({
                                     <p className="text-xs font-bold text-[#172135] truncate">
                                         {reporterName}
                                     </p>
-                                    <p className="text-[11px] text-slate-400 mt-0.5">Reporter Lapangan</p>
+                                    <p className="text-[11px] text-slate-400 mt-0.5">
+                                        {reporterRoleLabel}
+                                    </p>
                                 </div>
                                 {isEditMode && (
                                     <Lock

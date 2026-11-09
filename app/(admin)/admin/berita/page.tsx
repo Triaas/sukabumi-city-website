@@ -5,7 +5,7 @@ import {
     Eye,
     Pencil,
     Trash2,
-    ArrowDownToLine,
+    Undo2,
     Image as ImageIcon,
     FileText,
     Clock,
@@ -314,15 +314,18 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                                                             <Eye size={14} />
                                                         </Link>
                                                     ) : (
-                                                        <Link
-                                                            href={`/berita/${row.slug}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            title="Lihat Berita Tayang"
-                                                            className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-[#159447] hover:border-[#159447]/40 hover:bg-green-50/50 flex items-center justify-center transition-colors"
+                                                        <div
+                                                            title="Judul berita dapat diklik untuk melihat berita tayang"
+                                                            className="inline-flex cursor-not-allowed"
                                                         >
-                                                            <Eye size={14} />
-                                                        </Link>
+                                                            <button
+                                                                type="button"
+                                                                disabled
+                                                                className="w-7 h-7 rounded-lg border border-slate-200 bg-slate-50 text-slate-300 opacity-60 flex items-center justify-center cursor-not-allowed pointer-events-none"
+                                                            >
+                                                                <Eye size={14} />
+                                                            </button>
+                                                        </div>
                                                     )}
 
                                                     {/* 2. Pena (Edit): SELALU AKTIF di semua status */}
@@ -354,7 +357,7 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                                                                 title="Turunkan Tayang ke Draf (Unpublish)"
                                                                 className="w-7 h-7 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-300 flex items-center justify-center transition-colors cursor-pointer"
                                                             >
-                                                                <ArrowDownToLine size={14} />
+                                                                <Undo2 size={14} />
                                                             </button>
                                                         </form>
                                                     )}

@@ -118,8 +118,9 @@ function extractWibParts(isoDate?: string | null) {
 }
 
 function getRolePositionLabel(role?: UserRole): string {
-    if (role === 'REPORTER') return 'Reporter Lapangan'
-    return 'Pranata Humas'
+    if (role === 'REPORTER') return 'Reporter'
+    if (role === 'ADMIN_BERITA') return 'Admin Berita'
+    return 'Super Admin'
 }
 
 interface AdminBeritaFormProps {
@@ -177,7 +178,7 @@ export default function AdminBeritaForm({
         : currentUserName
     const reporterRoleLabel = isEditMode && initialData
         ? getRolePositionLabel(initialData.author_role)
-        : 'Pranata Humas'
+        : getRolePositionLabel(currentUserRole)
     const reporterInitials =
         reporterName
             .split(' ')
