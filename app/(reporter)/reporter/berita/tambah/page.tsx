@@ -160,7 +160,7 @@ export default function ReporterTambahBeritaPage() {
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     // Submission & Feedback State
-    const [submittingAction, setSubmittingAction] = useState<BeritaActionType | null>(null)
+    const [submittingAction, setSubmittingAction] = useState<'DRAFT' | 'SUBMIT' | 'PUBLISH' | 'PREVIEW' | null>(null)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
@@ -299,7 +299,7 @@ export default function ReporterTambahBeritaPage() {
     }
 
     // Handler Submit ke Server Action
-    const handleSubmit = async (actionType: BeritaActionType) => {
+    const handleSubmit = async (actionType: BeritaActionType, openPreview = false) => {
         if (submittingAction) return
 
         setErrorMessage(null)
@@ -330,7 +330,7 @@ export default function ReporterTambahBeritaPage() {
         }
 
         try {
-            setSubmittingAction(actionType)
+            setSubmittingAction(openPreview ? 'PREVIEW' : actionType)
 
             const formData = new FormData()
             formData.append('title', trimmedTitle)
@@ -350,6 +350,13 @@ export default function ReporterTambahBeritaPage() {
 
             if (!result.success) {
                 setErrorMessage(result.error || 'Gagal menyimpan berita.')
+                setSubmittingAction(null)
+                return
+            }
+
+            if (openPreview && result.slug) {
+                window.open(`/berita/${result.slug}?preview=true`, '_blank', 'noopener,noreferrer')
+                setSuccessMessage('Draf berita disimpan dan dibuka di tab pratinjau baru.')
                 setSubmittingAction(null)
                 return
             }
@@ -938,10 +945,20 @@ export default function ReporterTambahBeritaPage() {
                             <button
                                 type="button"
                                 disabled={submittingAction !== null}
-                                className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#f8fafc] border border-slate-200 hover:bg-slate-100 hover:border-slate-300 disabled:opacity-60 text-slate-600 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                                onClick={() => handleSubmit('DRAFT', true)}
+                                className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#f8fafc] border border-slate-200 hover:bg-slate-100 hover:border-slate-300 disabled:opacity-60 disabled:cursor-not-allowed text-slate-600 text-xs font-semibold rounded-xl transition-all cursor-pointer"
                             >
-                                <Eye size={14} />
-                                Pratinjau
+                                {submittingAction === 'PREVIEW' ? (
+                                    <>
+                                        <Loader2 size={14} className="animate-spin" />
+                                        <span>Membuka...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Eye size={14} />
+                                        <span>Pratinjau</span>
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>

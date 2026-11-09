@@ -233,6 +233,8 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                                             <td className="py-4 px-4 text-left">
                                                 <Link
                                                     href={viewHref}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
                                                     className="font-bold text-[#172135] text-xs sm:text-[13px] hover:text-[#159447] transition-colors line-clamp-2"
                                                 >
                                                     {row.title}
@@ -294,6 +296,8 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                                                     {!isPublished ? (
                                                         <Link
                                                             href={`/berita/${row.slug}?preview=true`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
                                                             title="Pratinjau Naskah"
                                                             className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-[#159447] hover:border-[#159447]/40 hover:bg-green-50/50 flex items-center justify-center transition-colors"
                                                         >
@@ -302,6 +306,8 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                                                     ) : (
                                                         <Link
                                                             href={`/berita/${row.slug}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
                                                             title="Lihat Berita Tayang"
                                                             className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-[#159447] hover:border-[#159447]/40 hover:bg-green-50/50 flex items-center justify-center transition-colors"
                                                         >
