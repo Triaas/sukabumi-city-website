@@ -5,6 +5,7 @@ import {
   formatIndoDate,
   extractCategoryList,
 } from '../utils/formatters';
+import { ensureBeritaCategoriesTable } from '../berita/category';
 
 // 1. Ambil Detail Berita Berdasarkan Slug
 //    Alur: Cari di tabel mandiri `public.berita` terlebih dahulu;
@@ -16,6 +17,8 @@ export async function getNewsBySlug(
 ): Promise<BeritaDetailPublic | null> {
   // Tahap A: Coba ambil dari tabel baru `public.berita`
   try {
+    await ensureBeritaCategoriesTable();
+
     const nativeQuery = isPreview
       ? `
         SELECT 
@@ -26,7 +29,13 @@ export async function getNewsBySlug(
           b.author_name::text AS author_name,
           b.caption::text AS caption,
           b.source_credit::text AS source_credit,
-          c.name::text AS category
+          COALESCE(
+            (SELECT STRING_AGG(c2.name, ', ' ORDER BY bc.position ASC)
+             FROM public.berita_categories bc
+             INNER JOIN public.categories c2 ON bc.category_id = c2.id
+             WHERE bc.berita_id = b.id),
+            c.name::text
+          ) AS category
         FROM public.berita b
         LEFT JOIN public.categories c ON b.category_id = c.id
         WHERE b.slug = $1
@@ -41,7 +50,13 @@ export async function getNewsBySlug(
           b.author_name::text AS author_name,
           b.caption::text AS caption,
           b.source_credit::text AS source_credit,
-          c.name::text AS category
+          COALESCE(
+            (SELECT STRING_AGG(c2.name, ', ' ORDER BY bc.position ASC)
+             FROM public.berita_categories bc
+             INNER JOIN public.categories c2 ON bc.category_id = c2.id
+             WHERE bc.berita_id = b.id),
+            c.name::text
+          ) AS category
         FROM public.berita b
         LEFT JOIN public.categories c ON b.category_id = c.id
         WHERE b.slug = $1
@@ -142,7 +157,14 @@ export async function getAllNews(limit: number = 100): Promise<BeritaPublic[]> {
         b.slug::text AS slug,
         COALESCE(b.published_at, b.created_at)::timestamptz AS date,
         b.image_url::text AS featured_image,
-        COALESCE(c.name, 'Informasi')::text AS category
+        COALESCE(
+          (SELECT STRING_AGG(c2.name, ', ' ORDER BY bc.position ASC)
+           FROM public.berita_categories bc
+           INNER JOIN public.categories c2 ON bc.category_id = c2.id
+           WHERE bc.berita_id = b.id),
+          c.name,
+          'Informasi'
+        )::text AS category
       FROM public.berita b
       LEFT JOIN public.categories c ON b.category_id = c.id
       WHERE b.status = 'PUBLISHED'
@@ -207,6 +229,7 @@ export async function getAllNews(limit: number = 100): Promise<BeritaPublic[]> {
   `;
 
   try {
+    await ensureBeritaCategoriesTable();
     let rows: any[] = [];
     try {
       const result = await pool.query(unionQuery, [safeLimit]);
@@ -256,13 +279,29 @@ export async function getRelatedNews(
         b.slug::text AS slug,
         COALESCE(b.published_at, b.created_at)::timestamptz AS date,
         b.image_url::text AS featured_image,
-        COALESCE(c.name, 'Informasi')::text AS category
+        COALESCE(
+          (SELECT STRING_AGG(c2.name, ', ' ORDER BY bc.position ASC)
+           FROM public.berita_categories bc
+           INNER JOIN public.categories c2 ON bc.category_id = c2.id
+           WHERE bc.berita_id = b.id),
+          c.name,
+          'Informasi'
+        )::text AS category
       FROM public.berita b
       LEFT JOIN public.categories c ON b.category_id = c.id
       WHERE b.status = 'PUBLISHED'
         AND (b.published_at IS NULL OR b.published_at <= NOW())
         AND b.slug != $1
-        AND COALESCE(c.name, 'Informasi') ILIKE $2
+        AND (
+          COALESCE(c.name, 'Informasi') ILIKE $2
+          OR EXISTS (
+            SELECT 1
+            FROM public.berita_categories bc
+            INNER JOIN public.categories c2 ON bc.category_id = c2.id
+            WHERE bc.berita_id = b.id
+              AND c2.name ILIKE $2
+          )
+        )
       ORDER BY COALESCE(b.published_at, b.created_at) DESC
       LIMIT $3
     ),
@@ -346,6 +385,7 @@ export async function getRelatedNews(
   `;
 
   try {
+    await ensureBeritaCategoriesTable();
     let rows: any[] = [];
     try {
       const result = await pool.query(unionRelatedQuery, [

@@ -112,6 +112,7 @@ export interface BeritaEditData {
   content: string;
   category_id: number | null;
   category_name: string;
+  categories?: string[];
   image_url: string | null;
   caption: string | null;
   source_credit: string | null;

@@ -126,11 +126,13 @@ function getRolePositionLabel(role?: UserRole): string {
 interface AdminBeritaFormProps {
     initialData?: BeritaEditData | null
     notFoundId?: number | null
+    availableCategories?: string[]
 }
 
 export default function AdminBeritaForm({
     initialData = null,
     notFoundId = null,
+    availableCategories = [...OFFICIAL_CATEGORIES],
 }: AdminBeritaFormProps) {
     const router = useRouter()
     const isEditMode = Boolean(initialData)
@@ -190,8 +192,14 @@ export default function AdminBeritaForm({
     const [caption, setCaption] = useState(initialData?.caption ?? '')
     const [sourceCredit, setSourceCredit] = useState(initialData?.source_credit ?? '')
     const [selectedTags, setSelectedTags] = useState<string[]>(() => {
+        if (initialData?.categories && initialData.categories.length > 0) {
+            return initialData.categories
+        }
         if (initialData?.category_name && initialData.category_name.trim()) {
-            return [initialData.category_name.trim()]
+            return initialData.category_name
+                .split(',')
+                .map((c) => c.trim())
+                .filter(Boolean)
         }
         return []
     })
@@ -225,6 +233,18 @@ export default function AdminBeritaForm({
         notFoundId ? `Data naskah berita dengan ID #${notFoundId} tidak ditemukan.` : null
     )
     const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
+    useEffect(() => {
+        if (!successMessage) return
+        const timer = setTimeout(() => setSuccessMessage(null), 5000)
+        return () => clearTimeout(timer)
+    }, [successMessage])
+
+    useEffect(() => {
+        if (!errorMessage || notFoundId) return
+        const timer = setTimeout(() => setErrorMessage(null), 5000)
+        return () => clearTimeout(timer)
+    }, [errorMessage, notFoundId])
 
     const applySelectedFile = (file: File) => {
         setErrorMessage(null)
@@ -335,7 +355,50 @@ export default function AdminBeritaForm({
         setIsTagDropdownOpen(false)
     }
 
-    const filteredCategories = OFFICIAL_CATEGORIES.filter(
+    const [categoryList, setCategoryList] = useState<string[]>(availableCategories)
+    const [isAddingInlineCategory, setIsAddingInlineCategory] = useState(false)
+    const [inlineCategoryInput, setInlineCategoryInput] = useState('')
+
+    const trimmedTagSearch = tagSearch.trim().replace(/\s+/g, ' ')
+    const exactCategoryMatch = categoryList.find(
+        (cat) => cat.toLowerCase() === trimmedTagSearch.toLowerCase()
+    )
+
+    // Kategori baru disimpan lokal dulu; baris di public.categories dibuat server saat naskah disimpan
+    const handleCreateCategory = () => {
+        if (!trimmedTagSearch || trimmedTagSearch.length > 30 || currentUserRole === 'REPORTER') return
+        if (exactCategoryMatch) {
+            selectTag(exactCategoryMatch)
+            return
+        }
+        setCategoryList((prev) =>
+            [...prev, trimmedTagSearch].sort((a, b) => a.localeCompare(b, 'id'))
+        )
+        selectTag(trimmedTagSearch)
+    }
+
+    const handleSaveInlineCategory = () => {
+        const trimmed = inlineCategoryInput.trim().replace(/\s+/g, ' ')
+        if (!trimmed || trimmed.length > 30 || currentUserRole === 'REPORTER') return
+
+        const existing = categoryList.find(
+            (cat) => cat.toLowerCase() === trimmed.toLowerCase()
+        )
+
+        if (existing) {
+            selectTag(existing)
+        } else {
+            setCategoryList((prev) =>
+                [...prev, trimmed].sort((a, b) => a.localeCompare(b, 'id'))
+            )
+            selectTag(trimmed)
+        }
+
+        setInlineCategoryInput('')
+        setIsAddingInlineCategory(false)
+    }
+
+    const filteredCategories = categoryList.filter(
         (cat) =>
             !selectedTags.includes(cat) &&
             cat.toLowerCase().includes(tagSearch.toLowerCase().trim())
@@ -431,9 +494,10 @@ export default function AdminBeritaForm({
             formData.append('content', editorHtml)
             formData.append(
                 'category_id',
-                selectedTags[0] ||
+                selectedTags.join(',') ||
                     (initialData?.category_id ? String(initialData.category_id) : '')
             )
+            selectedTags.forEach((tag) => formData.append('categories', tag))
             formData.append('caption', caption.trim())
             formData.append('source_credit', sourceCredit.trim())
             formData.append('action_type', actionType)
@@ -555,27 +619,45 @@ export default function AdminBeritaForm({
                 </div>
             </div>
 
-            {/* Notifikasi Error / Sukses */}
+            {/* Notifikasi Pop-up Toast Error / Sukses */}
             {errorMessage && (
-                <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium">
-                    <div className="flex items-center gap-2">
-                        <AlertCircle size={16} className="shrink-0 text-red-500" />
+                <div
+                    role="alert"
+                    className="fixed top-6 right-6 z-[110] max-w-md w-[calc(100vw-3rem)] sm:w-auto flex items-center justify-between gap-4 px-5 py-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-[15px] font-semibold shadow-xl animate-in fade-in slide-in-from-top-3 duration-200"
+                >
+                    <div className="flex items-center gap-3">
+                        <AlertCircle size={21} className="shrink-0 text-red-500" aria-hidden="true" />
                         <span>{errorMessage}</span>
                     </div>
                     <button
                         type="button"
                         onClick={() => setErrorMessage(null)}
-                        className="text-red-400 hover:text-red-600 cursor-pointer"
+                        aria-label="Tutup notifikasi"
+                        className="text-red-500 hover:text-red-700 p-1 rounded-lg transition-colors cursor-pointer shrink-0"
                     >
-                        <X size={14} />
+                        <X size={18} aria-hidden="true" />
                     </button>
                 </div>
             )}
 
             {successMessage && (
-                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium">
-                    <CheckCircle2 size={16} className="shrink-0 text-emerald-600" />
-                    <span>{successMessage}</span>
+                <div
+                    role="status"
+                    aria-live="polite"
+                    className="fixed top-6 right-6 z-[110] max-w-md w-[calc(100vw-3rem)] sm:w-auto flex items-center justify-between gap-4 px-5 py-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[15px] font-semibold shadow-xl animate-in fade-in slide-in-from-top-3 duration-200"
+                >
+                    <div className="flex items-center gap-3">
+                        <CheckCircle2 size={21} className="shrink-0 text-emerald-600" aria-hidden="true" />
+                        <span>{successMessage}</span>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setSuccessMessage(null)}
+                        aria-label="Tutup notifikasi"
+                        className="text-emerald-600 hover:text-emerald-800 p-1 rounded-lg transition-colors cursor-pointer shrink-0"
+                    >
+                        <X size={18} aria-hidden="true" />
+                    </button>
                 </div>
             )}
 
@@ -1000,6 +1082,7 @@ export default function AdminBeritaForm({
                                     <Search size={14} className="absolute left-3 text-slate-400 pointer-events-none" />
                                     <input
                                         type="text"
+                                        maxLength={30}
                                         value={tagSearch}
                                         onChange={(e) => {
                                             setTagSearch(e.target.value)
@@ -1041,11 +1124,38 @@ export default function AdminBeritaForm({
                                                     </button>
                                                 ))}
                                             </div>
+                                        ) : trimmedTagSearch && !exactCategoryMatch ? (
+                                            currentUserRole !== 'REPORTER' ? (
+                                                trimmedTagSearch.length > 30 ? (
+                                                    <div className="px-3 py-3 text-center">
+                                                        <p className="text-xs text-amber-700 font-medium">
+                                                            Nama kategori maksimal 30 karakter ({trimmedTagSearch.length}/30).
+                                                        </p>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleCreateCategory}
+                                                        className="w-full text-left px-3 py-2.5 rounded-lg text-xs font-semibold text-[#12803d] bg-[#f0fdf4] border border-[#bbf7d0] hover:bg-[#dcfce7] active:bg-[#bbf7d0] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#159447] transition-colors flex items-center gap-2 cursor-pointer"
+                                                    >
+                                                        <Plus size={14} aria-hidden="true" className="shrink-0" />
+                                                        <span className="min-w-0 break-words">
+                                                            Buat Kategori Baru: &ldquo;{trimmedTagSearch}&rdquo;
+                                                        </span>
+                                                    </button>
+                                                )
+                                            ) : (
+                                                <div className="px-3 py-4 text-center">
+                                                    <p className="text-xs text-slate-500 break-words">
+                                                        Kategori &ldquo;{trimmedTagSearch}&rdquo; tidak ditemukan. Hanya Admin yang dapat menambahkan kategori baru.
+                                                    </p>
+                                                </div>
+                                            )
                                         ) : (
                                             <div className="px-3 py-4 text-center">
-                                                <p className="text-xs text-slate-400">
-                                                    {tagSearch
-                                                        ? `Kategori "${tagSearch}" tidak ditemukan`
+                                                <p className="text-xs text-slate-500">
+                                                    {exactCategoryMatch
+                                                        ? `Kategori "${exactCategoryMatch}" sudah dipilih`
                                                         : 'Semua kategori sudah dipilih'}
                                                 </p>
                                             </div>
@@ -1053,6 +1163,68 @@ export default function AdminBeritaForm({
                                     </div>
                                 )}
                             </div>
+
+                            {/* Kontrol Inline Tambah Kategori Baru (Khusus Admin) */}
+                            {currentUserRole !== 'REPORTER' && (
+                                <div className="mt-3 pt-2.5 border-t border-slate-100">
+                                    {!isAddingInlineCategory ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsAddingInlineCategory(true)}
+                                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#159447] hover:text-[#12803d] transition-colors cursor-pointer"
+                                        >
+                                            <Plus size={13} strokeWidth={2.5} aria-hidden="true" />
+                                            <span>Tambah Kategori Baru</span>
+                                        </button>
+                                    ) : (
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center gap-1.5">
+                                                <input
+                                                    type="text"
+                                                    maxLength={30}
+                                                    value={inlineCategoryInput}
+                                                    onChange={(e) => setInlineCategoryInput(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            e.preventDefault()
+                                                            handleSaveInlineCategory()
+                                                        } else if (e.key === 'Escape') {
+                                                            setIsAddingInlineCategory(false)
+                                                            setInlineCategoryInput('')
+                                                        }
+                                                    }}
+                                                    placeholder="Nama kategori baru (maks. 30)..."
+                                                    autoFocus
+                                                    className="flex-1 bg-[#f8fafc] border border-slate-200/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#159447] focus:border-[#159447] transition-all"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={handleSaveInlineCategory}
+                                                    disabled={!inlineCategoryInput.trim() || inlineCategoryInput.trim().length > 30}
+                                                    className="px-2.5 py-1.5 bg-[#159447] hover:bg-[#12803d] disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                                                >
+                                                    Simpan
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setIsAddingInlineCategory(false)
+                                                        setInlineCategoryInput('')
+                                                    }}
+                                                    className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg transition-colors cursor-pointer"
+                                                    title="Batal"
+                                                    aria-label="Batal"
+                                                >
+                                                    <X size={14} aria-hidden="true" />
+                                                </button>
+                                            </div>
+                                            {inlineCategoryInput.trim().length > 30 && (
+                                                <p className="text-[10px] text-red-500">Maksimal 30 karakter.</p>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </Card>
 

@@ -78,6 +78,9 @@ export default async function ReporterBeritaPage({
 
         const matchCategory =
             selectedCategory === 'Semua kategori' ||
+            row.categories.some(
+                (cat) => cat.toLowerCase() === selectedCategory.toLowerCase()
+            ) ||
             row.categoryName.toLowerCase() === selectedCategory.toLowerCase()
 
         const matchStatus =
@@ -252,10 +255,17 @@ export default async function ReporterBeritaPage({
                                             </td>
 
                                             {/* KATEGORI */}
-                                            <td className="py-4 px-4 text-center whitespace-nowrap">
-                                                <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold border bg-slate-100 text-slate-700 border-slate-200">
-                                                    {row.categoryName}
-                                                </span>
+                                            <td className="py-4 px-4 text-center">
+                                                <div className="flex flex-wrap items-center justify-center gap-1">
+                                                    {row.categories.map((cat) => (
+                                                        <span
+                                                            key={cat}
+                                                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border bg-slate-100 text-slate-700 border-slate-200 whitespace-nowrap"
+                                                        >
+                                                            {cat}
+                                                        </span>
+                                                    ))}
+                                                </div>
                                             </td>
 
                                             {/* STATUS */}

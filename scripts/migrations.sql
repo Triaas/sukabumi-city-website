@@ -19,3 +19,17 @@ WHERE status = 'PUBLISHED'
 CREATE INDEX IF NOT EXISTS idx_berita_public
   ON public.berita (status, published_at DESC);
 
+-- 3. Tabel Relasi Banyak-ke-Banyak Berita & Kategori (public.berita_categories)
+CREATE TABLE IF NOT EXISTS public.berita_categories (
+  berita_id INT NOT NULL REFERENCES public.berita(id) ON DELETE CASCADE,
+  category_id INT NOT NULL REFERENCES public.categories(id) ON DELETE CASCADE,
+  position INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (berita_id, category_id)
+);
+
+INSERT INTO public.berita_categories (berita_id, category_id, position)
+SELECT id, category_id, 0
+FROM public.berita
+WHERE category_id IS NOT NULL
+ON CONFLICT (berita_id, category_id) DO NOTHING;
+

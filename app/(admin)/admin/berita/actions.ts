@@ -4,7 +4,10 @@ import pool from '@/lib/db';
 import { saveBeritaImage } from '@/lib/upload';
 import { parseCustomPublishTimestamp } from '@/lib/utils/datetime';
 import { generateUniqueSlug } from '@/lib/berita/slug';
-import { resolveCategoryId } from '@/lib/berita/category';
+import {
+  resolveCategoryIds,
+  syncBeritaCategories,
+} from '@/lib/berita/category';
 import {
   resolveNextStatus,
   resolveUnpublishStatus,
@@ -47,6 +50,16 @@ export async function createBeritaAction(
     const title = ((formData.get('title') as string) || '').trim();
     const content = ((formData.get('content') as string) || '').trim();
     const rawCategory = ((formData.get('category_id') as string) || '').trim();
+    const rawCategories = formData
+      .getAll('categories')
+      .map((val) => String(val).trim())
+      .filter(Boolean);
+    const categoryInputs =
+      rawCategories.length > 0
+        ? rawCategories
+        : rawCategory
+          ? rawCategory.split(',').map((c) => c.trim()).filter(Boolean)
+          : [];
     const caption = ((formData.get('caption') as string) || '').trim();
     const sourceCredit = ((formData.get('source_credit') as string) || '').trim();
     const actionType = ((formData.get('action_type') as BeritaActionType) ||
@@ -109,7 +122,7 @@ export async function createBeritaAction(
       };
     }
 
-    if (!rawCategory) {
+    if (categoryInputs.length === 0) {
       return {
         success: false,
         error: 'Pilih minimal 1 kategori berita.',
@@ -132,14 +145,26 @@ export async function createBeritaAction(
       }
     }
 
-    // 2. Resolusi category_id ke tabel public.categories
-    const categoryId = await resolveCategoryId(rawCategory);
-    if (!categoryId) {
+    if (
+      categoryInputs.some((cat) => cat.length > 30 && !/^\d+$/.test(cat))
+    ) {
       return {
         success: false,
-        error: 'Pilih minimal 1 kategori berita.',
+        error: 'Nama kategori baru tidak boleh melebihi 30 karakter.',
       };
     }
+
+    // 2. Resolusi seluruh kategori ke tabel public.categories
+    const categoryIds = await resolveCategoryIds(categoryInputs, userRole);
+    if (!categoryIds || categoryIds.length === 0) {
+      return {
+        success: false,
+        error: isAdmin
+          ? 'Pilih minimal 1 kategori berita yang valid (maksimal 30 karakter).'
+          : 'Kategori tidak ditemukan. Reporter tidak diizinkan membuat kategori baru.',
+      };
+    }
+    const categoryId = categoryIds[0];
 
     // 3. Unggah gambar fisik HANYA setelah seluruh validasi lolos
     let imageUrl: string | null = null;
@@ -235,6 +260,10 @@ export async function createBeritaAction(
     const insertedId = insertedBerita.rows[0]?.id
       ? Number(insertedBerita.rows[0].id)
       : undefined;
+
+    if (insertedId) {
+      await syncBeritaCategories(insertedId, categoryIds);
+    }
 
     revalidateBeritaPaths(newSlug);
 
@@ -382,6 +411,16 @@ export async function updateBeritaAction(
     const title = ((formData.get('title') as string) || '').trim();
     const content = ((formData.get('content') as string) || '').trim();
     const rawCategory = ((formData.get('category_id') as string) || '').trim();
+    const rawCategories = formData
+      .getAll('categories')
+      .map((val) => String(val).trim())
+      .filter(Boolean);
+    const categoryInputs =
+      rawCategories.length > 0
+        ? rawCategories
+        : rawCategory
+          ? rawCategory.split(',').map((c) => c.trim()).filter(Boolean)
+          : [];
     const caption = ((formData.get('caption') as string) || '').trim();
     const sourceCredit = ((formData.get('source_credit') as string) || '').trim();
     const actionType = ((formData.get('action_type') as BeritaActionType) ||
@@ -423,7 +462,7 @@ export async function updateBeritaAction(
       };
     }
 
-    if (!rawCategory) {
+    if (categoryInputs.length === 0) {
       return {
         success: false,
         error: 'Pilih minimal 1 kategori berita.',
@@ -485,14 +524,26 @@ export async function updateBeritaAction(
       };
     }
 
-    // 3. Resolusi category_id ke tabel public.categories
-    const categoryId = await resolveCategoryId(rawCategory);
-    if (!categoryId) {
+    if (
+      categoryInputs.some((cat) => cat.length > 30 && !/^\d+$/.test(cat))
+    ) {
       return {
         success: false,
-        error: 'Pilih minimal 1 kategori berita.',
+        error: 'Nama kategori baru tidak boleh melebihi 30 karakter.',
       };
     }
+
+    // 3. Resolusi seluruh kategori ke tabel public.categories
+    const categoryIds = await resolveCategoryIds(categoryInputs, userRole);
+    if (!categoryIds || categoryIds.length === 0) {
+      return {
+        success: false,
+        error: isAdmin
+          ? 'Pilih minimal 1 kategori berita yang valid (maksimal 30 karakter).'
+          : 'Kategori tidak ditemukan. Reporter tidak diizinkan membuat kategori baru.',
+      };
+    }
+    const categoryId = categoryIds[0];
 
     // 4. Unggah gambar baru HANYA setelah seluruh validasi lolos,
     //    atau gunakan fallback langsung dari database (currentRow.image_url).
@@ -566,6 +617,8 @@ export async function updateBeritaAction(
     ]);
 
     const finalSlug = (updated.rows[0]?.slug as string) || currentSlug;
+
+    await syncBeritaCategories(numericId, categoryIds);
 
     revalidateBeritaPaths(finalSlug);
 

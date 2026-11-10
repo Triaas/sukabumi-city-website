@@ -1,4 +1,4 @@
-import { getNewsById } from '@/lib/db'
+import { getAvailableCategories, getNewsById } from '@/lib/db'
 import type { BeritaEditData } from '@/lib/types/berita'
 import AdminBeritaForm from './AdminBeritaForm'
 
@@ -26,11 +26,14 @@ export default async function TambahBeritaPage({
         }
     }
 
+    const availableCategories = await getAvailableCategories()
+
     return (
         <AdminBeritaForm
             key={initialData?.id ?? 'new'}
             initialData={initialData}
             notFoundId={notFoundId}
+            availableCategories={availableCategories}
         />
     )
 }

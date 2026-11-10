@@ -6,6 +6,7 @@ import type {
   UserRole,
 } from '../types/berita';
 import { normalizeImageUrl } from '../utils/formatters';
+import { ensureBeritaCategoriesTable } from '../berita/category';
 
 // 1. Ambil Daftar Berita untuk Tabel Manajemen Admin & Reporter (public.berita)
 export async function getAdminNewsList(options?: {
@@ -13,6 +14,8 @@ export async function getAdminNewsList(options?: {
   authorName?: string;
 }): Promise<BeritaAdminRow[]> {
   try {
+    await ensureBeritaCategoriesTable();
+
     const isReporter = options?.role === 'REPORTER';
     const hasAuthorFilter = isReporter && Boolean(options?.authorName?.trim());
 
@@ -52,7 +55,14 @@ export async function getAdminNewsList(options?: {
         b.author_name,
         b.author_role,
         b.was_published,
-        COALESCE(c.name, 'Informasi') AS category_name
+        COALESCE(
+          (SELECT STRING_AGG(c2.name, ', ' ORDER BY bc.position ASC)
+           FROM public.berita_categories bc
+           INNER JOIN public.categories c2 ON bc.category_id = c2.id
+           WHERE bc.berita_id = b.id),
+          c.name,
+          'Informasi'
+        ) AS category_name
       FROM public.berita b
       LEFT JOIN public.categories c ON b.category_id = c.id
       ${whereClause}
@@ -70,6 +80,10 @@ export async function getAdminNewsList(options?: {
 
       const normalizedImg = normalizeImageUrl(row.image_url) ?? null;
       const categoryName = row.category_name || 'Informasi';
+      const categoryList = categoryName
+        .split(',')
+        .map((c: string) => c.trim())
+        .filter(Boolean);
       const authorName = row.author_name || 'Diskominfo Kota Sukabumi';
       const publishedIso = row.published_at
         ? new Date(row.published_at).toISOString()
@@ -95,7 +109,7 @@ export async function getAdminNewsList(options?: {
         categoryId: row.category_id ?? null,
         categoryName,
         category_name: categoryName,
-        categories: [categoryName],
+        categories: categoryList.length > 0 ? categoryList : [categoryName],
         authorName,
         author_name: authorName,
         authorRole: (row.author_role as UserRole) || 'REPORTER',
@@ -121,6 +135,8 @@ export async function getNewsById(id: number): Promise<BeritaEditData | null> {
   if (!Number.isFinite(id)) return null;
 
   try {
+    await ensureBeritaCategoriesTable();
+
     const query = `
       SELECT
         b.id,
@@ -135,7 +151,14 @@ export async function getNewsById(id: number): Promise<BeritaEditData | null> {
         b.author_role,
         b.status,
         b.published_at,
-        COALESCE(c.name, '') AS category_name
+        COALESCE(
+          (SELECT STRING_AGG(c2.name, ', ' ORDER BY bc.position ASC)
+           FROM public.berita_categories bc
+           INNER JOIN public.categories c2 ON bc.category_id = c2.id
+           WHERE bc.berita_id = b.id),
+          c.name,
+          ''
+        ) AS category_name
       FROM public.berita b
       LEFT JOIN public.categories c ON b.category_id = c.id
       WHERE b.id = $1
@@ -150,6 +173,11 @@ export async function getNewsById(id: number): Promise<BeritaEditData | null> {
     const publishedIso = row.published_at
       ? new Date(row.published_at).toISOString()
       : null;
+    const categoryNameStr = (row.category_name || '').trim();
+    const categories = categoryNameStr
+      .split(',')
+      .map((c: string) => c.trim())
+      .filter(Boolean);
 
     return {
       id: Number(row.id),
@@ -157,7 +185,8 @@ export async function getNewsById(id: number): Promise<BeritaEditData | null> {
       slug: row.slug || '',
       content: row.content || '',
       category_id: row.category_id ?? null,
-      category_name: row.category_name || '',
+      category_name: categoryNameStr,
+      categories,
       image_url: normalizedImg,
       caption: row.caption || null,
       source_credit: row.source_credit || null,

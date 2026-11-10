@@ -9,6 +9,7 @@ import {
     FileText,
     Clock,
     CheckCircle2,
+    Tags,
 } from 'lucide-react'
 import { getAdminNewsList } from '@/lib/db'
 import {
@@ -87,6 +88,9 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
 
         const matchCategory =
             selectedCategory === 'Semua kategori' ||
+            row.categories.some(
+                (cat) => cat.toLowerCase() === selectedCategory.toLowerCase()
+            ) ||
             row.categoryName.toLowerCase() === selectedCategory.toLowerCase()
 
         const matchStatus =
@@ -113,13 +117,20 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                     </p>
                 </div>
 
-                <div className="flex items-center justify-end sm:ml-auto self-end sm:self-center shrink-0">
+                <div className="flex flex-wrap items-center gap-2.5 justify-end sm:ml-auto self-end sm:self-center shrink-0">
+                    <Link
+                        href="/admin/berita/kategori"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 active:scale-[0.99] text-[#172135] text-xs sm:text-sm font-semibold transition-all shadow-2xs cursor-pointer"
+                    >
+                        <Tags size={16} className="text-[#159447]" aria-hidden="true" />
+                        <span>Kelola Kategori</span>
+                    </Link>
                     <Link
                         href="/admin/berita/tambah"
                         className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#159447] hover:bg-[#12803d] active:scale-[0.99] text-white text-xs sm:text-sm font-semibold transition-all shadow-sm cursor-pointer"
                         style={{ backgroundColor: '#159447' }}
                     >
-                        <PlusCircle size={17} className="stroke-[2.2] text-white" />
+                        <PlusCircle size={17} className="stroke-[2.2] text-white" aria-hidden="true" />
                         <span className="text-white">Tambah Berita Baru</span>
                     </Link>
                 </div>
@@ -262,10 +273,17 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                                             </td>
 
                                             {/* KATEGORI */}
-                                            <td className="py-4 px-4 text-center whitespace-nowrap">
-                                                <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-[11px] font-semibold border bg-slate-100 text-slate-700 border-slate-200">
-                                                    {row.categoryName}
-                                                </span>
+                                            <td className="py-4 px-4 text-center">
+                                                <div className="flex flex-wrap items-center justify-center gap-1">
+                                                    {row.categories.map((cat) => (
+                                                        <span
+                                                            key={cat}
+                                                            className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border bg-slate-100 text-slate-700 border-slate-200 whitespace-nowrap"
+                                                        >
+                                                            {cat}
+                                                        </span>
+                                                    ))}
+                                                </div>
                                             </td>
 
                                             {/* STATUS */}

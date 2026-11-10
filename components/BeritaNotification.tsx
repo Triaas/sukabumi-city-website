@@ -51,10 +51,10 @@ export default function BeritaNotification({ notifKey }: BeritaNotificationProps
         <div
             role="status"
             aria-live="polite"
-            className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium shadow-2xs animate-in fade-in slide-in-from-top-1 duration-200"
+            className="fixed top-6 right-6 z-[110] max-w-md w-[calc(100vw-3rem)] sm:w-auto flex items-center justify-between gap-4 px-5 py-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[15px] font-semibold shadow-xl animate-in fade-in slide-in-from-top-3 duration-200"
         >
-            <div className="flex items-center gap-2">
-                <CheckCircle2 size={16} className="shrink-0 text-emerald-600" />
+            <div className="flex items-center gap-3">
+                <CheckCircle2 size={21} className="shrink-0 text-emerald-600" aria-hidden="true" />
                 <span>{visibleMessage}</span>
             </div>
             <button
@@ -62,9 +62,9 @@ export default function BeritaNotification({ notifKey }: BeritaNotificationProps
                 onClick={() => setVisibleMessage(null)}
                 title="Tutup notifikasi"
                 aria-label="Tutup notifikasi"
-                className="text-emerald-500 hover:text-emerald-700 transition-colors cursor-pointer shrink-0"
+                className="text-emerald-600 hover:text-emerald-800 p-1 rounded-lg transition-colors cursor-pointer shrink-0"
             >
-                <X size={14} />
+                <X size={18} aria-hidden="true" />
             </button>
         </div>
     )
