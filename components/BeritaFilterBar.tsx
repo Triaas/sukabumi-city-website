@@ -4,13 +4,14 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Search, ChevronDown, X } from 'lucide-react'
-import { CATEGORY_FILTER_OPTIONS } from '@/lib/constants/categories'
+import { OFFICIAL_CATEGORIES } from '@/lib/constants/categories'
 
 interface BeritaFilterBarProps {
     basePath: string
     searchQuery: string
     selectedCategory: string
     selectedStatus: string
+    availableCategories?: string[]
     role?: 'ADMIN_BERITA' | 'REPORTER'
     placeholder?: string
 }
@@ -20,6 +21,7 @@ export default function BeritaFilterBar({
     searchQuery,
     selectedCategory,
     selectedStatus,
+    availableCategories,
     role = 'ADMIN_BERITA',
     placeholder = 'Cari judul berita atau nama penulis...',
 }: BeritaFilterBarProps) {
@@ -27,6 +29,17 @@ export default function BeritaFilterBar({
     const [searchInput, setSearchInput] = useState(searchQuery)
     const [isCategoryOpen, setIsCategoryOpen] = useState(false)
     const [isStatusOpen, setIsStatusOpen] = useState(false)
+
+    const categorySource =
+        availableCategories && availableCategories.length > 0
+            ? availableCategories
+            : [...OFFICIAL_CATEGORIES]
+    const categoryOptions = [
+        'Semua kategori',
+        ...categorySource.filter(
+            (cat) => cat.trim().toLowerCase() !== 'semua kategori'
+        ),
+    ]
 
     const statusOptions = [
         { label: 'Semua Status', value: 'ALL' },
@@ -136,7 +149,7 @@ export default function BeritaFilterBar({
                                     onClick={() => setIsCategoryOpen(false)}
                                 />
                                 <div className="absolute left-0 top-full mt-1.5 w-56 max-h-[280px] overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl flex flex-col py-1.5 z-30">
-                                    {CATEGORY_FILTER_OPTIONS.map((cat) => {
+                                    {categoryOptions.map((cat) => {
                                         const isSelected =
                                             selectedCategory.toLowerCase() ===
                                             cat.toLowerCase()

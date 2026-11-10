@@ -4,37 +4,31 @@ import { useState, useRef, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Image as ImageIcon, ChevronDown, ChevronLeft, ChevronRight, Search, X } from 'lucide-react'
+import { OFFICIAL_CATEGORIES } from '@/lib/constants/categories'
 
-const categories = [
-  'Semua kategori',
-  'Agama',
-  'Artikel',
-  'Bencana',
-  'Diskominfo',
-  'Ekonomi',
-  'Hukum',
-  'Infrastruktur',
-  'Kesehatan',
-  'Layanan Publik',
-  'Legislatif',
-  'Lingkungan',
-  'Olahraga',
-  'Pariwisata',
-  'Pendidikan',
-  'Pertanian',
-  'Politik',
-  'Seni Budaya',
-  'Sosial',
-  'Teknologi',
-  'Transportasi',
-  'Umum',
-  'Walikota'
-]
+interface BeritaClientProps {
+  initialNews: any[]
+  availableCategories?: string[]
+}
 
 // Terima data asli dari server
-export default function BeritaClient({ initialNews }: { initialNews: any[] }) {
+export default function BeritaClient({
+  initialNews,
+  availableCategories,
+}: BeritaClientProps) {
   const searchParams = useSearchParams()
   const contentRef = useRef<HTMLDivElement>(null)
+
+  const categorySource =
+    availableCategories && availableCategories.length > 0
+      ? availableCategories
+      : [...OFFICIAL_CATEGORIES]
+  const categories = [
+    'Semua kategori',
+    ...categorySource.filter(
+      (cat) => cat.trim().toLowerCase() !== 'semua kategori'
+    ),
+  ]
 
   // Baca category dari URL param, validasi apakah ada di daftar kategori
   const getInitialCategory = () => {
@@ -80,7 +74,18 @@ export default function BeritaClient({ initialNews }: { initialNews: any[] }) {
 
   const categoryFiltered = (activeCategory === 'Pilih Kategori' || activeCategory === 'Semua kategori')
     ? initialNews
-    : initialNews.filter(news => news.category && news.category.toLowerCase().includes(activeCategory.toLowerCase()))
+    : initialNews.filter((news) => {
+        if (!news.category) return false
+        const target = activeCategory.trim().toLowerCase()
+        const itemCategories = String(news.category)
+          .split(',')
+          .map((cat) => cat.trim().toLowerCase())
+          .filter(Boolean)
+        return (
+          itemCategories.includes(target) ||
+          String(news.category).toLowerCase().includes(target)
+        )
+      })
 
   const normalizedQuery = searchQuery.trim().toLowerCase()
   const filteredNews = normalizedQuery

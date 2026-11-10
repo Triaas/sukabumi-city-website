@@ -5,7 +5,10 @@ import type { UserRole } from '@/lib/types/berita';
 export interface CategoryWithCount {
   id: number;
   name: string;
-  news_count: number;
+  total_count: number;
+  published_count: number;
+  draft_count: number;
+  raw_total_count: number;
 }
 
 export interface CategoryMutationResult {
@@ -114,8 +117,13 @@ export async function getAvailableCategories(): Promise<string[]> {
 }
 
 /**
- * Mengambil seluruh daftar kategori dari `public.categories` beserta jumlah berita
- * yang menggunakan masing-masing kategori (baik via `berita_categories` maupun `berita.category_id`).
+ * Mengambil seluruh kategori beserta jumlah berita per status.
+ * - `total_count`: berita aktif di mata Admin (draf pribadi Reporter tidak dihitung).
+ * - `published_count`: berita berstatus PUBLISHED.
+ * - `draft_count`: berita non-PUBLISHED yang terlihat Admin (Draf Admin / Perlu Peninjauan).
+ * - `raw_total_count`: seluruh berita yang terikat kategori, termasuk draf pribadi Reporter
+ *   (dipakai untuk mengunci penghapusan).
+ * Relasi dihitung dari `berita.category_id` dan `berita_categories` (multi-kategori).
  */
 export async function getCategoriesWithCount(): Promise<CategoryWithCount[]> {
   try {
@@ -124,25 +132,42 @@ export async function getCategoriesWithCount(): Promise<CategoryWithCount[]> {
     const result = await pool.query<{
       id: number;
       name: string;
-      news_count: number;
+      total_count: number;
+      published_count: number;
+      draft_count: number;
+      raw_total_count: number;
     }>(
-      `SELECT
+      `WITH category_links AS (
+         SELECT berita_id, category_id FROM public.berita_categories
+         UNION
+         SELECT id AS berita_id, category_id FROM public.berita WHERE category_id IS NOT NULL
+       )
+       SELECT
          c.id,
          c.name,
-         (
-           SELECT COUNT(DISTINCT b_ref.id)::int
-           FROM public.berita b_ref
-           LEFT JOIN public.berita_categories bc ON bc.berita_id = b_ref.id
-           WHERE b_ref.category_id = c.id OR bc.category_id = c.id
-         ) AS news_count
+         COUNT(b.id) FILTER (
+           WHERE NOT (b.status = 'DRAFT' AND b.author_role = 'REPORTER')
+         )::int AS total_count,
+         COUNT(b.id) FILTER (WHERE b.status = 'PUBLISHED')::int AS published_count,
+         COUNT(b.id) FILTER (
+           WHERE b.status != 'PUBLISHED'
+             AND NOT (b.status = 'DRAFT' AND b.author_role = 'REPORTER')
+         )::int AS draft_count,
+         COUNT(b.id)::int AS raw_total_count
        FROM public.categories c
+       LEFT JOIN category_links cl ON cl.category_id = c.id
+       LEFT JOIN public.berita b ON b.id = cl.berita_id
+       GROUP BY c.id, c.name
        ORDER BY c.name ASC`
     );
 
     return result.rows.map((row) => ({
       id: Number(row.id),
       name: row.name,
-      news_count: Number(row.news_count) || 0,
+      total_count: Number(row.total_count) || 0,
+      published_count: Number(row.published_count) || 0,
+      draft_count: Number(row.draft_count) || 0,
+      raw_total_count: Number(row.raw_total_count) || 0,
     }));
   } catch (error: unknown) {
     console.error('Error in getCategoriesWithCount:', error);
@@ -327,17 +352,18 @@ export async function deleteCategory(
     const check = await pool.query<{
       id: number;
       name: string;
-      news_count: number;
+      raw_total_count: number;
     }>(
       `SELECT
          c.id,
          c.name,
          (
-           SELECT COUNT(DISTINCT b_ref.id)::int
-           FROM public.berita b_ref
-           LEFT JOIN public.berita_categories bc ON bc.berita_id = b_ref.id
-           WHERE b_ref.category_id = c.id OR bc.category_id = c.id
-         ) AS news_count
+           SELECT COUNT(*)::int FROM (
+             SELECT berita_id FROM public.berita_categories WHERE category_id = c.id
+             UNION
+             SELECT id FROM public.berita WHERE category_id = c.id
+           ) linked
+         ) AS raw_total_count
        FROM public.categories c
        WHERE c.id = $1
        LIMIT 1`,
@@ -351,13 +377,13 @@ export async function deleteCategory(
       };
     }
 
-    const { name, news_count } = check.rows[0];
-    const count = Number(news_count) || 0;
+    const { name, raw_total_count } = check.rows[0];
+    const count = Number(raw_total_count) || 0;
 
     if (count > 0) {
       return {
         success: false,
-        error: `Kategori "${name}" tidak dapat dihapus karena masih digunakan oleh ${count} berita.`,
+        error: `Kategori "${name}" tidak dapat dihapus karena masih terikat pada ${count} berita atau draf.`,
       };
     }
 

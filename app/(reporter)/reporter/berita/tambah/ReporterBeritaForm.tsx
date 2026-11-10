@@ -347,6 +347,9 @@ export default function ReporterBeritaForm({
     }
 
     const selectTag = (tag: string) => {
+        if (selectedTags.length >= 3 && !selectedTags.includes(tag)) {
+            return
+        }
         if (!selectedTags.includes(tag)) {
             setSelectedTags((prev) => [...prev, tag])
         }
@@ -428,6 +431,11 @@ export default function ReporterBeritaForm({
 
         if (selectedTags.length === 0) {
             setErrorMessage('Pilih minimal 1 kategori berita.')
+            return
+        }
+
+        if (selectedTags.length > 3) {
+            setErrorMessage('Maksimal 3 kategori berita yang diperbolehkan.')
             return
         }
 
@@ -986,8 +994,8 @@ export default function ReporterBeritaForm({
                                         Tag Kategori Berita <span className="text-red-500">*</span>
                                     </span>
                                 </div>
-                                <span className="text-[11px] text-slate-400 font-medium">
-                                    {selectedTags.length} Dipilih
+                                <span className={`text-[11px] font-medium ${selectedTags.length >= 3 ? 'text-amber-600 font-semibold' : 'text-slate-400'}`}>
+                                    {selectedTags.length} / 3 Dipilih
                                 </span>
                             </div>
 
@@ -1044,7 +1052,13 @@ export default function ReporterBeritaForm({
                                 {/* List Dropdown */}
                                 {isTagDropdownOpen && (
                                     <div className="absolute left-0 right-0 top-full mt-1.5 max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-10 p-1.5 overscroll-contain">
-                                        {filteredCategories.length > 0 ? (
+                                        {selectedTags.length >= 3 ? (
+                                            <div className="px-3 py-3 text-center">
+                                                <p className="text-xs text-amber-700 font-medium">
+                                                    Maksimal 3 kategori telah dipilih. Hapus salah satu kategori jika ingin memilih yang lain.
+                                                </p>
+                                            </div>
+                                        ) : filteredCategories.length > 0 ? (
                                             <div className="space-y-0.5">
                                                 {filteredCategories.map((cat) => (
                                                     <button
@@ -1103,7 +1117,7 @@ export default function ReporterBeritaForm({
                                     <Send size={16} />
                                     <span>
                                         {currentUserRole === 'REPORTER'
-                                            ? 'Kirim Draf untuk Review'
+                                            ? 'Serahkan Draf'
                                             : 'Terbitkan Berita'}
                                     </span>
                                 </>

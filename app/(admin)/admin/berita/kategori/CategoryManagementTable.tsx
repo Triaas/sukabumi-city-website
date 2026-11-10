@@ -10,7 +10,6 @@ import {
   Pencil,
   Trash2,
   Tags,
-  FileText,
   X,
   Loader2,
   AlertCircle,
@@ -84,9 +83,6 @@ export default function CategoryManagementTable({
   );
 
   const totalCategories = initialCategories.length;
-  const totalUsedCategories = initialCategories.filter(
-    (c) => c.news_count > 0
-  ).length;
 
   const openCreateModal = () => {
     setFeedback(null);
@@ -103,7 +99,7 @@ export default function CategoryManagementTable({
   };
 
   const openDeleteModal = (category: CategoryWithCount) => {
-    if (category.news_count > 0) return;
+    if (category.raw_total_count > 0) return;
     setFeedback(null);
     setDeleteError(null);
     setDeleteTarget(category);
@@ -259,10 +255,6 @@ export default function CategoryManagementTable({
               <Tags size={13} className="text-[#159447]" aria-hidden="true" />
               Total: {totalCategories} Kategori
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-50 text-[#12803d] border border-green-200/70 text-xs font-semibold">
-              <FileText size={13} aria-hidden="true" />
-              Digunakan: {totalUsedCategories} Kategori
-            </span>
           </div>
 
           <div className="relative w-full sm:w-72">
@@ -299,14 +291,20 @@ export default function CategoryManagementTable({
               <tr className="bg-[#f8fafc] border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 <th className="py-3 px-4 w-14 text-center">No</th>
                 <th className="py-3 px-4">Nama Kategori</th>
-                <th className="py-3 px-4 w-44 text-center">Jumlah Berita</th>
+                <th className="py-3 px-4 w-24 text-center">Total</th>
+                <th className="py-3 px-4 w-28 text-center">Diterbitkan</th>
+                <th className="py-3 px-4 w-28 text-center">Draf / Peninjauan</th>
                 <th className="py-3 px-4 w-32 text-center">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200/60 text-xs">
               {filteredCategories.length > 0 ? (
                 filteredCategories.map((cat, idx) => {
-                  const isUsed = cat.news_count > 0;
+                  const isLocked = cat.raw_total_count > 0;
+                  const lockReason =
+                    cat.raw_total_count > cat.total_count
+                      ? 'Terkunci: Masih digunakan oleh draf pribadi reporter.'
+                      : 'Terkunci: Masih digunakan oleh naskah berita aktif.';
                   return (
                     <tr
                       key={cat.id}
@@ -326,15 +324,19 @@ export default function CategoryManagementTable({
                         </div>
                       </td>
                       <td className="py-3 px-4 text-center">
-                        {isUsed ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                            {cat.news_count} Berita
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600">
-                            0 Berita
-                          </span>
-                        )}
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700">
+                          {cat.total_count}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-green-50 text-[#12803d] border border-green-200">
+                          {cat.published_count}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                          {cat.draft_count}
+                        </span>
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center justify-center gap-1.5">
@@ -348,12 +350,12 @@ export default function CategoryManagementTable({
                             <Pencil size={13} aria-hidden="true" />
                           </button>
 
-                          {isUsed ? (
+                          {isLocked ? (
                             <button
                               type="button"
                               disabled
-                              title={`Masih digunakan oleh ${cat.news_count} berita`}
-                              aria-label={`Kategori ${cat.name} tidak dapat dihapus karena masih digunakan oleh ${cat.news_count} berita`}
+                              title={lockReason}
+                              aria-label={`Kategori ${cat.name} tidak dapat dihapus. ${lockReason}`}
                               className="w-7 h-7 rounded-lg border border-slate-200 bg-slate-50 text-slate-300 opacity-60 flex items-center justify-center cursor-not-allowed"
                             >
                               <Lock size={13} aria-hidden="true" />
@@ -376,7 +378,7 @@ export default function CategoryManagementTable({
                 })
               ) : (
                 <tr>
-                  <td colSpan={4} className="py-10 px-4 text-center">
+                  <td colSpan={6} className="py-10 px-4 text-center">
                     <div className="flex flex-col items-center justify-center space-y-2">
                       <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
                         <Tags size={18} aria-hidden="true" />

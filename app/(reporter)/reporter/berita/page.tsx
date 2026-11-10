@@ -9,15 +9,15 @@ import {
     FileText,
     Clock,
     CheckCircle2,
+    RotateCcw,
 } from 'lucide-react'
-import { getAdminNewsList } from '@/lib/db'
+import { getAdminNewsList, getAvailableCategories } from '@/lib/db'
 import {
     getStatusLabel,
     STATUS_COLORS,
     type BeritaAdminRow,
     type NewsStatus,
 } from '@/lib/types/berita'
-import { CATEGORY_FILTER_OPTIONS } from '@/lib/constants/categories'
 import DeleteNewsButton from '@/components/DeleteNewsButton'
 import UnsubmitNewsButton from '@/components/UnsubmitNewsButton'
 import BeritaFilterBar from '@/components/BeritaFilterBar'
@@ -66,22 +66,28 @@ export default async function ReporterBeritaPage({
     const selectedStatus = resolvedParams.status || 'ALL'
     const notifKey = resolvedParams.notif
 
-    const allRows: BeritaAdminRow[] = await getAdminNewsList({
-        role: 'REPORTER',
-        authorName: 'Budi Santoso',
-    })
+    const [allRows, availableCategories]: [BeritaAdminRow[], string[]] =
+        await Promise.all([
+            getAdminNewsList({
+                role: 'REPORTER',
+                authorName: 'Budi Santoso',
+            }),
+            getAvailableCategories(),
+        ])
 
     const filteredRows = allRows.filter((row) => {
         const matchSearch =
             !searchQuery ||
             row.title.toLowerCase().includes(searchQuery.toLowerCase())
 
+        const targetCat = selectedCategory.trim().toLowerCase()
         const matchCategory =
             selectedCategory === 'Semua kategori' ||
-            row.categories.some(
-                (cat) => cat.toLowerCase() === selectedCategory.toLowerCase()
-            ) ||
-            row.categoryName.toLowerCase() === selectedCategory.toLowerCase()
+            row.categories.some((cat) => cat.trim().toLowerCase() === targetCat) ||
+            row.categoryName
+                .split(',')
+                .map((cat) => cat.trim().toLowerCase())
+                .includes(targetCat)
 
         const matchStatus =
             selectedStatus === 'ALL' || row.status === (selectedStatus as NewsStatus)
@@ -166,6 +172,7 @@ export default async function ReporterBeritaPage({
                 searchQuery={searchQuery}
                 selectedCategory={selectedCategory}
                 selectedStatus={selectedStatus}
+                availableCategories={availableCategories}
                 role="REPORTER"
                 placeholder="Cari judul naskah..."
             />
@@ -188,8 +195,17 @@ export default async function ReporterBeritaPage({
                         <tbody className="divide-y divide-slate-100 text-xs text-slate-600">
                             {filteredRows.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="py-12 text-center text-slate-400">
-                                        Belum ada data berita di database atau tidak ada yang cocok dengan filter.
+                                    <td colSpan={7} className="py-12 text-center text-slate-500">
+                                        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
+                                            <span>Tidak ada berita yang sesuai dengan kriteria pencarian Anda.</span>
+                                            <Link
+                                                href="/reporter/berita"
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 text-xs font-semibold text-slate-700 transition-colors shadow-2xs cursor-pointer"
+                                            >
+                                                <RotateCcw size={13} className="text-slate-500" aria-hidden="true" />
+                                                <span>Reset Filter</span>
+                                            </Link>
+                                        </div>
                                     </td>
                                 </tr>
                             ) : (
