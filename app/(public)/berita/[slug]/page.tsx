@@ -1,8 +1,10 @@
 import Link from 'next/link'
-import { ArrowLeft, Calendar, User, Image as ImageIcon } from 'lucide-react'
+import { ArrowLeft, Calendar, User, Eye, Image as ImageIcon } from 'lucide-react'
 import ShareButtons from '@/components/ShareButtons'
 import { getNewsBySlug, getRelatedNews } from '@/lib/db'
 import FallbackImage from '@/components/FallbackImage'
+
+export const dynamic = 'force-dynamic'
 
 export default async function ArticlePage({
   params,
@@ -56,7 +58,19 @@ export default async function ArticlePage({
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* Spacer Navbar */}
-      <div className="h-24 bg-[#1b293c]"></div>
+      <div className="h-28 sm:h-32 md:h-36 bg-[#1b293c]"></div>
+
+      {isPreview && article.status !== 'PUBLISHED' && (
+        <div className="bg-amber-50 border-b border-amber-200/90 text-amber-900 shadow-2xs">
+          <div className="container mx-auto px-4 md:px-8 lg:px-12 max-w-[1200px] py-3.5 sm:py-4 flex items-center gap-2.5 text-xs sm:text-sm font-semibold">
+            <Eye size={17} className="text-amber-600 shrink-0" aria-hidden="true" />
+            <span>
+              Mode Pratinjau: naskah berita ini masih berstatus{' '}
+              {article.status === 'SUBMITTED' ? 'Perlu Peninjauan' : 'Draf'} dan belum tampil untuk publik.
+            </span>
+          </div>
+        </div>
+      )}
 
       <section className="py-12 md:py-16">
         <div className="container mx-auto px-4 md:px-8 lg:px-12 max-w-[1200px]">

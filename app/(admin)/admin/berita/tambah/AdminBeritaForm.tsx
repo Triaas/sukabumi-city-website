@@ -5,18 +5,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
     ArrowLeft,
-    Bold,
-    Italic,
-    Underline,
-    Heading2,
-    Heading3,
-    List,
-    ListOrdered,
-    Quote,
-    Link2,
-    Undo2,
-    Redo2,
-    Maximize2,
     ImageIcon,
     CloudUpload,
     Trash2,
@@ -36,6 +24,7 @@ import {
     CheckCircle2,
     Lock,
 } from 'lucide-react'
+import RichTextEditor from '@/components/RichTextEditor'
 import { OFFICIAL_CATEGORIES } from '@/lib/constants/categories'
 import {
     getStatusLabel,
@@ -48,31 +37,6 @@ import {
     updateBeritaAction,
     type BeritaActionType,
 } from '../actions'
-
-// ─── Toolbar Button ───────────────────────────────────────────────────────────
-function ToolbarBtn({
-    icon: Icon,
-    label,
-    active = false,
-    onClick,
-}: {
-    icon: React.ElementType
-    label: string
-    active?: boolean
-    onClick?: () => void
-}) {
-    return (
-        <button
-            type="button"
-            title={label}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={onClick}
-            className={`flex items-center justify-center w-7 h-7 rounded-md text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors cursor-pointer ${active ? 'bg-slate-200 text-slate-800' : ''}`}
-        >
-            <Icon size={14} strokeWidth={2} />
-        </button>
-    )
-}
 
 // ─── Card Wrapper ─────────────────────────────────────────────────────────────
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -308,38 +272,14 @@ export default function AdminBeritaForm({
         }
     }
 
-    // Editor & Word Count State
-    const editorRef = useRef<HTMLDivElement>(null)
-    const [wordCount, setWordCount] = useState(0)
+    // Editor Content State (Tiptap)
+    const [content, setContent] = useState(initialData?.content ?? '')
 
-    const updateWordCount = () => {
-        if (editorRef.current) {
-            const text = editorRef.current.innerText || ''
-            const words = text.trim().split(/\s+/).filter((word) => word.length > 0)
-            setWordCount(words.length)
-        }
-    }
-
-    // Pre-fill konten HTML editor saat Edit Mode
     useEffect(() => {
-        if (editorRef.current && initialData?.content) {
-            editorRef.current.innerHTML = initialData.content
-            updateWordCount()
+        if (initialData?.content !== undefined) {
+            setContent(initialData.content)
         }
     }, [initialData?.id, initialData?.content])
-
-    const execFormat = (command: string, value: string = '') => {
-        document.execCommand(command, false, value)
-        editorRef.current?.focus()
-        updateWordCount()
-    }
-
-    const handleLink = () => {
-        const url = prompt('Masukkan URL tautan:', 'https://')
-        if (url) {
-            execFormat('createLink', url)
-        }
-    }
 
     const charCount = title.length
 
@@ -437,15 +377,6 @@ export default function AdminBeritaForm({
         }
     }, [])
 
-    const handleEditorClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        const target = e.target as HTMLElement
-        const anchor = target.closest('a')
-        if (anchor && anchor.href) {
-            e.preventDefault()
-            window.open(anchor.href, '_blank', 'noopener,noreferrer')
-        }
-    }
-
     // Handler Submit ke Server Action (Create atau Update)
     const handleSubmit = async (actionType: BeritaActionType, openPreview = false) => {
         if (submittingAction) return
@@ -454,8 +385,8 @@ export default function AdminBeritaForm({
         setSuccessMessage(null)
 
         const trimmedTitle = title.trim()
-        const editorHtml = editorRef.current?.innerHTML?.trim() || ''
-        const editorText = editorRef.current?.innerText?.trim() || ''
+        const editorHtml = content.trim()
+        const editorText = editorHtml.replace(/<[^>]*>/g, '').trim()
         const hasAnyImage = Boolean(imageFile || existingImageUrl)
         const trimmedCaption = caption.trim()
         const trimmedSourceCredit = sourceCredit.trim()
@@ -855,107 +786,13 @@ export default function AdminBeritaForm({
                             </div>
                         </div>
 
-                        {/* Toolbar */}
-                        <div className="px-4 py-2 border-b border-slate-100 bg-[#fafafa]">
-                            <div className="flex flex-wrap items-center gap-0.5">
-                                <ToolbarBtn
-                                    icon={Bold}
-                                    label="Bold"
-                                    onClick={() => execFormat('bold')}
-                                />
-                                <ToolbarBtn
-                                    icon={Italic}
-                                    label="Italic"
-                                    onClick={() => execFormat('italic')}
-                                />
-                                <ToolbarBtn
-                                    icon={Underline}
-                                    label="Underline"
-                                    onClick={() => execFormat('underline')}
-                                />
-                                <div className="w-px h-5 bg-slate-200 mx-1" />
-                                <ToolbarBtn
-                                    icon={Heading2}
-                                    label="Heading 2"
-                                    onClick={() => execFormat('formatBlock', 'H2')}
-                                />
-                                <ToolbarBtn
-                                    icon={Heading3}
-                                    label="Heading 3"
-                                    onClick={() => execFormat('formatBlock', 'H3')}
-                                />
-                                <button
-                                    type="button"
-                                    title="Format Paragraf Normal"
-                                    onMouseDown={(e) => e.preventDefault()}
-                                    onClick={() => execFormat('formatBlock', 'P')}
-                                    className="flex items-center gap-1 h-7 px-2 rounded-md text-xs font-medium text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors cursor-pointer"
-                                >
-                                    Paragraf
-                                </button>
-                                <div className="w-px h-5 bg-slate-200 mx-1" />
-                                <ToolbarBtn
-                                    icon={List}
-                                    label="Bullet List"
-                                    onClick={() => execFormat('insertUnorderedList')}
-                                />
-                                <ToolbarBtn
-                                    icon={ListOrdered}
-                                    label="Numbered List"
-                                    onClick={() => execFormat('insertOrderedList')}
-                                />
-                                <ToolbarBtn
-                                    icon={Quote}
-                                    label="Blockquote"
-                                    onClick={() => execFormat('formatBlock', 'BLOCKQUOTE')}
-                                />
-                                <ToolbarBtn
-                                    icon={Link2}
-                                    label="Tautan"
-                                    onClick={handleLink}
-                                />
-                                <div className="w-px h-5 bg-slate-200 mx-1" />
-                                <ToolbarBtn
-                                    icon={Undo2}
-                                    label="Undo"
-                                    onClick={() => execFormat('undo')}
-                                />
-                                <ToolbarBtn
-                                    icon={Redo2}
-                                    label="Redo"
-                                    onClick={() => execFormat('redo')}
-                                />
-                                <ToolbarBtn
-                                    icon={Maximize2}
-                                    label="Layar Penuh"
-                                    onClick={() => {
-                                        if (editorRef.current) {
-                                            if (!document.fullscreenElement) {
-                                                editorRef.current.requestFullscreen?.()
-                                            } else {
-                                                document.exitFullscreen?.()
-                                            }
-                                        }
-                                    }}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Editor Area */}
-                        <div
-                            ref={editorRef}
-                            onInput={updateWordCount}
-                            onClick={handleEditorClick}
-                            data-placeholder="Tulis naskah berita lengkap di sini..."
-                            className="px-5 py-5 min-h-[320px] bg-[#f8fafc] text-sm leading-relaxed text-slate-700 editor-content [&_a]:text-blue-600 [&_a]:underline [&_a]:cursor-pointer hover:[&_a]:text-blue-800 empty:before:content-[attr(data-placeholder)] empty:before:text-slate-300 empty:before:pointer-events-none"
-                            suppressContentEditableWarning
-                            contentEditable
-                            style={{ outline: 'none' }}
-                        />
-
-                        {/* Footer */}
-                        <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-white">
-                            <span className="text-[11px] text-slate-500 font-medium">{wordCount} Kata</span>
+                        <div className="p-3 sm:p-4">
+                            <RichTextEditor
+                                value={content}
+                                onChange={setContent}
+                                placeholder="Tulis naskah berita lengkap di sini..."
+                                minHeight="320px"
+                            />
                         </div>
                     </Card>
                 </div>

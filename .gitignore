@@ -16,3 +16,7 @@ node_modules
 
 # Ignore WordPress Uploads (Terlalu besar untuk Git)
 public/wp-content/uploads/
+
+# Abaikan file upload lokal
+/public/uploads/*
+!/public/uploads/.gitkeep

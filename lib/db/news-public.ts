@@ -29,6 +29,7 @@ export async function getNewsBySlug(
           b.author_name::text AS author_name,
           b.caption::text AS caption,
           b.source_credit::text AS source_credit,
+          b.status::text AS status,
           COALESCE(
             (SELECT STRING_AGG(c2.name, ', ' ORDER BY bc.position ASC)
              FROM public.berita_categories bc
@@ -50,6 +51,7 @@ export async function getNewsBySlug(
           b.author_name::text AS author_name,
           b.caption::text AS caption,
           b.source_credit::text AS source_credit,
+          b.status::text AS status,
           COALESCE(
             (SELECT STRING_AGG(c2.name, ', ' ORDER BY bc.position ASC)
              FROM public.berita_categories bc
@@ -80,6 +82,7 @@ export async function getNewsBySlug(
         categories,
         caption: news.caption || null,
         sourceCredit: news.source_credit || null,
+        status: news.status || null,
       };
     }
   } catch (nativeError: any) {

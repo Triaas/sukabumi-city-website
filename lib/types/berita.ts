@@ -70,6 +70,7 @@ export interface BeritaDetailPublic {
   categories: string[];
   caption?: string | null;
   sourceCredit?: string | null;
+  status?: string | null;
 }
 
 /**

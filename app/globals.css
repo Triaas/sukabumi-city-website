@@ -154,40 +154,61 @@ body.hide-navbar #main-navbar {
   display: none;
 }
 
-/* Rich Text Editor content typography */
-.editor-content h2 {
+/* Rich Text Editor & Tiptap ProseMirror content typography */
+.editor-content h2,
+.ProseMirror h2 {
   font-size: 1.35rem;
   font-weight: 700;
   margin: 0.75rem 0 0.5rem;
   color: #172135;
 }
-.editor-content h3 {
+.editor-content h3,
+.ProseMirror h3 {
   font-size: 1.15rem;
   font-weight: 600;
   margin: 0.5rem 0 0.25rem;
   color: #172135;
 }
-.editor-content p {
+.editor-content p,
+.ProseMirror p {
   margin-bottom: 0.75rem;
 }
-.editor-content ul {
+.editor-content ul,
+.ProseMirror ul {
   list-style-type: disc;
   padding-left: 1.5rem;
   margin: 0.5rem 0;
 }
-.editor-content ol {
+.editor-content ol,
+.ProseMirror ol {
   list-style-type: decimal;
   padding-left: 1.5rem;
   margin: 0.5rem 0;
 }
-.editor-content blockquote {
-  border-left: 4px solid #cbd5e1;
-  padding-left: 1rem;
-  color: #64748b;
-  font-style: italic;
-  margin: 1rem 0;
+.editor-content li p,
+.ProseMirror li p {
+  margin-bottom: 0.25rem;
 }
-.editor-content a {
+.editor-content blockquote,
+.ProseMirror blockquote {
+  border-left: 4px solid #159447;
+  padding-left: 1rem;
+  color: #475569;
+  font-style: italic;
+  margin: 0.75rem 0;
+}
+.editor-content a,
+.ProseMirror a {
   color: #159447;
   text-decoration: underline;
+}
+.ProseMirror {
+  outline: none;
+}
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #94a3b8;
+  pointer-events: none;
+  height: 0;
 }
