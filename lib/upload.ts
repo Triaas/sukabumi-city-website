@@ -138,4 +138,45 @@ export async function savePengumumanAttachment(file: File): Promise<string> {
   return `/uploads/pengumuman/lampiran/${fileName}`;
 }
 
+const MAX_TRANSPARANSI_PDF_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
+
+export async function saveTransparansiPdf(file: File): Promise<string> {
+  if (!file || file.size === 0) {
+    throw new Error('Berkas dokumen PDF tidak ditemukan atau kosong.');
+  }
+
+  const isPdfMime = file.type.toLowerCase() === 'application/pdf';
+  const isPdfExt = file.name.toLowerCase().endsWith('.pdf');
+  if (!isPdfMime && !isPdfExt) {
+    throw new Error('Format dokumen tidak didukung. Gunakan berkas PDF.');
+  }
+
+  if (file.size > MAX_TRANSPARANSI_PDF_SIZE_BYTES) {
+    throw new Error('Ukuran berkas PDF melebihi batas maksimal 25 MB.');
+  }
+
+  const uploadDir = path.join(
+    process.cwd(),
+    'public',
+    'uploads',
+    'transparansi'
+  );
+  await fs.mkdir(uploadDir, { recursive: true });
+
+  const baseName = file.name
+    .replace(/\.pdf$/i, '')
+    .replace(/[^a-zA-Z0-9_-]/g, '_')
+    .replace(/_+/g, '_')
+    .slice(0, 60);
+  const fileName = `${Date.now()}-${baseName || 'Dokumen'}.pdf`;
+  const filePath = path.join(uploadDir, fileName);
+
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  await fs.writeFile(filePath, buffer);
+
+  return `/uploads/transparansi/${fileName}`;
+}
+
+
 

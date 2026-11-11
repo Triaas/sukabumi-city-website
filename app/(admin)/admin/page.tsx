@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Eye, FileText, Users, Megaphone, Clock3, FileCheck } from 'lucide-react'
-import { initialTransparansi } from './transparansi/page'
+import { initialTransparansi } from './transparansi/TransparansiClient'
 
 const stats = [
   {

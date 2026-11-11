@@ -1351,6 +1351,7 @@ interface TransparansiDoc {
 
 function TransparansiDokumen() {
   const [documents, setDocuments] = useState<TransparansiDoc[]>([])
+  const [isLoadingDocs, setIsLoadingDocs] = useState(true)
   const [currentPage, setCurrentPage] = useState(0)
   const [selectedDocument, setSelectedDocument] = useState<TransparansiDoc | null>(null)
   const [downloadConfirm, setDownloadConfirm] = useState<TransparansiDoc | null>(null)
@@ -1358,10 +1359,16 @@ function TransparansiDokumen() {
   const totalPages = Math.ceil(documents.length / itemsPerPage)
 
   useEffect(() => {
-    fetch('/api/transparansi-dokumen')
+    fetch('/api/transparansi-dokumen', { cache: 'no-store' })
       .then((res) => res.json())
-      .then((data: TransparansiDoc[]) => setDocuments(data))
-      .catch((err) => console.error('Gagal memuat transparansi dokumen:', err))
+      .then((data: TransparansiDoc[]) => {
+        setDocuments(Array.isArray(data) ? data : [])
+        setIsLoadingDocs(false)
+      })
+      .catch((err) => {
+        console.error('Gagal memuat transparansi dokumen:', err)
+        setIsLoadingDocs(false)
+      })
   }, [])
 
   const currentDocuments = documents.slice(
@@ -1437,11 +1444,13 @@ function TransparansiDokumen() {
         </div>
 
         {/* Document Cards Grid + Pagination ΓÇö flex-col with min-h keeps pagination position stable */}
-        <div className="flex flex-col" style={{ minHeight: '320px' }}>
+        <div className="flex flex-col" style={{ minHeight: '370px' }}>
           {/* Document Cards Grid */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 flex-1">
-            {documents.length === 0 && currentDocuments.length === 0 ? (
+            {isLoadingDocs ? (
               <div className="col-span-5 flex items-center justify-center py-16 text-slate-400 text-sm">Memuat dokumen...</div>
+            ) : documents.length === 0 ? (
+              <div className="col-span-5 flex items-center justify-center py-16 text-slate-400 text-sm">Belum ada dokumen transparansi yang diterbitkan.</div>
             ) : (
               currentDocuments.map((doc) => (
                 /* Outer Transparent Wrapper (Double-Bezel) */
@@ -1459,10 +1468,21 @@ function TransparansiDokumen() {
                       </div>
                     </div>
 
-                    {/* Document Title — flex-grow pushes buttons to bottom */}
-                    <h3 className="flex-grow mb-4 text-sm font-medium leading-tight text-[#1f2937] line-clamp-3 group-hover:text-[#159447] transition-colors">
+
+                    {/* Label Transparansi Dokumen */}
+                    <div className="text-xs font-bold text-[#159447] mb-2 uppercase tracking-wider">
+                      Transparansi Dokumen
+                    </div>
+
+                    {/* Document Title */}
+                    <h3 className="flex-grow mb-3 text-sm font-semibold leading-snug text-[#1d293d] line-clamp-3 group-hover:text-[#159447] transition-colors">
                       {doc.title}
                     </h3>
+
+                    {/* Tanggal Pemberlakuan */}
+                    <div className="mb-4 text-xs font-medium text-slate-400">
+                      {doc.date}
+                    </div>
 
                     {/* Action Buttons */}
                     <div className="flex gap-2 mt-auto">
@@ -1485,7 +1505,7 @@ function TransparansiDokumen() {
             )}
           </div>
 
-          {/* Navigation Controls ΓÇö always at bottom of the fixed-height container */}
+          {/* Navigation Controls - always at bottom of the fixed-height container */}
           {totalPages > 1 && (
             <div className="mt-8 flex items-center justify-center gap-4">
               <button
