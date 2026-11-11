@@ -5,13 +5,12 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Pemerintah Kota Sukabumi | Website Resmi',
   description: 'Portal resmi Pemerintah Kota Sukabumi — Reugreug Pageuh Repeh Rapih.',
-  generator: 'v0.app',
   icons: {
     icon: [
-      { url: '/logo.png', media: '(prefers-color-scheme: light)' },
-      { url: '/logo.png', media: '(prefers-color-scheme: dark)' },
-      { url: '/logo.png', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon.png', type: 'image/png' },
     ],
+    shortcut: '/favicon.ico',
     apple: '/apple-icon.png',
   },
 }

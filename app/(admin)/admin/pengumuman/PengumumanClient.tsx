@@ -20,6 +20,7 @@ import {
     Paperclip,
     FileText,
     Download,
+    ExternalLink,
     UploadCloud,
     Megaphone,
     User,
@@ -1092,7 +1093,7 @@ export default function PengumumanClient({
                                                         size={13}
                                                         className="text-slate-500 shrink-0"
                                                     />
-                                                    <span>1 File</span>
+                                                    <span>PDF</span>
                                                 </button>
                                             ) : (
                                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-rose-50 text-rose-600 border border-rose-200">
@@ -2130,7 +2131,7 @@ export default function PengumumanClient({
             {/* 7. MODAL: LIHAT / PREVIEW DETAIL PENGUMUMAN */}
             {previewItem && (
                 <div className="fixed inset-0 z-[70] bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl border border-slate-200 max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+                    <div className="bg-white rounded-2xl border border-slate-200 max-w-3xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200 flex flex-col">
                         {/* Header Modal */}
                         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                             <div className="flex items-center gap-2">
@@ -2169,7 +2170,7 @@ export default function PengumumanClient({
                             <h2 className="text-lg font-bold text-[#172135] tracking-tight leading-snug">
                                 {previewItem.title}
                             </h2>
-                            <div className="flex items-center gap-2 mt-2.5">
+                            <div className="flex items-center gap-2 mt-2">
                                 <div
                                     className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[9px] shrink-0 ${previewItem.author.avatarBg}`}
                                 >
@@ -2184,70 +2185,65 @@ export default function PengumumanClient({
                             </div>
                         </div>
 
-                        {previewItem.thumbnail_url && (
-                            <div className="rounded-xl overflow-hidden border border-slate-200 bg-slate-100 max-h-48">
-                                <img
-                                    src={previewItem.thumbnail_url}
-                                    alt={previewItem.title}
-                                    className="w-full h-full object-cover"
-                                />
-                            </div>
-                        )}
-
-                        {/* Isi Konten */}
-                        <div
-                            className="bg-[#f8fafc] border border-slate-100 rounded-xl p-4 text-xs text-slate-700 leading-relaxed editor-content [&_a]:text-blue-600 [&_a]:underline"
-                            dangerouslySetInnerHTML={{
-                                __html: previewItem.content,
-                            }}
-                        />
-
-                        {/* Area Unduh Lampiran Dokumen */}
-                        {(previewItem.attachment_url ||
-                            previewItem.attachment) && (
-                            <div className="p-3.5 bg-emerald-50/60 border border-emerald-200/80 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                                <div className="flex items-center gap-2.5 min-w-0">
-                                    <div className="w-9 h-9 rounded-lg bg-red-100 text-red-600 flex items-center justify-center shrink-0">
-                                        <FileText size={18} />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="text-xs font-bold text-[#172135] truncate">
-                                            {getAttachmentDisplayName(
-                                                previewItem.attachment_url ||
-                                                    previewItem.attachment
-                                            )}
-                                        </p>
-                                        <p className="text-[11px] text-slate-500">
-                                            Berkas Lampiran Resmi (PDF)
-                                        </p>
-                                    </div>
+                        {/* Preview Berkas PDF Lampiran */}
+                        {(() => {
+                            let pdfUrl =
+                                previewItem.attachment_url ||
+                                previewItem.attachment ||
+                                ''
+                            if (pdfUrl) {
+                                pdfUrl = pdfUrl
+                                    .replace('https://portal.sukabumikota.go.id', '')
+                                    .replace('http://portal.sukabumikota.go.id', '')
+                            }
+                            return pdfUrl ? (
+                                <div className="w-full h-[520px] rounded-xl overflow-hidden border border-slate-200 bg-slate-100 flex flex-col shadow-inner">
+                                    <iframe
+                                        src={pdfUrl}
+                                        className="w-full flex-1 border-0"
+                                        title={`Lampiran - ${previewItem.title}`}
+                                    />
                                 </div>
-                                <a
-                                    href={
-                                        previewItem.attachment_url ||
-                                        previewItem.attachment ||
-                                        '#'
-                                    }
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    download
-                                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#159447] hover:bg-[#12803d] text-white text-xs font-semibold shadow-xs transition-colors shrink-0 cursor-pointer"
-                                >
-                                    <Download size={14} />
-                                    <span>Unduh Lampiran</span>
-                                </a>
-                            </div>
-                        )}
+                            ) : (
+                                <div className="p-8 text-center bg-slate-50 border border-slate-200 rounded-xl text-slate-500 text-xs">
+                                    Berkas lampiran PDF tidak ditemukan.
+                                </div>
+                            )
+                        })()}
 
                         {/* Footer Modal */}
-                        <div className="flex justify-end pt-2 border-t border-slate-100">
-                            <button
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                            {(() => {
+                                const rawUrl =
+                                    previewItem.attachment_url ||
+                                    previewItem.attachment ||
+                                    ''
+                                const pdfUrl = rawUrl
+                                    ? rawUrl
+                                          .replace('https://portal.sukabumikota.go.id', '')
+                                          .replace('http://portal.sukabumikota.go.id', '')
+                                    : null
+                                return pdfUrl ? (
+                                    <a
+                                        href={pdfUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-2 rounded-xl border-2 border-[#159447] bg-white px-4 py-2 text-xs font-bold text-[#159447] transition-all hover:bg-[#f0fdf4] hover:shadow-xs active:scale-[0.99] cursor-pointer"
+                                    >
+                                        <span>Buka di Tab Baru</span>
+                                        <ExternalLink size={14} className="stroke-[2.2]" />
+                                    </a>
+                                ) : (
+                                    <div />
+                                )
+                            })()}
+                            {/* <button
                                 type="button"
                                 onClick={() => setPreviewItem(null)}
                                 className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 font-semibold text-xs text-[#566276] cursor-pointer"
                             >
-                                Tutup Preview
-                            </button>
+                                Tutup
+                            </button> */}
                         </div>
                     </div>
                 </div>
