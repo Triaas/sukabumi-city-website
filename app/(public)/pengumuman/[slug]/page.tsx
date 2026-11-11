@@ -1,18 +1,34 @@
 import Link from 'next/link'
-import { ArrowLeft, Calendar, User } from 'lucide-react'
+import { ArrowLeft, Calendar, User, Eye } from 'lucide-react'
 import ShareButtons from '@/components/ShareButtons'
-import { getAnnouncementBySlug, getAnnouncements } from '@/lib/announcements'
+import {
+  getAnnouncementBySlug,
+  getAnnouncements,
+  getPengumumanDetailBySlug,
+} from '@/lib/announcements'
+
+export const dynamic = 'force-dynamic'
 
 export default async function AnnouncementDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>
+  searchParams?: Promise<{ preview?: string }>
 }) {
   const { slug } = await params
-  const [announcement, allAnnouncements] = await Promise.all([
-    getAnnouncementBySlug(slug),
+  const resolvedSearch = searchParams ? await searchParams : {}
+  const isPreview = resolvedSearch.preview === 'true'
+
+  const [cmsAnnouncement, allAnnouncements] = await Promise.all([
+    getPengumumanDetailBySlug(slug, isPreview),
     getAnnouncements(),
   ])
+  const legacyAnnouncement = cmsAnnouncement
+    ? null
+    : await getAnnouncementBySlug(slug)
+  const announcement = cmsAnnouncement ?? legacyAnnouncement
+  const isDraftPreview = isPreview && cmsAnnouncement?.status === 'DRAFT'
 
   const otherAnnouncements = allAnnouncements
     .filter((item) => item.slug !== slug)
@@ -34,6 +50,11 @@ export default async function AnnouncementDetailPage({
   const match = announcement.content.match(shortcodeRegex)
   let pdfUrl = match ? match[1] : null
 
+  // Pengumuman dari CMS menyimpan lampiran di kolom tersendiri
+  if (!pdfUrl && cmsAnnouncement?.attachmentUrl) {
+    pdfUrl = cmsAnnouncement.attachmentUrl
+  }
+
   // 2. Ubah URL absolut web lama menjadi relative path (lokal Next.js)
   if (pdfUrl) {
     pdfUrl = pdfUrl.replace('https://portal.sukabumikota.go.id', '')
@@ -47,7 +68,18 @@ export default async function AnnouncementDetailPage({
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* Spacer Navbar */}
-      <div className="h-24 bg-[#1b293c]"></div>
+      <div className="h-28 sm:h-32 md:h-36 bg-[#1b293c]"></div>
+
+      {isDraftPreview && (
+        <div className="bg-amber-50 border-b border-amber-200/90 text-amber-900 shadow-2xs">
+          <div className="container mx-auto px-4 md:px-8 lg:px-12 max-w-[1200px] py-3.5 sm:py-4 flex items-center gap-2.5 text-xs sm:text-sm font-semibold">
+            <Eye size={17} className="text-amber-600 shrink-0" aria-hidden="true" />
+            <span>
+              Mode Pratinjau: pengumuman ini masih berstatus Draf dan belum tampil untuk publik.
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Article Body */}
       <section className="py-12 md:py-16">
@@ -117,14 +149,14 @@ export default async function AnnouncementDetailPage({
                 {otherAnnouncements.map((item) => (
                   <Link
                     href={`/pengumuman/${item.slug}`}
-                    key={item.id}
+                    key={item.slug}
                     className="group p-1.5 rounded-[22px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex flex-col cursor-pointer"
                   >
                     <div className="flex flex-col flex-1 rounded-2xl bg-white border border-slate-200/90 overflow-hidden shadow-sm transition-all duration-300 group-hover:border-[#159447]/40">
                       <div className="h-36 bg-slate-200 flex items-center justify-center overflow-hidden">
                         <img
-                          src="/images/toa_pengumuman.jpg"
-                          alt="Ilustrasi Pengumuman"
+                          src={item.image || '/images/toa_pengumuman.jpg'}
+                          alt={item.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>

@@ -144,15 +144,19 @@ export default function PengumumanPage() {
                 /* Outer Transparent Wrapper (Double-Bezel) */
                 <Link
                   href={`/pengumuman/${item.slug}`}
-                  key={item.id}
+                  key={item.slug}
                   className="group p-1.5 rounded-[22px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex flex-col cursor-pointer"
                 >
                   {/* Inner Main Card */}
                   <div className="flex flex-col flex-1 rounded-2xl bg-white border border-slate-200/90 overflow-hidden shadow-sm transition-all duration-300 group-hover:border-[#159447]/40">
                     <div className="h-36 bg-slate-200 flex items-center justify-center overflow-hidden">
                       <img 
-                        src="/images/toa_pengumuman.jpg" 
-                        alt="Ilustrasi Pengumuman" 
+                        src={item.image || '/images/toa_pengumuman.jpg'} 
+                        alt={item.title} 
+                        onError={(e) => {
+                          e.currentTarget.onerror = null
+                          e.currentTarget.src = '/images/toa_pengumuman.jpg'
+                        }}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
