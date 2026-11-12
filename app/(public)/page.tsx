@@ -1444,9 +1444,9 @@ function TransparansiDokumen() {
         </div>
 
         {/* Document Cards Grid + Pagination ΓÇö flex-col with min-h keeps pagination position stable */}
-        <div className="flex flex-col" style={{ minHeight: '370px' }}>
+        <div className="flex flex-col">
           {/* Document Cards Grid */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 flex-1">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {isLoadingDocs ? (
               <div className="col-span-5 flex items-center justify-center py-16 text-slate-400 text-sm">Memuat dokumen...</div>
             ) : documents.length === 0 ? (
@@ -1456,31 +1456,34 @@ function TransparansiDokumen() {
                 /* Outer Transparent Wrapper (Double-Bezel) */
                 <div
                   key={doc.id}
-                  className="group p-1.5 rounded-[22px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex flex-col"
+                  className="group p-1.5 rounded-[22px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex flex-col min-w-0 w-full"
                 >
                   {/* Inner Main Card */}
-                  <div className="flex flex-col flex-1 rounded-2xl bg-white border border-slate-200/90 p-5 shadow-sm transition-all duration-300 group-hover:border-[#159447]/40">
+                  <div className="flex flex-col flex-1 rounded-2xl bg-white border border-slate-200/90 p-4 shadow-sm transition-all duration-300 group-hover:border-[#159447]/40 min-w-0 overflow-hidden">
                     {/* PDF Icon */}
-                    <div className="mb-4 flex justify-center">
-                      <div className="flex h-16 w-16 flex-col items-center justify-center rounded-xl bg-[#f0fdf4] border-2 border-[#159447] transition-transform duration-300 group-hover:scale-105">
-                        <FileText className="h-6 w-6 text-[#159447]" />
-                        <span className="mt-1 text-xs font-bold text-[#159447]">{doc.type}</span>
+                    <div className="mb-3 flex justify-center">
+                      <div className="flex h-12 w-12 flex-col items-center justify-center rounded-xl bg-[#f0fdf4] border border-[#159447] transition-transform duration-300 group-hover:scale-105">
+                        <FileText className="h-5 w-5 text-[#159447]" />
+                        <span className="text-[10px] font-bold text-[#159447] leading-none mt-0.5">{doc.type}</span>
                       </div>
                     </div>
 
 
                     {/* Label Transparansi Dokumen */}
-                    <div className="text-xs font-bold text-[#159447] mb-2 uppercase tracking-wider">
+                    <div className="text-[11px] font-bold text-[#159447] mb-1.5 uppercase tracking-wider">
                       Transparansi Dokumen
                     </div>
 
                     {/* Document Title */}
-                    <h3 className="flex-grow mb-3 text-sm font-semibold leading-snug text-[#1d293d] line-clamp-3 group-hover:text-[#159447] transition-colors">
+                    <h3
+                      title={doc.title}
+                      className="text-sm font-semibold leading-snug text-[#1d293d] line-clamp-3 group-hover:text-[#159447] transition-colors break-words [overflow-wrap:anywhere]"
+                    >
                       {doc.title}
                     </h3>
 
                     {/* Tanggal Pemberlakuan */}
-                    <div className="mb-4 text-xs font-medium text-slate-400">
+                    <div className="mt-1.5 mb-3 text-xs font-medium text-slate-400">
                       {doc.date}
                     </div>
 
@@ -1488,13 +1491,13 @@ function TransparansiDokumen() {
                     <div className="flex gap-2 mt-auto">
                       <button
                         onClick={() => handleViewClick(doc)}
-                        className="flex-1 rounded-lg bg-[#f8f9fa] border border-slate-200/80 px-3 py-2 text-center text-xs font-semibold text-[#6b7280] hover:bg-[#e5e7eb] hover:text-[#1f2937] transition-colors cursor-pointer"
+                        className="flex-1 rounded-lg bg-[#f8f9fa] border border-slate-200/80 px-2.5 py-1.5 text-center text-xs font-semibold text-[#6b7280] hover:bg-[#e5e7eb] hover:text-[#1f2937] transition-colors cursor-pointer"
                       >
                         Lihat
                       </button>
                       <button
                         onClick={() => setDownloadConfirm(doc)}
-                        className="flex-1 rounded-lg bg-[#159447] px-3 py-2 text-center text-xs font-semibold text-white hover:bg-[#0f7a36] transition-colors cursor-pointer"
+                        className="flex-1 rounded-lg bg-[#159447] px-2.5 py-1.5 text-center text-xs font-semibold text-white hover:bg-[#0f7a36] transition-colors cursor-pointer"
                       >
                         Unduh
                       </button>

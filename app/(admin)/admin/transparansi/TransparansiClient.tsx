@@ -17,6 +17,7 @@ import {
     Check,
     AlertCircle,
     CheckCircle2,
+    Paperclip,
     FileText,
     UploadCloud,
     Loader2,
@@ -946,16 +947,16 @@ export default function TransparansiClient({
                             <tr className="border-b border-slate-100 bg-white text-[11px] font-bold text-[#566276]/60 uppercase tracking-wider">
                                 <th className="py-4 px-4 text-center w-14">NO</th>
                                 <th className="py-4 px-4 text-left">
-                                    JUDUL DOKUMEN
+                                    JUDUL
                                 </th>
-                                <th className="py-4 px-4 text-left w-44">
-                                    TANGGAL BERLAKU
-                                </th>
-                                <th className="py-4 px-4 text-center w-60">
-                                    FILE PDF
+                                <th className="py-4 px-4 text-center w-36">
+                                    LAMPIRAN
                                 </th>
                                 <th className="py-4 px-4 text-center w-28">
                                     STATUS
+                                </th>
+                                <th className="py-4 px-4 text-left w-44">
+                                    TANGGAL BERLAKU
                                 </th>
                                 <th className="py-4 px-4 text-center w-32">
                                     AKSI
@@ -993,46 +994,28 @@ export default function TransparansiClient({
                                             >
                                                 {item.title}
                                             </p>
-                                            {item.description && (
-                                                <p
-                                                    className="text-[11px] text-[#566276] mt-1 line-clamp-1 leading-normal"
-                                                    title={item.description}
-                                                >
-                                                    {item.description}
-                                                </p>
-                                            )}
                                         </td>
 
-                                        {/* TANGGAL BERLAKU */}
-                                        <td className="py-4 px-4 text-left whitespace-nowrap">
-                                            <span className="font-medium text-[#172135] text-xs">
-                                                {item.effectiveDate}
-                                            </span>
-                                        </td>
-
-                                        {/* FILE PDF */}
+                                        {/* LAMPIRAN */}
                                         <td className="py-4 px-4 text-center whitespace-nowrap">
                                             <button
                                                 type="button"
                                                 onClick={() =>
                                                     setPreviewItem(item)
                                                 }
-                                                title={getPdfDisplayName(
-                                                    item.pdf_url || item.pdfFile
-                                                )}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200/90 border border-slate-200/80 text-slate-700 text-xs font-semibold max-w-[220px] transition-colors shadow-2xs cursor-pointer"
-                                            >
-                                                <FileText
-                                                    size={14}
-                                                    className="text-red-500 shrink-0"
-                                                    aria-hidden="true"
-                                                />
-                                                <span className="truncate">
-                                                    {getPdfDisplayName(
+                                                title={
+                                                    getPdfDisplayName(
                                                         item.pdf_url ||
                                                             item.pdfFile
-                                                    )}
-                                                </span>
+                                                    )
+                                                }
+                                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200/90 hover:bg-slate-200 transition-colors cursor-pointer"
+                                            >
+                                                <Paperclip
+                                                    size={13}
+                                                    className="text-slate-500 shrink-0"
+                                                />
+                                                <span>PDF</span>
                                             </button>
                                         </td>
 
@@ -1049,6 +1032,13 @@ export default function TransparansiClient({
                                                     Draf
                                                 </span>
                                             )}
+                                        </td>
+
+                                        {/* TANGGAL BERLAKU */}
+                                        <td className="py-4 px-4 text-left whitespace-nowrap">
+                                            <span className="font-medium text-[#172135] text-xs">
+                                                {item.effectiveDate}
+                                            </span>
                                         </td>
 
                                         {/* AKSI */}

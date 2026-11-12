@@ -1015,7 +1015,7 @@ export default function PengumumanClient({
                             <tr className="border-b border-slate-100 bg-white text-[11px] font-bold text-[#566276]/60 uppercase tracking-wider">
                                 <th className="py-4 px-4 text-center w-14">NO</th>
                                 <th className="py-4 px-4 text-left">
-                                    JUDUL PENGUMUMAN
+                                    JUDUL 
                                 </th>
                                 <th className="py-4 px-4 text-center w-36">
                                     LAMPIRAN
