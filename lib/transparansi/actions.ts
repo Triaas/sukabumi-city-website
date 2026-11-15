@@ -37,6 +37,7 @@ export interface TransparansiMutationResult {
   success: boolean;
   id?: number;
   slug?: string;
+  pdf_url?: string;
   error?: string;
 }
 
@@ -300,6 +301,7 @@ export async function createTransparansiAction(
       success: true,
       id: Number(insertResult.rows[0]?.id),
       slug: insertResult.rows[0]?.slug,
+      pdf_url: finalPdfUrl,
     };
   } catch (error: unknown) {
     console.error('Error in createTransparansiAction:', error);
@@ -440,6 +442,7 @@ export async function updateTransparansiAction(
       success: true,
       id: numericId,
       slug,
+      pdf_url: finalPdfUrl,
     };
   } catch (error: unknown) {
     console.error('Error in updateTransparansiAction:', error);

@@ -21,6 +21,8 @@ import {
     FileText,
     UploadCloud,
     Loader2,
+    Send,
+    Save,
 } from 'lucide-react'
 import {
     createTransparansiAction,
@@ -96,6 +98,18 @@ function parseIndoToDateInput(indoStr: string): string {
         return `${year}-${monthNum}-${day}`
     }
     return ''
+}
+
+function formatYmdToIndoShort(ymd: string): string {
+    if (!ymd) return '-'
+    const parts = ymd.trim().split('-')
+    if (parts.length === 3) {
+        const year = parts[0]
+        const monthIdx = parseInt(parts[1], 10) - 1
+        const day = parseInt(parts[2], 10)
+        return `${String(day).padStart(2, '0')} ${indonesianMonths[monthIdx] || parts[1]} ${year}`
+    }
+    return ymd
 }
 
 function parseDateToTimestamp(dateStr: string): number {
@@ -188,6 +202,9 @@ export default function TransparansiClient({
     const [pdfFileObj, setPdfFileObj] = useState<File | null>(null)
     const [formError, setFormError] = useState<string | null>(null)
     const [pdfError, setPdfError] = useState(false)
+    const [submittingStatus, setSubmittingStatus] = useState<
+        'Diterbitkan' | 'Draf' | 'Preview' | null
+    >(null)
 
     const fileInputRef = useRef<HTMLInputElement>(null)
     const editFileInputRef = useRef<HTMLInputElement>(null)
@@ -405,10 +422,14 @@ export default function TransparansiClient({
         setFormError(null)
     }
 
-    const handleSaveAdd = (e: React.FormEvent) => {
-        e.preventDefault()
-        if (isPending) return
-
+    const buildValidatedPayload = (
+        targetStatus: 'Diterbitkan' | 'Draf'
+    ): {
+        payload: FormData
+        trimmedTitle: string
+        trimmedDesc: string
+        trimmedDate: string
+    } | null => {
         const trimmedTitle = formData.title.trim()
         const trimmedDesc = formData.description.trim()
         const trimmedDate = formData.effectiveDate.trim()
@@ -416,26 +437,26 @@ export default function TransparansiClient({
 
         if (!trimmedTitle) {
             setFormError('Judul dokumen wajib diisi.')
-            return
+            return null
         }
         if (!trimmedDate) {
             setFormError('Tanggal pemberlakuan wajib diisi.')
-            return
+            return null
         }
         if (trimmedDate > maxDate) {
             setFormError(
                 'Tanggal pemberlakuan tidak boleh melebihi tanggal hari ini (WIB).'
             )
-            return
+            return null
         }
         if (!trimmedDesc) {
             setFormError('Deskripsi program wajib diisi.')
-            return
+            return null
         }
         if (!pdfFileObj && !formData.pdfFile.trim()) {
             setPdfError(true)
             setFormError('Berkas dokumen PDF wajib diunggah.')
-            return
+            return null
         }
 
         setPdfError(false)
@@ -445,7 +466,7 @@ export default function TransparansiClient({
         payload.append('title', trimmedTitle)
         payload.append('description', trimmedDesc)
         payload.append('effective_date', trimmedDate)
-        payload.append('status', formData.status)
+        payload.append('status', targetStatus)
 
         if (pdfFileObj) {
             payload.append('pdf_file', pdfFileObj)
@@ -453,8 +474,24 @@ export default function TransparansiClient({
             payload.append('existing_pdf_url', formData.pdfFile)
         }
 
+        return { payload, trimmedTitle, trimmedDesc, trimmedDate }
+    }
+
+    const handleSaveAdd = (
+        targetStatus: 'Diterbitkan' | 'Draf' = 'Diterbitkan',
+        openPreview = false
+    ) => {
+        if (isPending) return
+
+        const validated = buildValidatedPayload(targetStatus)
+        if (!validated) return
+
+        const { payload, trimmedTitle, trimmedDesc, trimmedDate } = validated
+        setSubmittingStatus(openPreview ? 'Preview' : targetStatus)
+
         startTransition(async () => {
             const result = await createTransparansiAction(payload)
+            setSubmittingStatus(null)
             if (!result.success) {
                 setFormError(
                     result.error || 'Gagal menyimpan dokumen transparansi baru.'
@@ -463,10 +500,36 @@ export default function TransparansiClient({
             }
 
             setIsAddModalOpen(false)
+
+            if (openPreview) {
+                const resolvedPdfUrl = result.pdf_url || formData.pdfFile
+                setPreviewItem({
+                    id: result.id ?? Date.now(),
+                    no: String(result.id ?? 0).padStart(2, '0'),
+                    title: trimmedTitle,
+                    slug: result.slug || '',
+                    description: trimmedDesc,
+                    effective_date: trimmedDate,
+                    effectiveDate: formatYmdToIndoShort(trimmedDate),
+                    pdf_url: resolvedPdfUrl,
+                    pdfFile: resolvedPdfUrl,
+                    status: targetStatus,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                })
+                setFeedback({
+                    type: 'success',
+                    message:
+                        'Draf dokumen disimpan dan dibuka dalam mode pratinjau.',
+                })
+                router.refresh()
+                return
+            }
+
             setFeedback({
                 type: 'success',
                 message:
-                    formData.status === 'Diterbitkan'
+                    targetStatus === 'Diterbitkan'
                         ? 'Dokumen transparansi berhasil diterbitkan.'
                         : 'Draf dokumen transparansi berhasil disimpan.',
             })
@@ -474,60 +537,25 @@ export default function TransparansiClient({
         })
     }
 
-    const handleSaveEdit = (e: React.FormEvent) => {
-        e.preventDefault()
+    const handleSaveEdit = (
+        targetStatus: 'Diterbitkan' | 'Draf' = 'Diterbitkan',
+        openPreview = false
+    ) => {
         if (isPending || !editingItem) return
 
-        const trimmedTitle = formData.title.trim()
-        const trimmedDesc = formData.description.trim()
-        const trimmedDate = formData.effectiveDate.trim()
-        const maxDate = getTodayDateWIB()
+        const validated = buildValidatedPayload(targetStatus)
+        if (!validated) return
 
-        if (!trimmedTitle) {
-            setFormError('Judul dokumen wajib diisi.')
-            return
-        }
-        if (!trimmedDate) {
-            setFormError('Tanggal pemberlakuan wajib diisi.')
-            return
-        }
-        if (trimmedDate > maxDate) {
-            setFormError(
-                'Tanggal pemberlakuan tidak boleh melebihi tanggal hari ini (WIB).'
-            )
-            return
-        }
-        if (!trimmedDesc) {
-            setFormError('Deskripsi program wajib diisi.')
-            return
-        }
-        if (!pdfFileObj && !formData.pdfFile.trim()) {
-            setPdfError(true)
-            setFormError('Berkas dokumen PDF wajib tersedia.')
-            return
-        }
-
-        setPdfError(false)
-        setFormError(null)
-
-        const payload = new FormData()
+        const { payload, trimmedTitle, trimmedDesc, trimmedDate } = validated
         payload.append('id', String(editingItem.id))
-        payload.append('title', trimmedTitle)
-        payload.append('description', trimmedDesc)
-        payload.append('effective_date', trimmedDate)
-        payload.append('status', formData.status)
-
-        if (pdfFileObj) {
-            payload.append('pdf_file', pdfFileObj)
-        } else if (formData.pdfFile) {
-            payload.append('existing_pdf_url', formData.pdfFile)
-        }
+        setSubmittingStatus(openPreview ? 'Preview' : targetStatus)
 
         startTransition(async () => {
             const result = await updateTransparansiAction(
                 editingItem.id,
                 payload
             )
+            setSubmittingStatus(null)
             if (!result.success) {
                 setFormError(
                     result.error || 'Gagal memperbarui dokumen transparansi.'
@@ -535,11 +563,38 @@ export default function TransparansiClient({
                 return
             }
 
+            const currentItem = editingItem
             setEditingItem(null)
+
+            if (openPreview) {
+                const resolvedPdfUrl =
+                    result.pdf_url ||
+                    formData.pdfFile ||
+                    currentItem.pdf_url
+                setPreviewItem({
+                    ...currentItem,
+                    title: trimmedTitle,
+                    slug: result.slug || currentItem.slug,
+                    description: trimmedDesc,
+                    effective_date: trimmedDate,
+                    effectiveDate: formatYmdToIndoShort(trimmedDate),
+                    pdf_url: resolvedPdfUrl,
+                    pdfFile: resolvedPdfUrl,
+                    status: targetStatus,
+                })
+                setFeedback({
+                    type: 'success',
+                    message:
+                        'Perubahan dokumen disimpan dan dibuka dalam mode pratinjau.',
+                })
+                router.refresh()
+                return
+            }
+
             setFeedback({
                 type: 'success',
                 message:
-                    formData.status === 'Diterbitkan'
+                    targetStatus === 'Diterbitkan'
                         ? 'Perubahan dokumen berhasil disimpan dan diterbitkan.'
                         : 'Draf dokumen transparansi berhasil disimpan.',
             })
@@ -1245,7 +1300,10 @@ export default function TransparansiClient({
                         )}
 
                         <form
-                            onSubmit={handleSaveAdd}
+                            onSubmit={(e) => {
+                                e.preventDefault()
+                                handleSaveAdd('Diterbitkan')
+                            }}
                             noValidate
                             className="space-y-4 text-xs"
                         >
@@ -1417,65 +1475,90 @@ export default function TransparansiClient({
                                 )}
                             </div>
 
-                            {/* 5. Status Publikasi */}
-                            <div>
-                                <label className="block font-semibold text-[#172135] mb-1.5">
-                                    Status Publikasi{' '}
-                                    <span className="text-red-500">*</span>
+                            {/* 5. Status Publikasi & Aksi */}
+                            <div className="space-y-2.5 pt-2 border-t border-slate-100">
+                                <label className="block font-semibold text-[#172135]">
+                                    Status Publikasi
                                 </label>
+
+                                {/* Tombol Utama: Terbitkan Dokumen */}
+                                <button
+                                    type="button"
+                                    disabled={isPending}
+                                    onClick={() => handleSaveAdd('Diterbitkan')}
+                                    className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 bg-[#159447] hover:bg-[#12803d] active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-all shadow-sm cursor-pointer"
+                                    style={{ backgroundColor: '#159447' }}
+                                >
+                                    {isPending &&
+                                    submittingStatus === 'Diterbitkan' ? (
+                                        <>
+                                            <Loader2
+                                                size={16}
+                                                className="animate-spin"
+                                            />
+                                            <span>Memproses...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Send size={16} />
+                                            <span>Terbitkan Dokumen</span>
+                                        </>
+                                    )}
+                                </button>
+
+                                {/* Secondary Action Buttons: Simpan Draf & Pratinjau */}
                                 <div className="grid grid-cols-2 gap-2.5">
                                     <button
                                         type="button"
-                                        onClick={() =>
-                                            setFormData({
-                                                ...formData,
-                                                status: 'Diterbitkan',
-                                            })
-                                        }
-                                        className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                                            formData.status === 'Diterbitkan'
-                                                ? 'bg-[#f0fdf4] border-[#159447] text-[#159447] shadow-2xs'
-                                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                                        }`}
+                                        disabled={isPending}
+                                        onClick={() => handleSaveAdd('Draf')}
+                                        className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#f8fafc] border border-slate-200 hover:bg-slate-100 hover:border-slate-300 disabled:opacity-60 disabled:cursor-not-allowed text-slate-600 text-xs font-semibold rounded-xl transition-all cursor-pointer"
                                     >
-                                        <span
-                                            className={`w-2 h-2 rounded-full ${
-                                                formData.status ===
-                                                'Diterbitkan'
-                                                    ? 'bg-[#16a34a]'
-                                                    : 'bg-slate-300'
-                                            }`}
-                                        />
-                                        <span>Diterbitkan</span>
+                                        {isPending &&
+                                        submittingStatus === 'Draf' ? (
+                                            <>
+                                                <Loader2
+                                                    size={14}
+                                                    className="animate-spin"
+                                                />
+                                                <span>Menyimpan...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Save size={14} />
+                                                <span>Simpan Draf</span>
+                                            </>
+                                        )}
                                     </button>
                                     <button
                                         type="button"
+                                        disabled={isPending}
                                         onClick={() =>
-                                            setFormData({
-                                                ...formData,
-                                                status: 'Draf',
-                                            })
+                                            handleSaveAdd('Draf', true)
                                         }
-                                        className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                                            formData.status === 'Draf'
-                                                ? 'bg-[#fffbeb] border-[#d97706] text-[#d97706] shadow-2xs'
-                                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                                        }`}
+                                        className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#f8fafc] border border-slate-200 hover:bg-slate-100 hover:border-slate-300 disabled:opacity-60 disabled:cursor-not-allowed text-slate-600 text-xs font-semibold rounded-xl transition-all cursor-pointer"
                                     >
-                                        <span
-                                            className={`w-2 h-2 rounded-full ${
-                                                formData.status === 'Draf'
-                                                    ? 'bg-[#d97706]'
-                                                    : 'bg-slate-300'
-                                            }`}
-                                        />
-                                        <span>Draf</span>
+                                        {isPending &&
+                                        submittingStatus === 'Preview' ? (
+                                            <>
+                                                <Loader2
+                                                    size={14}
+                                                    className="animate-spin"
+                                                />
+                                                <span>Membuka...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Eye size={14} />
+                                                <span>Pratinjau</span>
+                                            </>
+                                        )}
                                     </button>
                                 </div>
                             </div>
 
-                            {/* Tombol Aksi Form */}
-                            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                            {/* Tombol Batal Modal */}
+                            <div className="flex items-center justify-end pt-2 border-t border-slate-100">
                                 <button
                                     type="button"
                                     disabled={isPending}
@@ -1483,25 +1566,6 @@ export default function TransparansiClient({
                                     className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold cursor-pointer transition-colors disabled:opacity-50"
                                 >
                                     Batal
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={isPending}
-                                    className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#159447] hover:bg-[#12803d] text-white font-semibold shadow-xs cursor-pointer transition-all disabled:opacity-60"
-                                    style={{ backgroundColor: '#159447' }}
-                                >
-                                    {isPending ? (
-                                        <>
-                                            <Loader2
-                                                size={14}
-                                                className="animate-spin"
-                                                aria-hidden="true"
-                                            />
-                                            <span>Menyimpan...</span>
-                                        </>
-                                    ) : (
-                                        <span>Simpan Dokumen</span>
-                                    )}
                                 </button>
                             </div>
                         </form>
@@ -1558,7 +1622,10 @@ export default function TransparansiClient({
                         )}
 
                         <form
-                            onSubmit={handleSaveEdit}
+                            onSubmit={(e) => {
+                                e.preventDefault()
+                                handleSaveEdit(editingItem.status)
+                            }}
                             noValidate
                             className="space-y-4 text-xs"
                         >
@@ -1729,65 +1796,100 @@ export default function TransparansiClient({
                                 )}
                             </div>
 
-                            {/* 5. Status Publikasi */}
-                            <div>
-                                <label className="block font-semibold text-[#172135] mb-1.5">
-                                    Status Publikasi{' '}
-                                    <span className="text-red-500">*</span>
+                            {/* 5. Status Publikasi & Aksi */}
+                            <div className="space-y-2.5 pt-2 border-t border-slate-100">
+                                <label className="block font-semibold text-[#172135]">
+                                    Status Publikasi
                                 </label>
+
+                                {/* Tombol Utama: Terbitkan / Simpan & Perbarui Tayangan */}
+                                <button
+                                    type="button"
+                                    disabled={isPending}
+                                    onClick={() =>
+                                        handleSaveEdit('Diterbitkan')
+                                    }
+                                    className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 bg-[#159447] hover:bg-[#12803d] active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-all shadow-sm cursor-pointer"
+                                    style={{ backgroundColor: '#159447' }}
+                                >
+                                    {isPending &&
+                                    submittingStatus === 'Diterbitkan' ? (
+                                        <>
+                                            <Loader2
+                                                size={16}
+                                                className="animate-spin"
+                                            />
+                                            <span>Memproses...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Send size={16} />
+                                            <span>
+                                                {editingItem.status ===
+                                                'Diterbitkan'
+                                                    ? 'Simpan & Perbarui Tayangan'
+                                                    : 'Terbitkan Dokumen'}
+                                            </span>
+                                        </>
+                                    )}
+                                </button>
+
+                                {/* Secondary Action Buttons: Simpan Draf & Pratinjau */}
                                 <div className="grid grid-cols-2 gap-2.5">
                                     <button
                                         type="button"
-                                        onClick={() =>
-                                            setFormData({
-                                                ...formData,
-                                                status: 'Diterbitkan',
-                                            })
-                                        }
-                                        className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                                            formData.status === 'Diterbitkan'
-                                                ? 'bg-[#f0fdf4] border-[#159447] text-[#159447] shadow-2xs'
-                                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                                        }`}
+                                        disabled={isPending}
+                                        onClick={() => handleSaveEdit('Draf')}
+                                        className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#f8fafc] border border-slate-200 hover:bg-slate-100 hover:border-slate-300 disabled:opacity-60 disabled:cursor-not-allowed text-slate-600 text-xs font-semibold rounded-xl transition-all cursor-pointer"
                                     >
-                                        <span
-                                            className={`w-2 h-2 rounded-full ${
-                                                formData.status ===
-                                                'Diterbitkan'
-                                                    ? 'bg-[#16a34a]'
-                                                    : 'bg-slate-300'
-                                            }`}
-                                        />
-                                        <span>Diterbitkan</span>
+                                        {isPending &&
+                                        submittingStatus === 'Draf' ? (
+                                            <>
+                                                <Loader2
+                                                    size={14}
+                                                    className="animate-spin"
+                                                />
+                                                <span>Menyimpan...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Save size={14} />
+                                                <span>Simpan Draf</span>
+                                            </>
+                                        )}
                                     </button>
                                     <button
                                         type="button"
+                                        disabled={isPending}
                                         onClick={() =>
-                                            setFormData({
-                                                ...formData,
-                                                status: 'Draf',
-                                            })
+                                            handleSaveEdit(
+                                                editingItem.status,
+                                                true
+                                            )
                                         }
-                                        className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                                            formData.status === 'Draf'
-                                                ? 'bg-[#fffbeb] border-[#d97706] text-[#d97706] shadow-2xs'
-                                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                                        }`}
+                                        className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#f8fafc] border border-slate-200 hover:bg-slate-100 hover:border-slate-300 disabled:opacity-60 disabled:cursor-not-allowed text-slate-600 text-xs font-semibold rounded-xl transition-all cursor-pointer"
                                     >
-                                        <span
-                                            className={`w-2 h-2 rounded-full ${
-                                                formData.status === 'Draf'
-                                                    ? 'bg-[#d97706]'
-                                                    : 'bg-slate-300'
-                                            }`}
-                                        />
-                                        <span>Draf</span>
+                                        {isPending &&
+                                        submittingStatus === 'Preview' ? (
+                                            <>
+                                                <Loader2
+                                                    size={14}
+                                                    className="animate-spin"
+                                                />
+                                                <span>Membuka...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Eye size={14} />
+                                                <span>Pratinjau</span>
+                                            </>
+                                        )}
                                     </button>
                                 </div>
                             </div>
 
-                            {/* Tombol Aksi Form */}
-                            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                            {/* Tombol Batal Modal */}
+                            <div className="flex items-center justify-end pt-2 border-t border-slate-100">
                                 <button
                                     type="button"
                                     disabled={isPending}
@@ -1795,25 +1897,6 @@ export default function TransparansiClient({
                                     className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold cursor-pointer transition-colors disabled:opacity-50"
                                 >
                                     Batal
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={isPending}
-                                    className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#159447] hover:bg-[#12803d] text-white font-semibold shadow-xs cursor-pointer transition-all disabled:opacity-60"
-                                    style={{ backgroundColor: '#159447' }}
-                                >
-                                    {isPending ? (
-                                        <>
-                                            <Loader2
-                                                size={14}
-                                                className="animate-spin"
-                                                aria-hidden="true"
-                                            />
-                                            <span>Menyimpan...</span>
-                                        </>
-                                    ) : (
-                                        <span>Simpan Perubahan</span>
-                                    )}
                                 </button>
                             </div>
                         </form>
