@@ -178,5 +178,42 @@ export async function saveTransparansiPdf(file: File): Promise<string> {
   return `/uploads/transparansi/${fileName}`;
 }
 
+/**
+ * Menyimpan berkas gambar banner beranda ke direktori `public/uploads/banner/`
+ * dan mengembalikan URL path relatif (contoh: `/uploads/banner/1730000000-a1b2c3d4.webp`).
+ */
+export async function saveBannerImage(file: File): Promise<string> {
+  if (!file || file.size === 0) {
+    throw new Error('Berkas gambar banner tidak ditemukan atau kosong.');
+  }
+
+  const ext = ALLOWED_MIME_TYPES[file.type.toLowerCase()];
+  if (!ext) {
+    throw new Error(
+      'Format berkas gambar tidak didukung. Gunakan format JPG, PNG, atau WebP.'
+    );
+  }
+
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    throw new Error(
+      'Ukuran berkas gambar banner melebihi batas maksimal 5 MB.'
+    );
+  }
+
+  const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'banner');
+  await fs.mkdir(uploadDir, { recursive: true });
+
+  const randomStr = Math.random().toString(36).substring(2, 10);
+  const fileName = `${Date.now()}-${randomStr}.${ext}`;
+  const filePath = path.join(uploadDir, fileName);
+
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  await fs.writeFile(filePath, buffer);
+
+  return `/uploads/banner/${fileName}`;
+}
+
+
 
 

@@ -7,7 +7,7 @@ export async function getEventBanners() {
       SELECT id, title, image_url AS image, target_url AS href
       FROM public.event_banners
       WHERE is_active = TRUE
-      ORDER BY sort_order ASC, id ASC
+      ORDER BY sort_order ASC, id DESC
     `;
     const { rows } = await pool.query(query);
     return rows;
@@ -16,4 +16,3 @@ export async function getEventBanners() {
     return [];
   }
 }
-

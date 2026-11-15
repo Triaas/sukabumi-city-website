@@ -216,7 +216,7 @@ function EventSlider() {
   const [currentSlide, setCurrentSlide] = useState(0)
 
   useEffect(() => {
-    fetch('/api/event-banners')
+    fetch('/api/event-banners', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data: EventBanner[]) => setBanners(data))
       .catch((err) => console.error('Gagal memuat event banners:', err))
