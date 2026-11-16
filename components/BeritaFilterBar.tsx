@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Search, ChevronDown, X } from 'lucide-react'
@@ -82,6 +82,14 @@ export default function BeritaFilterBar({
         selectedCategory !== 'Semua kategori' ||
         selectedStatus !== 'ALL'
 
+    useEffect(() => {
+        if (searchInput.trim() === searchQuery.trim()) return
+        const timer = setTimeout(() => {
+            applyFilters({ q: searchInput })
+        }, 300)
+        return () => clearTimeout(timer)
+    }, [searchInput, searchQuery])
+
     return (
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5">
             <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
@@ -99,7 +107,7 @@ export default function BeritaFilterBar({
                         className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
                     />
                     <input
-                        type="search"
+                        type="text"
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
                         placeholder={placeholder}

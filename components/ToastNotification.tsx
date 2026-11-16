@@ -13,7 +13,7 @@ interface ToastNotificationProps {
 export default function ToastNotification({
     message,
     type = 'success',
-    duration = 1750,
+    duration = 2000,
     onClose,
 }: ToastNotificationProps) {
     const onCloseRef = useRef(onClose)

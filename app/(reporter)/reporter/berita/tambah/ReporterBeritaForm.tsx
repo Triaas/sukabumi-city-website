@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import RichTextEditor from '@/components/RichTextEditor'
 import ToastNotification from '@/components/ToastNotification'
+import ConfirmSaveDraftModal from '@/components/ConfirmSaveDraftModal'
 import { OFFICIAL_CATEGORIES } from '@/lib/constants/categories'
 import {
     getStatusLabel,
@@ -146,7 +147,7 @@ export default function ReporterBeritaForm({
 
     const [caption, setCaption] = useState(initialData?.caption ?? '')
     const [sourceCredit, setSourceCredit] = useState(initialData?.source_credit ?? '')
-    const [selectedTags, setSelectedTags] = useState<string[]>(() => {
+    const initialTags = useMemo(() => {
         if (initialData?.categories && initialData.categories.length > 0) {
             return initialData.categories
         }
@@ -157,7 +158,8 @@ export default function ReporterBeritaForm({
                 .filter(Boolean)
         }
         return []
-    })
+    }, [initialData?.categories, initialData?.category_name])
+    const [selectedTags, setSelectedTags] = useState<string[]>(initialTags)
     const [tagSearch, setTagSearch] = useState('')
     const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false)
     const tagDropdownRef = useRef<HTMLDivElement>(null)
@@ -310,8 +312,95 @@ export default function ReporterBeritaForm({
         }
     }, [])
 
+    const [pendingExitHref, setPendingExitHref] = useState<string | null>(null)
+    const skipUnsavedGuardRef = useRef(false)
+
+    const hasUnsavedChanges =
+        isEditMode &&
+        !isLockedForReporter &&
+        (title !== (initialData?.title ?? '') ||
+            caption !== (initialData?.caption ?? '') ||
+            sourceCredit !== (initialData?.source_credit ?? '') ||
+            content !== (initialData?.content ?? '') ||
+            imageFile !== null ||
+            (existingImageUrl ?? null) !== (initialData?.image_url ?? null) ||
+            selectedTags.length !== initialTags.length ||
+            selectedTags.some((t, i) => t !== initialTags[i]))
+
+    useEffect(() => {
+        if (!hasUnsavedChanges) return
+
+        const handleDocumentClick = (e: MouseEvent) => {
+            if (skipUnsavedGuardRef.current || submittingAction) return
+            if (
+                e.defaultPrevented ||
+                e.button !== 0 ||
+                e.metaKey ||
+                e.ctrlKey ||
+                e.shiftKey ||
+                e.altKey
+            ) {
+                return
+            }
+
+            const target = e.target as HTMLElement | null
+            const anchor = target?.closest('a[href]') as HTMLAnchorElement | null
+            if (!anchor) return
+            if (anchor.target === '_blank' || anchor.hasAttribute('download')) return
+
+            const rawHref = anchor.getAttribute('href')
+            if (
+                !rawHref ||
+                rawHref.startsWith('#') ||
+                rawHref.startsWith('mailto:') ||
+                rawHref.startsWith('tel:')
+            ) {
+                return
+            }
+
+            const nextUrl = new URL(anchor.href, window.location.origin)
+            if (nextUrl.origin !== window.location.origin) return
+
+            const currentPath = `${window.location.pathname}${window.location.search}`
+            const targetPath = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`
+            if (targetPath === currentPath) return
+
+            e.preventDefault()
+            e.stopPropagation()
+            setPendingExitHref(targetPath)
+        }
+
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (skipUnsavedGuardRef.current) return
+            e.preventDefault()
+            e.returnValue = ''
+        }
+
+        document.addEventListener('click', handleDocumentClick, true)
+        window.addEventListener('beforeunload', handleBeforeUnload)
+        return () => {
+            document.removeEventListener('click', handleDocumentClick, true)
+            window.removeEventListener('beforeunload', handleBeforeUnload)
+        }
+    }, [hasUnsavedChanges, submittingAction])
+
+    useEffect(() => {
+        if (!pendingExitHref) return
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && !submittingAction) {
+                setPendingExitHref(null)
+            }
+        }
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [pendingExitHref, submittingAction])
+
     // Handler Submit ke Server Action (Create atau Update)
-    const handleSubmit = async (actionType: BeritaActionType, openPreview = false) => {
+    const handleSubmit = async (
+        actionType: BeritaActionType,
+        openPreview = false,
+        redirectTo?: string | null
+    ) => {
         if (submittingAction || isLockedForReporter) return
 
         setErrorMessage(null)
@@ -325,36 +414,43 @@ export default function ReporterBeritaForm({
         const trimmedSourceCredit = sourceCredit.trim()
 
         if (!trimmedTitle) {
+            setPendingExitHref(null)
             setErrorMessage('Judul berita utama wajib diisi.')
             return
         }
 
         if (!hasAnyImage) {
+            setPendingExitHref(null)
             setErrorMessage('Gambar utama berita wajib diunggah.')
             return
         }
 
         if (!trimmedCaption) {
+            setPendingExitHref(null)
             setErrorMessage('Keterangan / caption foto wajib diisi.')
             return
         }
 
         if (!trimmedSourceCredit) {
+            setPendingExitHref(null)
             setErrorMessage('Sumber foto / atribusi wajib diisi.')
             return
         }
 
         if (!editorText) {
+            setPendingExitHref(null)
             setErrorMessage('Naskah narasi berita wajib diisi.')
             return
         }
 
         if (selectedTags.length === 0) {
+            setPendingExitHref(null)
             setErrorMessage('Pilih minimal 1 kategori berita.')
             return
         }
 
         if (selectedTags.length > 3) {
+            setPendingExitHref(null)
             setErrorMessage('Maksimal 3 kategori berita yang diperbolehkan.')
             return
         }
@@ -388,6 +484,7 @@ export default function ReporterBeritaForm({
                 : await createBeritaAction(formData)
 
             if (!result.success) {
+                setPendingExitHref(null)
                 setErrorMessage(result.error || 'Gagal menyimpan berita.')
                 setSubmittingAction(null)
                 return
@@ -411,9 +508,16 @@ export default function ReporterBeritaForm({
                         : 'draft_saved'
                     : 'submitted'
 
-            router.push(`/reporter/berita?notif=${notifParam}`)
+            skipUnsavedGuardRef.current = true
+            setPendingExitHref(null)
+            if (redirectTo && redirectTo !== '/reporter/berita') {
+                router.push(redirectTo)
+            } else {
+                router.push(`/reporter/berita?notif=${notifParam}`)
+            }
             router.refresh()
         } catch (err: unknown) {
+            setPendingExitHref(null)
             setErrorMessage(
                 err instanceof Error
                     ? err.message
@@ -966,6 +1070,23 @@ export default function ReporterBeritaForm({
                 {/* ─── End Kolom Kanan ─────────────────────────────────── */}
 
             </div>
+
+            <ConfirmSaveDraftModal
+                isOpen={pendingExitHref !== null}
+                isSaving={submittingAction === 'DRAFT'}
+                onConfirmSaveDraft={() =>
+                    handleSubmit('DRAFT', false, pendingExitHref)
+                }
+                onDiscard={() => {
+                    const target = pendingExitHref
+                    skipUnsavedGuardRef.current = true
+                    setPendingExitHref(null)
+                    if (target) {
+                        router.push(target)
+                    }
+                }}
+                onCancel={() => setPendingExitHref(null)}
+            />
         </div>
     )
 }

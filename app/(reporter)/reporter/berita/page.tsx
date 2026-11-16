@@ -221,9 +221,11 @@ export default async function ReporterBeritaPage({
                                     const isDraft = row.status === 'DRAFT'
                                     const isSubmitted = row.status === 'SUBMITTED'
                                     const isPublished = row.status === 'PUBLISHED'
-                                    const viewHref = isPublished
-                                        ? `/berita/${row.slug}`
-                                        : `/berita/${row.slug}?preview=true`
+                                    const titleHref = isDraft
+                                        ? `/reporter/berita/tambah?id=${row.id}`
+                                        : isPublished
+                                          ? `/berita/${row.slug}`
+                                          : `/berita/${row.slug}?preview=true`
 
                                     return (
                                         <tr
@@ -256,18 +258,21 @@ export default async function ReporterBeritaPage({
                                             {/* JUDUL */}
                                             <td className="py-4 px-4 text-left">
                                                 <Link
-                                                    href={viewHref}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
+                                                    href={titleHref}
+                                                    target={
+                                                        isDraft
+                                                            ? undefined
+                                                            : '_blank'
+                                                    }
+                                                    rel={
+                                                        isDraft
+                                                            ? undefined
+                                                            : 'noopener noreferrer'
+                                                    }
                                                     className="font-bold text-[#172135] text-[13px] hover:text-[#159447] transition-colors line-clamp-2"
                                                 >
                                                     {row.title}
                                                 </Link>
-                                                {row.excerpt && (
-                                                    <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">
-                                                        {row.excerpt}
-                                                    </p>
-                                                )}
                                             </td>
 
                                             {/* KATEGORI */}
