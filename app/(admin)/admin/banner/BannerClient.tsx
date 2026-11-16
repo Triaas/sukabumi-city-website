@@ -669,13 +669,19 @@ export default function BannerClient({
                     type="number"
                     min={1}
                     disabled={isPending}
-                    value={formData.sortOrder}
-                    onChange={(e) =>
+                    value={formData.sortOrder || ''}
+                    onChange={(e) => {
+                        const val = e.target.value
                         setFormData({
                             ...formData,
-                            sortOrder: parseInt(e.target.value, 10) || 1,
+                            sortOrder: val === '' ? 0 : Math.max(1, parseInt(val, 10) || 1),
                         })
-                    }
+                    }}
+                    onBlur={() => {
+                        if (!formData.sortOrder || formData.sortOrder < 1) {
+                            setFormData({ ...formData, sortOrder: 1 })
+                        }
+                    }}
                     className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-[#f8fafc] focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] focus:bg-white text-slate-800 text-xs transition-all disabled:opacity-60"
                 />
             </div>

@@ -63,6 +63,33 @@ function parseBooleanStatus(raw: FormDataEntryValue | null, fallback = true): bo
   return fallback;
 }
 
+async function normalizeBannerOrder(
+  movedId?: number,
+  targetPosition?: number
+): Promise<void> {
+  const { rows } = await pool.query<{ id: number }>(
+    `SELECT id FROM public.event_banners ORDER BY sort_order ASC, id DESC`
+  );
+  const orderedIds = rows.map((r) => Number(r.id));
+
+  if (movedId !== undefined && targetPosition !== undefined) {
+    const filtered = orderedIds.filter((id) => id !== movedId);
+    const clampedIndex = Math.max(
+      0,
+      Math.min(filtered.length, targetPosition - 1)
+    );
+    filtered.splice(clampedIndex, 0, movedId);
+    orderedIds.splice(0, orderedIds.length, ...filtered);
+  }
+
+  for (let i = 0; i < orderedIds.length; i++) {
+    await pool.query(
+      `UPDATE public.event_banners SET sort_order = $1 WHERE id = $2`,
+      [i + 1, orderedIds[i]]
+    );
+  }
+}
+
 export async function getBannerList(): Promise<BannerItem[]> {
   try {
     await ensureEventBannersTable();
@@ -79,6 +106,16 @@ export async function getBannerList(): Promise<BannerItem[]> {
       FROM public.event_banners
       ORDER BY sort_order ASC, id DESC
     `);
+
+    const hasInvalidOrder = rows.some(
+      (row, idx) => Number(row.sort_order) !== idx + 1
+    );
+    if (hasInvalidOrder && rows.length > 0) {
+      await normalizeBannerOrder();
+      rows.forEach((row, idx) => {
+        row.sort_order = idx + 1;
+      });
+    }
 
     return rows.map((row) => {
       const rawTarget = (row.target_url || '').trim();
@@ -161,11 +198,14 @@ export async function createBannerAction(
       [title, finalImageUrl, targetUrl, sortOrder, isActive]
     );
 
+    const insertedId = Number(insertResult.rows[0]?.id);
+    await normalizeBannerOrder(insertedId, sortOrder);
+
     revalidateBannerPaths();
 
     return {
       success: true,
-      id: Number(insertResult.rows[0]?.id),
+      id: insertedId,
       imageUrl: finalImageUrl,
     };
   } catch (error: unknown) {
@@ -272,6 +312,8 @@ export async function updateBannerAction(
       [numericId, title, finalImageUrl, targetUrl, sortOrder, isActive]
     );
 
+    await normalizeBannerOrder(numericId, sortOrder);
+
     revalidateBannerPaths();
 
     return {
@@ -316,6 +358,8 @@ export async function deleteBannerAction(
         error: 'Banner tidak ditemukan atau sudah dihapus.',
       };
     }
+
+    await normalizeBannerOrder();
 
     revalidateBannerPaths();
 
