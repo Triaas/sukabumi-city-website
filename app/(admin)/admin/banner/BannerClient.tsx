@@ -9,6 +9,7 @@ import {
     ChevronLeft,
     ChevronRight,
     Eye,
+    EyeOff,
     Pencil,
     Trash2,
     Undo2,
@@ -808,7 +809,7 @@ export default function BannerClient({
                 </div>
                 <div className="bg-white rounded-2xl border border-slate-200/80 p-4 flex items-center gap-4 shadow-xs">
                     <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                        <Undo2 size={20} aria-hidden="true" />
+                        <EyeOff size={20} aria-hidden="true" />
                     </div>
                     <div>
                         <p className="text-xs font-semibold text-slate-500">
