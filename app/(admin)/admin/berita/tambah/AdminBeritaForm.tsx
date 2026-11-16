@@ -25,6 +25,7 @@ import {
     Lock,
 } from 'lucide-react'
 import RichTextEditor from '@/components/RichTextEditor'
+import ToastNotification from '@/components/ToastNotification'
 import { OFFICIAL_CATEGORIES } from '@/lib/constants/categories'
 import {
     getStatusLabel,
@@ -197,18 +198,6 @@ export default function AdminBeritaForm({
         notFoundId ? `Data naskah berita dengan ID #${notFoundId} tidak ditemukan.` : null
     )
     const [successMessage, setSuccessMessage] = useState<string | null>(null)
-
-    useEffect(() => {
-        if (!successMessage) return
-        const timer = setTimeout(() => setSuccessMessage(null), 5000)
-        return () => clearTimeout(timer)
-    }, [successMessage])
-
-    useEffect(() => {
-        if (!errorMessage || notFoundId) return
-        const timer = setTimeout(() => setErrorMessage(null), 5000)
-        return () => clearTimeout(timer)
-    }, [errorMessage, notFoundId])
 
     const applySelectedFile = (file: File) => {
         setErrorMessage(null)
@@ -571,46 +560,16 @@ export default function AdminBeritaForm({
             </div>
 
             {/* Notifikasi Pop-up Toast Error / Sukses */}
-            {errorMessage && (
-                <div
-                    role="alert"
-                    className="fixed top-6 right-6 z-[110] max-w-md w-[calc(100vw-3rem)] sm:w-auto flex items-center justify-between gap-4 px-5 py-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-[15px] font-semibold shadow-xl animate-in fade-in slide-in-from-top-3 duration-200"
-                >
-                    <div className="flex items-center gap-3">
-                        <AlertCircle size={21} className="shrink-0 text-red-500" aria-hidden="true" />
-                        <span>{errorMessage}</span>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={() => setErrorMessage(null)}
-                        aria-label="Tutup notifikasi"
-                        className="text-red-500 hover:text-red-700 p-1 rounded-lg transition-colors cursor-pointer shrink-0"
-                    >
-                        <X size={18} aria-hidden="true" />
-                    </button>
-                </div>
-            )}
-
-            {successMessage && (
-                <div
-                    role="status"
-                    aria-live="polite"
-                    className="fixed top-6 right-6 z-[110] max-w-md w-[calc(100vw-3rem)] sm:w-auto flex items-center justify-between gap-4 px-5 py-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[15px] font-semibold shadow-xl animate-in fade-in slide-in-from-top-3 duration-200"
-                >
-                    <div className="flex items-center gap-3">
-                        <CheckCircle2 size={21} className="shrink-0 text-emerald-600" aria-hidden="true" />
-                        <span>{successMessage}</span>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={() => setSuccessMessage(null)}
-                        aria-label="Tutup notifikasi"
-                        className="text-emerald-600 hover:text-emerald-800 p-1 rounded-lg transition-colors cursor-pointer shrink-0"
-                    >
-                        <X size={18} aria-hidden="true" />
-                    </button>
-                </div>
-            )}
+            <ToastNotification
+                message={errorMessage}
+                type="error"
+                onClose={() => setErrorMessage(null)}
+            />
+            <ToastNotification
+                message={successMessage}
+                type="success"
+                onClose={() => setSuccessMessage(null)}
+            />
 
             {/* ── MAIN GRID ─────────────────────────────────────────────── */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

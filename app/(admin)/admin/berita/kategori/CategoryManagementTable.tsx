@@ -22,6 +22,7 @@ import {
   updateCategoryAction,
   deleteCategoryAction,
 } from './actions';
+import ToastNotification from '@/components/ToastNotification';
 
 interface CategoryManagementTableProps {
   initialCategories: CategoryWithCount[];
@@ -52,14 +53,6 @@ export default function CategoryManagementTable({
     null
   );
   const [deleteError, setDeleteError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!feedback) return;
-    const timer = setTimeout(() => {
-      setFeedback(null);
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, [feedback]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -210,42 +203,11 @@ export default function CategoryManagementTable({
       </div>
 
       {/* NOTIFIKASI POP-UP TOAST */}
-      {feedback && (
-        <div
-          role="status"
-          aria-live="polite"
-          className={`fixed top-6 right-6 z-[110] max-w-md w-[calc(100vw-3rem)] sm:w-auto flex items-center justify-between gap-4 px-5 py-4 rounded-2xl border text-[15px] font-semibold shadow-xl animate-in fade-in slide-in-from-top-3 duration-200 ${
-            feedback.type === 'success'
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-              : 'bg-red-50 border-red-200 text-red-700'
-          }`}
-        >
-          <div className="flex items-center gap-3">
-            {feedback.type === 'success' ? (
-              <CheckCircle2
-                size={21}
-                className="shrink-0 text-emerald-600"
-                aria-hidden="true"
-              />
-            ) : (
-              <AlertCircle
-                size={21}
-                className="shrink-0 text-red-500"
-                aria-hidden="true"
-              />
-            )}
-            <span>{feedback.message}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setFeedback(null)}
-            aria-label="Tutup notifikasi"
-            className="text-slate-500 hover:text-slate-700 p-1 rounded-lg transition-colors cursor-pointer shrink-0"
-          >
-            <X size={18} aria-hidden="true" />
-          </button>
-        </div>
-      )}
+      <ToastNotification
+        message={feedback?.message}
+        type={feedback?.type}
+        onClose={() => setFeedback(null)}
+      />
 
       {/* 2. RINGKASAN SINGKAT & PENCARIAN */}
       <div className="bg-white border border-slate-200/80 rounded-2xl shadow-xs p-4 sm:p-5 space-y-4">

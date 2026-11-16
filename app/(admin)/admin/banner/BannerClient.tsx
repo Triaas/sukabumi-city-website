@@ -29,6 +29,7 @@ import {
     toggleBannerStatusAction,
     type BannerItem,
 } from '@/lib/banner/actions'
+import ToastNotification from '@/components/ToastNotification'
 
 export type { BannerItem }
 
@@ -79,6 +80,7 @@ export default function BannerClient({
     const [previewItem, setPreviewItem] = useState<BannerItem | null>(null)
     const [editingItem, setEditingItem] = useState<BannerItem | null>(null)
     const [deletingItem, setDeletingItem] = useState<BannerItem | null>(null)
+    const [unpublishingItem, setUnpublishingItem] = useState<BannerItem | null>(null)
     const [togglingId, setTogglingId] = useState<number | null>(null)
 
     // Feedback Toast
@@ -86,14 +88,6 @@ export default function BannerClient({
         type: 'success' | 'error'
         message: string
     } | null>(null)
-
-    useEffect(() => {
-        if (!feedback) return
-        const timer = setTimeout(() => {
-            setFeedback(null)
-        }, 5000)
-        return () => clearTimeout(timer)
-    }, [feedback])
 
     // Form State
     const [formData, setFormData] = useState<BannerFormData>({
@@ -114,14 +108,15 @@ export default function BannerClient({
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key !== 'Escape' || isPending) return
-            if (deletingItem) setDeletingItem(null)
+            if (unpublishingItem) setUnpublishingItem(null)
+            else if (deletingItem) setDeletingItem(null)
             else if (previewItem) setPreviewItem(null)
             else if (editingItem) setEditingItem(null)
             else if (isAddModalOpen) setIsAddModalOpen(false)
         }
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
-    }, [isPending, deletingItem, previewItem, editingItem, isAddModalOpen])
+    }, [isPending, unpublishingItem, deletingItem, previewItem, editingItem, isAddModalOpen])
 
     // Filter & Search Logic
     const filteredData = useMemo(() => {
@@ -387,6 +382,33 @@ export default function BannerClient({
         })
     }
 
+    const handleConfirmUnpublish = () => {
+        if (!unpublishingItem || isPending) return
+        const target = unpublishingItem
+        startTransition(async () => {
+            const result = await toggleBannerStatusAction(target.id, false)
+            setUnpublishingItem(null)
+            if (!result.success) {
+                setFeedback({
+                    type: 'error',
+                    message: result.error || 'Gagal menonaktifkan banner.',
+                })
+                return
+            }
+
+            setBannerList((prev) =>
+                prev.map((b) =>
+                    b.id === target.id ? { ...b, isActive: false } : b
+                )
+            )
+            setFeedback({
+                type: 'success',
+                message: `Banner "${target.title}" berhasil dinonaktifkan dari beranda.`,
+            })
+            router.refresh()
+        })
+    }
+
     const renderForm = (
         onSubmit: (e: React.FormEvent) => void,
         onClose: () => void,
@@ -629,42 +651,11 @@ export default function BannerClient({
     return (
         <div className="w-full space-y-6 pb-10">
             {/* Toast Feedback */}
-            {feedback && (
-                <div
-                    role="status"
-                    aria-live="polite"
-                    className={`fixed top-6 right-6 z-[110] max-w-md w-[calc(100vw-3rem)] sm:w-auto flex items-center justify-between gap-4 px-5 py-4 rounded-2xl border text-[15px] font-semibold shadow-xl animate-in fade-in slide-in-from-top-3 duration-200 ${
-                        feedback.type === 'success'
-                            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                            : 'bg-red-50 border-red-200 text-red-700'
-                    }`}
-                >
-                    <div className="flex items-center gap-3">
-                        {feedback.type === 'success' ? (
-                            <CheckCircle2
-                                size={21}
-                                className="shrink-0 text-emerald-600"
-                                aria-hidden="true"
-                            />
-                        ) : (
-                            <AlertCircle
-                                size={21}
-                                className="shrink-0 text-red-500"
-                                aria-hidden="true"
-                            />
-                        )}
-                        <span>{feedback.message}</span>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={() => setFeedback(null)}
-                        aria-label="Tutup notifikasi"
-                        className="text-slate-500 hover:text-slate-700 p-1 rounded-lg transition-colors cursor-pointer shrink-0"
-                    >
-                        <X size={18} aria-hidden="true" />
-                    </button>
-                </div>
-            )}
+            <ToastNotification
+                message={feedback?.message}
+                type={feedback?.type}
+                onClose={() => setFeedback(null)}
+            />
 
             {/* Header & Action Bar */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full">
@@ -979,9 +970,13 @@ export default function BannerClient({
                                                         isPending &&
                                                         togglingId === item.id
                                                     }
-                                                    onClick={() =>
-                                                        handleToggleStatus(item)
-                                                    }
+                                                    onClick={() => {
+                                                        if (item.isActive) {
+                                                            setUnpublishingItem(item)
+                                                        } else {
+                                                            handleToggleStatus(item)
+                                                        }
+                                                    }}
                                                     title={
                                                         item.isActive
                                                             ? 'Nonaktifkan Banner (Sembunyikan dari Beranda)'
@@ -1311,6 +1306,75 @@ export default function BannerClient({
                                     <span>Hapus Banner</span>
                                 )}
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Konfirmasi Turunkan / Nonaktifkan Banner */}
+            {unpublishingItem && (
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-xs p-4"
+                    onClick={() => {
+                        if (!isPending) setUnpublishingItem(null)
+                    }}
+                >
+                    <div
+                        className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 text-center animate-in fade-in zoom-in-95 duration-150"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex flex-col items-center text-center">
+                            {/* Icon Lingkaran di Atas */}
+                            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-50 border-2 border-amber-100 text-amber-600">
+                                <Undo2 className="h-6 w-6 stroke-[2]" />
+                            </div>
+
+                            {/* Judul Modal */}
+                            <h3 className="mb-2 text-lg font-bold text-[#1b293c]">
+                                Konfirmasi Turunkan Banner
+                            </h3>
+
+                            {/* Pesan Keterangan */}
+                            <p className="mb-3 text-sm text-[#66758a] whitespace-normal">
+                                Apakah yakin ingin menonaktifkan banner ini dari beranda?
+                            </p>
+
+                            {/* Preview Singkat Judul Banner */}
+                            {unpublishingItem.title && (
+                                <p className="mb-6 text-xs text-slate-600 font-medium bg-slate-50 border border-slate-200/80 rounded-lg px-3 py-2 line-clamp-2 w-full text-center whitespace-normal">
+                                    &ldquo;{unpublishingItem.title}&rdquo;
+                                </p>
+                            )}
+
+                            {/* Tombol Aksi Tidak & Ya */}
+                            <div className="flex w-full gap-3">
+                                <button
+                                    type="button"
+                                    disabled={isPending}
+                                    onClick={() => setUnpublishingItem(null)}
+                                    className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
+                                >
+                                    Tidak
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={isPending}
+                                    onClick={handleConfirmUnpublish}
+                                    className="flex-1 rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-amber-700 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-70"
+                                >
+                                    {isPending ? (
+                                        <>
+                                            <Loader2
+                                                size={16}
+                                                className="animate-spin text-white"
+                                            />
+                                            <span>Menurunkan...</span>
+                                        </>
+                                    ) : (
+                                        <span>Ya</span>
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
