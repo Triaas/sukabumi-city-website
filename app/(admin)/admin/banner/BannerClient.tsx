@@ -32,6 +32,7 @@ import {
     type BannerItem,
 } from '@/lib/banner/actions'
 import ToastNotification from '@/components/ToastNotification'
+import ConfirmSaveDraftModal from '@/components/ConfirmSaveDraftModal'
 
 export type { BannerItem }
 
@@ -84,6 +85,13 @@ export default function BannerClient({
     const [deletingItem, setDeletingItem] = useState<BannerItem | null>(null)
     const [unpublishingItem, setUnpublishingItem] = useState<BannerItem | null>(null)
     const [togglingId, setTogglingId] = useState<number | null>(null)
+    const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false)
+    const [editInitialSnapshot, setEditInitialSnapshot] = useState<{
+        title: string
+        imageUrl: string
+        targetUrl: string
+        sortOrder: number
+    } | null>(null)
 
     // Feedback Toast
     const [feedback, setFeedback] = useState<{
@@ -107,18 +115,48 @@ export default function BannerClient({
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [isDragging, setIsDragging] = useState(false)
 
+    const hasEditChanges = Boolean(
+        editingItem &&
+            editInitialSnapshot &&
+            (formData.title !== editInitialSnapshot.title ||
+                formData.targetUrl !== editInitialSnapshot.targetUrl ||
+                formData.sortOrder !== editInitialSnapshot.sortOrder ||
+                imageFileObj !== null ||
+                formData.imageUrl !== editInitialSnapshot.imageUrl)
+    )
+
+    const requestCloseEditModal = () => {
+        if (isPending) return
+        if (hasEditChanges) {
+            setIsExitConfirmOpen(true)
+            return
+        }
+        setEditingItem(null)
+        setEditInitialSnapshot(null)
+    }
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key !== 'Escape' || isPending) return
-            if (unpublishingItem) setUnpublishingItem(null)
+            if (isExitConfirmOpen) setIsExitConfirmOpen(false)
+            else if (unpublishingItem) setUnpublishingItem(null)
             else if (deletingItem) setDeletingItem(null)
             else if (previewItem) setPreviewItem(null)
-            else if (editingItem) setEditingItem(null)
+            else if (editingItem) requestCloseEditModal()
             else if (isAddModalOpen) setIsAddModalOpen(false)
         }
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
-    }, [isPending, unpublishingItem, deletingItem, previewItem, editingItem, isAddModalOpen])
+    }, [
+        isPending,
+        isExitConfirmOpen,
+        unpublishingItem,
+        deletingItem,
+        previewItem,
+        editingItem,
+        isAddModalOpen,
+        hasEditChanges,
+    ])
 
     // Filter & Search Logic
     const filteredData = useMemo(() => {
@@ -184,7 +222,14 @@ export default function BannerClient({
     }
 
     const openEditModal = (item: BannerItem) => {
+        setIsExitConfirmOpen(false)
         setEditingItem(item)
+        setEditInitialSnapshot({
+            title: item.title,
+            imageUrl: item.imageUrl,
+            targetUrl: item.targetUrl,
+            sortOrder: item.sortOrder,
+        })
         setFormData({
             title: item.title,
             imageUrl: item.imageUrl,
@@ -303,20 +348,26 @@ export default function BannerClient({
         if (isPending || !editingItem) return
 
         const payload = buildValidatedPayload(targetIsActive)
-        if (!payload) return
+        if (!payload) {
+            setIsExitConfirmOpen(false)
+            return
+        }
 
         payload.append('id', String(editingItem.id))
 
         startTransition(async () => {
             const result = await updateBannerAction(payload)
             if (!result.success) {
+                setIsExitConfirmOpen(false)
                 setFormError(
                     result.error || 'Gagal memperbarui konfigurasi banner.'
                 )
                 return
             }
 
+            setIsExitConfirmOpen(false)
             setEditingItem(null)
+            setEditInitialSnapshot(null)
             setFeedback({
                 type: 'success',
                 message: targetIsActive
@@ -1295,7 +1346,7 @@ export default function BannerClient({
                             <button
                                 type="button"
                                 disabled={isPending}
-                                onClick={() => setEditingItem(null)}
+                                onClick={requestCloseEditModal}
                                 className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors"
                             >
                                 <X size={18} />
@@ -1303,7 +1354,7 @@ export default function BannerClient({
                         </div>
                         {renderForm(
                             handleSaveEdit,
-                            () => setEditingItem(null),
+                            requestCloseEditModal,
                             true
                         )}
                     </div>
@@ -1429,6 +1480,21 @@ export default function BannerClient({
                     </div>
                 </div>
             )}
+
+            <ConfirmSaveDraftModal
+                isOpen={isExitConfirmOpen}
+                isSaving={isPending}
+                isPublished={Boolean(editingItem?.isActive)}
+                onConfirmSaveDraft={() =>
+                    handleSaveEdit(editingItem?.isActive ?? false)
+                }
+                onDiscard={() => {
+                    setIsExitConfirmOpen(false)
+                    setEditingItem(null)
+                    setEditInitialSnapshot(null)
+                }}
+                onCancel={() => setIsExitConfirmOpen(false)}
+            />
         </div>
     )
 }

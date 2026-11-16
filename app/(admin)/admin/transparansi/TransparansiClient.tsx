@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import ToastNotification from '@/components/ToastNotification'
+import ConfirmSaveDraftModal from '@/components/ConfirmSaveDraftModal'
 import {
     PlusCircle,
     Search,
@@ -170,6 +171,13 @@ export default function TransparansiClient({
     const [deletingItem, setDeletingItem] = useState<TransparansiItem | null>(null)
     const [unpublishingItem, setUnpublishingItem] =
         useState<TransparansiItem | null>(null)
+    const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false)
+    const [editInitialSnapshot, setEditInitialSnapshot] = useState<{
+        title: string
+        effectiveDate: string
+        description: string
+        pdfFile: string
+    } | null>(null)
 
     const [feedback, setFeedback] = useState<{
         type: 'success' | 'error'
@@ -214,24 +222,47 @@ export default function TransparansiClient({
         }
     }, [previewItem])
 
+    const hasEditChanges = Boolean(
+        editingItem &&
+            editInitialSnapshot &&
+            (formData.title !== editInitialSnapshot.title ||
+                formData.effectiveDate !== editInitialSnapshot.effectiveDate ||
+                formData.description !== editInitialSnapshot.description ||
+                pdfFileObj !== null ||
+                formData.pdfFile !== editInitialSnapshot.pdfFile)
+    )
+
+    const requestCloseEditModal = () => {
+        if (isPending) return
+        if (hasEditChanges) {
+            setIsExitConfirmOpen(true)
+            return
+        }
+        setEditingItem(null)
+        setEditInitialSnapshot(null)
+    }
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key !== 'Escape' || isPending) return
-            if (unpublishingItem) setUnpublishingItem(null)
+            if (isExitConfirmOpen) setIsExitConfirmOpen(false)
+            else if (unpublishingItem) setUnpublishingItem(null)
             else if (deletingItem) setDeletingItem(null)
             else if (previewItem) setPreviewItem(null)
-            else if (editingItem) setEditingItem(null)
+            else if (editingItem) requestCloseEditModal()
             else if (isAddModalOpen) setIsAddModalOpen(false)
         }
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
     }, [
         isPending,
+        isExitConfirmOpen,
         unpublishingItem,
         deletingItem,
         previewItem,
         editingItem,
         isAddModalOpen,
+        hasEditChanges,
     ])
 
     const filteredData = useMemo(() => {
@@ -368,6 +399,7 @@ export default function TransparansiClient({
         setFormError(null)
         setPdfError(false)
         setPdfFileObj(null)
+        setIsExitConfirmOpen(false)
         setEditingItem(item)
 
         let dateInput =
@@ -378,12 +410,21 @@ export default function TransparansiClient({
             dateInput = maxDate
         }
 
+        const initialPdfFile = item.pdf_url || item.pdfFile
+        const initialDesc = item.description || ''
+        setEditInitialSnapshot({
+            title: item.title,
+            effectiveDate: dateInput,
+            description: initialDesc,
+            pdfFile: initialPdfFile,
+        })
+
         setFormData({
             title: item.title,
             effectiveDate: dateInput,
-            description: item.description || '',
+            description: initialDesc,
             status: item.status,
-            pdfFile: item.pdf_url || item.pdfFile,
+            pdfFile: initialPdfFile,
         })
     }
 
@@ -537,7 +578,10 @@ export default function TransparansiClient({
         if (isPending || !editingItem) return
 
         const validated = buildValidatedPayload(targetStatus)
-        if (!validated) return
+        if (!validated) {
+            setIsExitConfirmOpen(false)
+            return
+        }
 
         const { payload, trimmedTitle, trimmedDesc, trimmedDate } = validated
         payload.append('id', String(editingItem.id))
@@ -550,6 +594,7 @@ export default function TransparansiClient({
             )
             setSubmittingStatus(null)
             if (!result.success) {
+                setIsExitConfirmOpen(false)
                 setFormError(
                     result.error || 'Gagal memperbarui dokumen transparansi.'
                 )
@@ -557,7 +602,9 @@ export default function TransparansiClient({
             }
 
             const currentItem = editingItem
+            setIsExitConfirmOpen(false)
             setEditingItem(null)
+            setEditInitialSnapshot(null)
 
             if (openPreview) {
                 const resolvedPdfUrl =
@@ -1600,7 +1647,7 @@ export default function TransparansiClient({
                                 type="button"
                                 aria-label="Tutup modal edit dokumen"
                                 disabled={isPending}
-                                onClick={() => setEditingItem(null)}
+                                onClick={requestCloseEditModal}
                                 className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors"
                             >
                                 <X size={18} aria-hidden="true" />
@@ -1890,7 +1937,7 @@ export default function TransparansiClient({
                                 <button
                                     type="button"
                                     disabled={isPending}
-                                    onClick={() => setEditingItem(null)}
+                                    onClick={requestCloseEditModal}
                                     className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold cursor-pointer transition-colors disabled:opacity-50"
                                 >
                                     Batal
@@ -2304,6 +2351,21 @@ export default function TransparansiClient({
                     </div>
                 </div>
             )}
+
+            <ConfirmSaveDraftModal
+                isOpen={isExitConfirmOpen}
+                isSaving={isPending}
+                isPublished={editingItem?.status === 'Diterbitkan'}
+                onConfirmSaveDraft={() =>
+                    handleSaveEdit(editingItem?.status ?? 'Draf')
+                }
+                onDiscard={() => {
+                    setIsExitConfirmOpen(false)
+                    setEditingItem(null)
+                    setEditInitialSnapshot(null)
+                }}
+                onCancel={() => setIsExitConfirmOpen(false)}
+            />
         </div>
     )
 }

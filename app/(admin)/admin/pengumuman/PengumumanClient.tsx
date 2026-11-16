@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import ToastNotification from '@/components/ToastNotification'
+import ConfirmSaveDraftModal from '@/components/ConfirmSaveDraftModal'
 import {
     PlusCircle,
     Search,
@@ -178,6 +179,15 @@ export default function PengumumanClient({
     const [previewItem, setPreviewItem] = useState<PengumumanItem | null>(null)
     const [deletingItem, setDeletingItem] = useState<PengumumanItem | null>(null)
     const [unpublishingItem, setUnpublishingItem] = useState<PengumumanItem | null>(null)
+    const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false)
+    const [editInitialSnapshot, setEditInitialSnapshot] = useState<{
+        title: string
+        content: string
+        publishDate: string
+        publishTime: string
+        attachment: string | null
+        thumbnailUrl: string | null
+    } | null>(null)
 
     // Floating Toast Feedback
     const [feedback, setFeedback] = useState<{
@@ -215,6 +225,52 @@ export default function PengumumanClient({
 
     const [isDragging, setIsDragging] = useState(false)
     const [attachmentError, setAttachmentError] = useState(false)
+
+    const hasEditChanges = Boolean(
+        editingItem &&
+            editInitialSnapshot &&
+            (formData.title !== editInitialSnapshot.title ||
+                formData.content !== editInitialSnapshot.content ||
+                formData.publishDate !== editInitialSnapshot.publishDate ||
+                formData.publishTime !== editInitialSnapshot.publishTime ||
+                formData.attachment !== editInitialSnapshot.attachment ||
+                formData.thumbnailUrl !== editInitialSnapshot.thumbnailUrl ||
+                attachmentFile !== null ||
+                thumbnailFile !== null)
+    )
+
+    const requestCloseEditModal = () => {
+        if (isPending) return
+        if (hasEditChanges) {
+            setIsExitConfirmOpen(true)
+            return
+        }
+        setEditingItem(null)
+        setEditInitialSnapshot(null)
+    }
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key !== 'Escape' || isPending) return
+            if (isExitConfirmOpen) setIsExitConfirmOpen(false)
+            else if (unpublishingItem) setUnpublishingItem(null)
+            else if (deletingItem) setDeletingItem(null)
+            else if (previewItem) setPreviewItem(null)
+            else if (editingItem) requestCloseEditModal()
+            else if (isAddModalOpen) setIsAddModalOpen(false)
+        }
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [
+        isPending,
+        isExitConfirmOpen,
+        unpublishingItem,
+        deletingItem,
+        previewItem,
+        editingItem,
+        isAddModalOpen,
+        hasEditChanges,
+    ])
 
     // ─── Filter & Search Logic ────────────────────────────────────────────────
     const filteredData = useMemo(() => {
@@ -395,6 +451,7 @@ export default function PengumumanClient({
         setThumbnailFile(null)
         setThumbnailPreview(item.thumbnail_url || null)
         setSubmittingStatus(null)
+        setIsExitConfirmOpen(false)
         setEditingItem(item)
 
         const now = extractWibParts()
@@ -410,6 +467,17 @@ export default function PengumumanClient({
             timeInput = now.time
         }
 
+        const initialAttachment = item.attachment_url || item.attachment
+        const initialThumbnailUrl = item.thumbnail_url || null
+        setEditInitialSnapshot({
+            title: item.title,
+            content: item.content,
+            publishDate: dateInput,
+            publishTime: timeInput,
+            attachment: initialAttachment,
+            thumbnailUrl: initialThumbnailUrl,
+        })
+
         setFormData({
             title: item.title,
             content: item.content,
@@ -418,8 +486,8 @@ export default function PengumumanClient({
             authorName: item.author.name || 'Trias Firmansyah',
             authorRole: item.author.role || 'Admin',
             status: item.status,
-            attachment: item.attachment_url || item.attachment,
-            thumbnailUrl: item.thumbnail_url || null,
+            attachment: initialAttachment,
+            thumbnailUrl: initialThumbnailUrl,
         })
     }
 
@@ -483,14 +551,17 @@ export default function PengumumanClient({
         const plainContent = stripHtmlTags(formData.content)
 
         if (!trimmedTitle) {
+            setIsExitConfirmOpen(false)
             setFormError('Judul pengumuman wajib diisi.')
             return
         }
         if (!plainContent) {
+            setIsExitConfirmOpen(false)
             setFormError('Isi pengumuman wajib diisi.')
             return
         }
         if (!attachmentFile && !formData.attachment) {
+            setIsExitConfirmOpen(false)
             setAttachmentError(true)
             return
         }
@@ -566,14 +637,17 @@ export default function PengumumanClient({
         const plainContent = stripHtmlTags(formData.content)
 
         if (!trimmedTitle) {
+            setIsExitConfirmOpen(false)
             setFormError('Judul pengumuman wajib diisi.')
             return
         }
         if (!plainContent) {
+            setIsExitConfirmOpen(false)
             setFormError('Isi pengumuman wajib diisi.')
             return
         }
         if (!attachmentFile && !formData.attachment) {
+            setIsExitConfirmOpen(false)
             setAttachmentError(true)
             return
         }
@@ -609,11 +683,15 @@ export default function PengumumanClient({
             )
             setSubmittingStatus(null)
             if (!result.success) {
+                setIsExitConfirmOpen(false)
                 setFormError(
                     result.error || 'Gagal memperbarui pengumuman.'
                 )
                 return
             }
+
+            setIsExitConfirmOpen(false)
+            setEditInitialSnapshot(null)
 
             if (openPreview && result.slug) {
                 window.open(
@@ -1706,7 +1784,7 @@ export default function PengumumanClient({
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setEditingItem(null)}
+                                onClick={requestCloseEditModal}
                                 disabled={isPending}
                                 className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
                             >
@@ -2087,7 +2165,7 @@ export default function PengumumanClient({
                             <div className="flex items-center justify-end pt-2 border-t border-slate-100">
                                 <button
                                     type="button"
-                                    onClick={() => setEditingItem(null)}
+                                    onClick={requestCloseEditModal}
                                     disabled={isPending}
                                     className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold cursor-pointer disabled:opacity-50"
                                 >
@@ -2347,6 +2425,21 @@ export default function PengumumanClient({
                     </div>
                 </div>
             )}
+
+            <ConfirmSaveDraftModal
+                isOpen={isExitConfirmOpen}
+                isSaving={isPending}
+                isPublished={editingItem?.status === 'Diterbitkan'}
+                onConfirmSaveDraft={() =>
+                    handleSaveEdit(editingItem?.status ?? 'Draf')
+                }
+                onDiscard={() => {
+                    setIsExitConfirmOpen(false)
+                    setEditingItem(null)
+                    setEditInitialSnapshot(null)
+                }}
+                onCancel={() => setIsExitConfirmOpen(false)}
+            />
         </div>
     )
 }
