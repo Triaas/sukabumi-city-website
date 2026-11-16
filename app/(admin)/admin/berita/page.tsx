@@ -274,7 +274,7 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                                                     href={
                                                         isPublished
                                                             ? `/berita/${row.slug}`
-                                                            : `/admin/berita/tambah?id=${row.id}`
+                                                            : `/admin/berita/tambah?ref=${row.uuid}`
                                                     }
                                                     target={
                                                         isPublished
@@ -373,7 +373,7 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
 
                                                     {/* 2. Pena (Edit): SELALU AKTIF di semua status */}
                                                     <Link
-                                                        href={`/admin/berita/tambah?id=${row.id}`}
+                                                        href={`/admin/berita/tambah?ref=${row.uuid}`}
                                                         title="Edit Berita"
                                                         className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50 flex items-center justify-center transition-colors"
                                                     >

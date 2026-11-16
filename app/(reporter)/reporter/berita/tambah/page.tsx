@@ -1,4 +1,5 @@
-import { getAvailableCategories, getNewsById } from '@/lib/db'
+import { redirect } from 'next/navigation'
+import { getAvailableCategories, getNewsByUuid } from '@/lib/db'
 import type { BeritaEditData } from '@/lib/types/berita'
 import ReporterBeritaForm from './ReporterBeritaForm'
 
@@ -6,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 interface ReporterTambahBeritaPageProps {
     searchParams?: Promise<{
-        id?: string
+        ref?: string
     }>
 }
 
@@ -14,15 +15,17 @@ export default async function ReporterTambahBeritaPage({
     searchParams,
 }: ReporterTambahBeritaPageProps) {
     const resolvedParams = searchParams ? await searchParams : {}
-    const rawId = resolvedParams.id ? Number(resolvedParams.id) : null
+    const rawRef = resolvedParams.ref ? resolvedParams.ref.trim() : null
 
     let initialData: BeritaEditData | null = null
-    let notFoundId: number | null = null
 
-    if (rawId && Number.isFinite(rawId) && rawId > 0) {
-        initialData = await getNewsById(rawId)
-        if (!initialData) {
-            notFoundId = rawId
+    if (rawRef) {
+        initialData = await getNewsByUuid(rawRef, {
+            role: 'REPORTER',
+            authorName: 'Budi Santoso',
+        })
+        if (!initialData || initialData.status !== 'DRAFT') {
+            redirect('/reporter/berita')
         }
     }
 
@@ -30,9 +33,9 @@ export default async function ReporterTambahBeritaPage({
 
     return (
         <ReporterBeritaForm
-            key={initialData?.id ?? 'new'}
+            key={initialData?.uuid ?? 'new'}
             initialData={initialData}
-            notFoundId={notFoundId}
+            notFoundId={null}
             availableCategories={availableCategories}
         />
     )

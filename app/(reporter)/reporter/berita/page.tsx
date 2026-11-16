@@ -222,7 +222,7 @@ export default async function ReporterBeritaPage({
                                     const isSubmitted = row.status === 'SUBMITTED'
                                     const isPublished = row.status === 'PUBLISHED'
                                     const titleHref = isDraft
-                                        ? `/reporter/berita/tambah?id=${row.id}`
+                                        ? `/reporter/berita/tambah?ref=${row.uuid}`
                                         : isPublished
                                           ? `/berita/${row.slug}`
                                           : `/berita/${row.slug}?preview=true`
@@ -343,7 +343,7 @@ export default async function ReporterBeritaPage({
                                                     {/* 2. Pena (Edit): Aktif HANYA jika status === 'DRAFT' */}
                                                     {isDraft ? (
                                                         <Link
-                                                            href={`/reporter/berita/tambah?id=${row.id}`}
+                                                            href={`/reporter/berita/tambah?ref=${row.uuid}`}
                                                             title="Edit Draf"
                                                             className="w-7 h-7 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-colors"
                                                         >
@@ -366,6 +366,8 @@ export default async function ReporterBeritaPage({
                                                         title={row.title}
                                                         disabled={!isDraft}
                                                         disabledTitle="Hanya naskah berstatus Draf yang dapat dihapus"
+                                                        role="REPORTER"
+                                                        authorName="Budi Santoso"
                                                     />
 
                                                     {/* 4. Unsubmit (Tarik Naskah): HANYA muncul jika status === 'SUBMITTED' */}

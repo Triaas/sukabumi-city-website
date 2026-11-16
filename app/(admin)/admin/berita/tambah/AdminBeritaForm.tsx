@@ -91,7 +91,7 @@ function getRolePositionLabel(role?: UserRole): string {
 
 interface AdminBeritaFormProps {
     initialData?: BeritaEditData | null
-    notFoundId?: number | null
+    notFoundId?: number | string | null
     availableCategories?: string[]
 }
 
@@ -103,6 +103,9 @@ export default function AdminBeritaForm({
     const router = useRouter()
     const isEditMode = Boolean(initialData)
     const [activeId, setActiveId] = useState<number | null>(initialData?.id ?? null)
+    const [activeUuid, setActiveUuid] = useState<string | null>(
+        initialData?.uuid ?? null
+    )
 
     const [title, setTitle] = useState(initialData?.title ?? '')
 
@@ -573,6 +576,14 @@ export default function AdminBeritaForm({
 
             if (result.id && !activeId) {
                 setActiveId(result.id)
+            }
+            if (result.uuid && !activeUuid) {
+                setActiveUuid(result.uuid)
+                window.history.replaceState(
+                    null,
+                    '',
+                    `/admin/berita/tambah?ref=${result.uuid}`
+                )
             }
 
             if (openPreview && result.slug) {

@@ -41,6 +41,7 @@ export async function getAdminNewsList(options?: {
     const query = `
       SELECT
         b.id,
+        b.uuid,
         b.title,
         b.slug,
         b.content,
@@ -97,6 +98,7 @@ export async function getAdminNewsList(options?: {
 
       return {
         id: row.id,
+        uuid: String(row.uuid || ''),
         no: String(index + 1).padStart(2, '0'),
         title: row.title,
         slug: row.slug,
@@ -140,6 +142,7 @@ export async function getNewsById(id: number): Promise<BeritaEditData | null> {
     const query = `
       SELECT
         b.id,
+        b.uuid,
         b.title,
         b.slug,
         b.content,
@@ -181,6 +184,7 @@ export async function getNewsById(id: number): Promise<BeritaEditData | null> {
 
     return {
       id: Number(row.id),
+      uuid: String(row.uuid || ''),
       title: row.title || '',
       slug: row.slug || '',
       content: row.content || '',
@@ -198,6 +202,100 @@ export async function getNewsById(id: number): Promise<BeritaEditData | null> {
   } catch (error: any) {
     if (error?.code !== '42P01') {
       console.error('Error fetching news by id:', error);
+    }
+    return null;
+  }
+}
+
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// 3. Ambil Data Tunggal Naskah Berdasarkan UUID & Validasi Kepemilikan (Anti-IDOR)
+export async function getNewsByUuid(
+  uuid: string,
+  options?: { role?: UserRole | string; authorName?: string }
+): Promise<BeritaEditData | null> {
+  const trimmedUuid = (uuid || '').trim();
+  if (!UUID_REGEX.test(trimmedUuid)) return null;
+
+  try {
+    await ensureBeritaCategoriesTable();
+
+    const isReporter = options?.role === 'REPORTER';
+    const params: any[] = [trimmedUuid];
+    let ownershipFilter = '';
+
+    if (isReporter) {
+      const authorName = (options?.authorName || '').trim();
+      if (!authorName) return null;
+      ownershipFilter = `AND b.author_role = 'REPORTER' AND LOWER(b.author_name) = LOWER($2)`;
+      params.push(authorName);
+    }
+
+    const query = `
+      SELECT
+        b.id,
+        b.uuid,
+        b.title,
+        b.slug,
+        b.content,
+        b.category_id,
+        b.image_url,
+        b.caption,
+        b.source_credit,
+        b.author_name,
+        b.author_role,
+        b.status,
+        b.published_at,
+        COALESCE(
+          (SELECT STRING_AGG(c2.name, ', ' ORDER BY bc.position ASC)
+           FROM public.berita_categories bc
+           INNER JOIN public.categories c2 ON bc.category_id = c2.id
+           WHERE bc.berita_id = b.id),
+          c.name,
+          ''
+        ) AS category_name
+      FROM public.berita b
+      LEFT JOIN public.categories c ON b.category_id = c.id
+      WHERE b.uuid = $1::uuid
+      ${ownershipFilter}
+      LIMIT 1
+    `;
+
+    const { rows } = await pool.query(query, params);
+    if (rows.length === 0) return null;
+
+    const row = rows[0];
+    const normalizedImg = normalizeImageUrl(row.image_url) ?? null;
+    const publishedIso = row.published_at
+      ? new Date(row.published_at).toISOString()
+      : null;
+    const categoryNameStr = (row.category_name || '').trim();
+    const categories = categoryNameStr
+      .split(',')
+      .map((c: string) => c.trim())
+      .filter(Boolean);
+
+    return {
+      id: Number(row.id),
+      uuid: String(row.uuid || ''),
+      title: row.title || '',
+      slug: row.slug || '',
+      content: row.content || '',
+      category_id: row.category_id ?? null,
+      category_name: categoryNameStr,
+      categories,
+      image_url: normalizedImg,
+      caption: row.caption || null,
+      source_credit: row.source_credit || null,
+      author_name: row.author_name || 'Diskominfo Kota Sukabumi',
+      author_role: (row.author_role as UserRole) || 'REPORTER',
+      status: (row.status as NewsStatus) || 'DRAFT',
+      published_at: publishedIso,
+    };
+  } catch (error: any) {
+    if (error?.code !== '42P01') {
+      console.error('Error fetching news by uuid:', error);
     }
     return null;
   }

@@ -78,6 +78,7 @@ export interface BeritaDetailPublic {
  */
 export interface BeritaAdminRow {
   id: number | string;
+  uuid: string;
   no?: string;
   title: string;
   slug: string;
@@ -108,6 +109,7 @@ export interface BeritaAdminRow {
  */
 export interface BeritaEditData {
   id: number;
+  uuid: string;
   title: string;
   slug: string;
   content: string;

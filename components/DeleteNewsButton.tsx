@@ -4,12 +4,15 @@ import { useState, useTransition } from 'react'
 import { Trash2, Loader2 } from 'lucide-react'
 import { deleteNewsAction } from '@/app/(admin)/admin/berita/actions'
 import { dispatchBeritaToast } from '@/components/BeritaNotification'
+import type { UserRole } from '@/lib/types/berita'
 
 interface DeleteNewsButtonProps {
     id: number | string
     title: string
     disabled?: boolean
     disabledTitle?: string
+    role?: UserRole
+    authorName?: string
 }
 
 export default function DeleteNewsButton({
@@ -17,6 +20,8 @@ export default function DeleteNewsButton({
     title,
     disabled = false,
     disabledTitle = 'Tidak dapat dihapus',
+    role,
+    authorName,
 }: DeleteNewsButtonProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [isPending, startTransition] = useTransition()
@@ -25,7 +30,10 @@ export default function DeleteNewsButton({
         if (isPending) return
 
         startTransition(async () => {
-            const res = await deleteNewsAction(id)
+            const res = await deleteNewsAction(
+                id,
+                role ? { role, authorName } : undefined
+            )
             if (!res.success) {
                 setIsOpen(false)
                 dispatchBeritaToast(

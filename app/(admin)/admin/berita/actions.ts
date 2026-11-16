@@ -21,6 +21,7 @@ export type { BeritaActionType };
 export interface CreateBeritaResult {
   success: boolean;
   id?: number;
+  uuid?: string;
   slug?: string;
   error?: string;
 }
@@ -244,7 +245,7 @@ export async function createBeritaAction(
         NOW(),
         NOW()
       )
-      RETURNING id, slug
+      RETURNING id, uuid, slug
     `;
 
     const insertedBerita = await pool.query(insertQuery, [
@@ -266,6 +267,9 @@ export async function createBeritaAction(
     const insertedId = insertedBerita.rows[0]?.id
       ? Number(insertedBerita.rows[0].id)
       : undefined;
+    const insertedUuid = insertedBerita.rows[0]?.uuid
+      ? String(insertedBerita.rows[0].uuid)
+      : undefined;
 
     if (insertedId) {
       await syncBeritaCategories(insertedId, resolvedCategoryIds);
@@ -276,6 +280,7 @@ export async function createBeritaAction(
     return {
       success: true,
       id: insertedId,
+      uuid: insertedUuid,
       slug: newSlug,
     };
   } catch (error: unknown) {
@@ -372,7 +377,10 @@ export async function unpublishNewsAction(id: number | string): Promise<{
 /**
  * Server Action untuk menghapus berita secara permanen dari database (`public.berita`).
  */
-export async function deleteNewsAction(id: number | string): Promise<{
+export async function deleteNewsAction(
+  id: number | string,
+  options?: { role?: UserRole; authorName?: string }
+): Promise<{
   success: boolean;
   error?: string;
 }> {
@@ -382,7 +390,34 @@ export async function deleteNewsAction(id: number | string): Promise<{
       return { success: false, error: 'ID berita tidak valid.' };
     }
 
-    await pool.query('DELETE FROM public.berita WHERE id = $1', [numericId]);
+    if (options?.role === 'REPORTER') {
+      const authorName = (options.authorName || '').trim();
+      if (!authorName) {
+        return {
+          success: false,
+          error: 'Identitas penulis tidak valid untuk menghapus berita.',
+        };
+      }
+
+      const delRes = await pool.query(
+        `DELETE FROM public.berita
+         WHERE id = $1
+           AND author_role = 'REPORTER'
+           AND LOWER(author_name) = LOWER($2)
+           AND status = 'DRAFT'`,
+        [numericId, authorName]
+      );
+
+      if ((delRes.rowCount ?? 0) === 0) {
+        return {
+          success: false,
+          error:
+            'Anda tidak memiliki izin untuk menghapus naskah ini atau status bukan Draf.',
+        };
+      }
+    } else {
+      await pool.query('DELETE FROM public.berita WHERE id = $1', [numericId]);
+    }
 
     revalidateBeritaPaths();
 
@@ -396,6 +431,8 @@ export async function deleteNewsAction(id: number | string): Promise<{
     };
   }
 }
+
+export const deleteBeritaAction = deleteNewsAction;
 
 /**
  * Server Action untuk memperbarui berita eksisting di tabel `public.berita`.
@@ -433,6 +470,7 @@ export async function updateBeritaAction(
       'DRAFT') as BeritaActionType;
     const isDraftAction = actionType === 'DRAFT';
     const title = rawTitle || (isDraftAction ? '(Draf Tanpa Judul)' : '');
+    const authorName = ((formData.get('author_name') as string) || '').trim();
     const userRole = ((formData.get('user_role') as UserRole) ||
       'REPORTER') as UserRole;
     const publishDateRaw = ((formData.get('publish_date') as string) || '').trim();
@@ -496,7 +534,7 @@ export async function updateBeritaAction(
     // 2. Ambil data naskah saat ini dari database untuk pengecekan status,
     //    peran penulis asli, dan fallback gambar eksisting yang tepercaya.
     const currentCheck = await pool.query(
-      'SELECT slug, status, image_url, author_role, was_published FROM public.berita WHERE id = $1 LIMIT 1',
+      'SELECT uuid, slug, status, image_url, author_name, author_role, was_published FROM public.berita WHERE id = $1 LIMIT 1',
       [numericId]
     );
 
@@ -508,20 +546,34 @@ export async function updateBeritaAction(
     }
 
     const currentRow = currentCheck.rows[0];
+    const currentUuid = String(currentRow.uuid || '');
     const currentSlug = currentRow.slug as string;
     const currentStatus = (currentRow.status as NewsStatus) || 'DRAFT';
+    const originalAuthorName = String(currentRow.author_name || '').trim();
     const originalAuthorRole = (currentRow.author_role as UserRole) || 'REPORTER';
     const existingDbImageUrl =
       typeof currentRow.image_url === 'string'
         ? currentRow.image_url.trim()
         : null;
 
-    // Reporter hanya diizinkan mengedit jika naskah masih berstatus DRAFT
-    if (userRole === 'REPORTER' && currentStatus !== 'DRAFT') {
-      return {
-        success: false,
-        error: 'Hanya naskah berstatus Draf yang dapat diedit oleh Reporter.',
-      };
+    // Reporter hanya diizinkan mengedit naskah miliknya sendiri yang masih berstatus DRAFT
+    if (userRole === 'REPORTER') {
+      if (
+        originalAuthorRole !== 'REPORTER' ||
+        !authorName ||
+        originalAuthorName.toLowerCase() !== authorName.toLowerCase()
+      ) {
+        return {
+          success: false,
+          error: 'Anda tidak memiliki izin untuk mengedit naskah milik penulis lain.',
+        };
+      }
+      if (currentStatus !== 'DRAFT') {
+        return {
+          success: false,
+          error: 'Hanya naskah berstatus Draf yang dapat diedit oleh Reporter.',
+        };
+      }
     }
 
     const hasFileUpload = imageEntry instanceof File && imageEntry.size > 0;
@@ -597,6 +649,7 @@ export async function updateBeritaAction(
     );
 
     // 6. Query UPDATE TIDAK mengubah author_name dan author_role
+    const isReporterRole = userRole === 'REPORTER';
     const updateQuery = `
       UPDATE public.berita
       SET
@@ -611,10 +664,11 @@ export async function updateBeritaAction(
         published_at = COALESCE($10::timestamptz, published_at, CASE WHEN $11::boolean THEN NOW() ELSE NULL END),
         updated_at = NOW()
       WHERE id = $1
-      RETURNING id, slug
+      ${isReporterRole ? "AND author_role = 'REPORTER' AND LOWER(author_name) = LOWER($12) AND status = 'DRAFT'" : ''}
+      RETURNING id, uuid, slug
     `;
 
-    const updated = await pool.query(updateQuery, [
+    const updateParams: any[] = [
       numericId,
       title,
       content,
@@ -626,9 +680,22 @@ export async function updateBeritaAction(
       wasPublished,
       customPublishedAt,
       isPublishedNow,
-    ]);
+    ];
+    if (isReporterRole) {
+      updateParams.push(authorName);
+    }
+
+    const updated = await pool.query(updateQuery, updateParams);
+    if ((updated.rowCount ?? 0) === 0) {
+      return {
+        success: false,
+        error:
+          'Gagal memperbarui berita: naskah tidak ditemukan atau Anda tidak memiliki akses.',
+      };
+    }
 
     const finalSlug = (updated.rows[0]?.slug as string) || currentSlug;
+    const finalUuid = String(updated.rows[0]?.uuid || currentUuid);
 
     await syncBeritaCategories(numericId, resolvedCategoryIds);
 
@@ -637,6 +704,7 @@ export async function updateBeritaAction(
     return {
       success: true,
       id: numericId,
+      uuid: finalUuid,
       slug: finalSlug,
     };
   } catch (error: unknown) {
