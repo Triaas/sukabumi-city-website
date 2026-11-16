@@ -167,6 +167,8 @@ export default function TransparansiClient({
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
     const [previewItem, setPreviewItem] = useState<TransparansiItem | null>(null)
+    const [attachmentPreviewItem, setAttachmentPreviewItem] =
+        useState<TransparansiItem | null>(null)
     const [editingItem, setEditingItem] = useState<TransparansiItem | null>(null)
     const [deletingItem, setDeletingItem] = useState<TransparansiItem | null>(null)
     const [unpublishingItem, setUnpublishingItem] =
@@ -265,6 +267,7 @@ export default function TransparansiClient({
             if (isExitConfirmOpen) setIsExitConfirmOpen(false)
             else if (unpublishingItem) setUnpublishingItem(null)
             else if (deletingItem) setDeletingItem(null)
+            else if (attachmentPreviewItem) setAttachmentPreviewItem(null)
             else if (previewItem) setPreviewItem(null)
             else if (editingItem) requestCloseEditModal()
             else if (isAddModalOpen) requestCloseAddModal()
@@ -276,6 +279,7 @@ export default function TransparansiClient({
         isExitConfirmOpen,
         unpublishingItem,
         deletingItem,
+        attachmentPreviewItem,
         previewItem,
         editingItem,
         isAddModalOpen,
@@ -1112,25 +1116,31 @@ export default function TransparansiClient({
 
                                         {/* LAMPIRAN */}
                                         <td className="py-4 px-4 text-center whitespace-nowrap">
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setPreviewItem(item)
-                                                }
-                                                title={
-                                                    getPdfDisplayName(
+                                            {item.pdf_url || item.pdfFile ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setAttachmentPreviewItem(
+                                                            item
+                                                        )
+                                                    }
+                                                    title={getPdfDisplayName(
                                                         item.pdf_url ||
                                                             item.pdfFile
-                                                    )
-                                                }
-                                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200/90 hover:bg-slate-200 transition-colors cursor-pointer"
-                                            >
-                                                <Paperclip
-                                                    size={13}
-                                                    className="text-slate-500 shrink-0"
-                                                />
-                                                <span>PDF</span>
-                                            </button>
+                                                    )}
+                                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200/90 hover:bg-slate-200 transition-colors cursor-pointer"
+                                                >
+                                                    <Paperclip
+                                                        size={13}
+                                                        className="text-slate-500 shrink-0"
+                                                    />
+                                                    <span>PDF</span>
+                                                </button>
+                                            ) : (
+                                                <span className="text-xs text-slate-400">
+                                                    -
+                                                </span>
+                                            )}
                                         </td>
 
                                         {/* STATUS */}
@@ -2405,6 +2415,71 @@ export default function TransparansiClient({
                 }}
                 onCancel={() => setIsExitConfirmOpen(false)}
             />
+
+            {/* MODAL: PREVIEW LAMPIRAN PDF */}
+            {attachmentPreviewItem && (
+                <div className="fixed inset-0 z-[70] bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl border border-slate-200 max-w-3xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200 flex flex-col">
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="space-y-1.5">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    {attachmentPreviewItem.status ===
+                                    'Diterbitkan' ? (
+                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#f0fdf4] border border-[#dcfce7] text-[#16a34a] text-[11px] font-semibold">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-[#16a34a]" />
+                                            Diterbitkan
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#fffbeb] border border-[#fef3c7] text-[#d97706] text-[11px] font-semibold">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-[#d97706]" />
+                                            Draf
+                                        </span>
+                                    )}
+                                    <span className="text-xs text-slate-400">
+                                        • {attachmentPreviewItem.effectiveDate}
+                                    </span>
+                                </div>
+                                <h3 className="text-lg font-bold text-[#172135] leading-snug">
+                                    {attachmentPreviewItem.title}
+                                </h3>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setAttachmentPreviewItem(null)}
+                                aria-label="Tutup pratinjau lampiran"
+                                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer shrink-0"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div className="w-full h-[480px] rounded-xl border border-slate-200 overflow-hidden bg-slate-100">
+                            <iframe
+                                src={
+                                    attachmentPreviewItem.pdf_url ||
+                                    attachmentPreviewItem.pdfFile
+                                }
+                                title={`Lampiran ${attachmentPreviewItem.title}`}
+                                className="w-full h-full"
+                            />
+                        </div>
+
+                        <div className="flex items-center justify-start pt-2 border-t border-slate-100">
+                            <a
+                                href={
+                                    attachmentPreviewItem.pdf_url ||
+                                    attachmentPreviewItem.pdfFile
+                                }
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#159447] text-[#159447] hover:bg-emerald-50 text-xs font-bold transition-colors"
+                            >
+                                <span>Buka di Tab Baru</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
