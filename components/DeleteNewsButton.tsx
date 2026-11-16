@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { Trash2, Loader2 } from 'lucide-react'
 import { deleteNewsAction } from '@/app/(admin)/admin/berita/actions'
+import { dispatchBeritaToast } from '@/components/BeritaNotification'
 
 interface DeleteNewsButtonProps {
     id: number | string
@@ -26,9 +27,14 @@ export default function DeleteNewsButton({
         startTransition(async () => {
             const res = await deleteNewsAction(id)
             if (!res.success) {
-                alert(res.error || 'Gagal menghapus berita.')
+                setIsOpen(false)
+                dispatchBeritaToast(
+                    res.error || 'Gagal menghapus berita.',
+                    'error'
+                )
             } else {
                 setIsOpen(false)
+                dispatchBeritaToast('Berita berhasil dihapus.', 'success')
             }
         })
     }

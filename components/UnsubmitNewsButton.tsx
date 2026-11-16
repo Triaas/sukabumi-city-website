@@ -6,6 +6,7 @@ import {
     unpublishNewsAction,
     unsubmitNewsAction,
 } from '@/app/(admin)/admin/berita/actions'
+import { dispatchBeritaToast } from '@/components/BeritaNotification'
 
 interface UnsubmitNewsButtonProps {
     id: number | string
@@ -53,14 +54,22 @@ export default function UnsubmitNewsButton({
                 : await unsubmitNewsAction(id)
 
             if (!res.success) {
-                alert(
+                setIsOpen(false)
+                dispatchBeritaToast(
                     res.error ||
                         (isUnpublish
                             ? 'Gagal menurunkan penayangan berita.'
-                            : 'Gagal menarik naskah berita.')
+                            : 'Gagal menarik naskah berita.'),
+                    'error'
                 )
             } else {
                 setIsOpen(false)
+                dispatchBeritaToast(
+                    isUnpublish
+                        ? 'Berita berhasil diturunkan dari tampilan publik.'
+                        : 'Naskah berita berhasil ditarik kembali ke draf.',
+                    'success'
+                )
             }
         })
     }
