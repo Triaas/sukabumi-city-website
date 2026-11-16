@@ -1077,20 +1077,39 @@ export default function TransparansiClient({
                                         {/* AKSI */}
                                         <td className="py-4 px-4 text-center whitespace-nowrap">
                                             <div className="flex items-center justify-center gap-1.5">
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setPreviewItem(item)
-                                                    }
-                                                    title="Lihat Dokumen"
-                                                    aria-label="Lihat Dokumen"
-                                                    className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50 flex items-center justify-center transition-colors cursor-pointer"
-                                                >
-                                                    <Eye
-                                                        size={14}
-                                                        aria-hidden="true"
-                                                    />
-                                                </button>
+                                                {/* 1. Mata (Lihat Dokumen / Pratinjau): Aktif HANYA jika status BUKAN 'Diterbitkan' */}
+                                                {item.status !== 'Diterbitkan' ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setPreviewItem(item)
+                                                        }
+                                                        title="Lihat Dokumen"
+                                                        aria-label="Lihat Dokumen"
+                                                        className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50 flex items-center justify-center transition-colors cursor-pointer"
+                                                    >
+                                                        <Eye
+                                                            size={14}
+                                                            aria-hidden="true"
+                                                        />
+                                                    </button>
+                                                ) : (
+                                                    <div
+                                                        title="Judul dokumen dapat diklik untuk melihat transparansi di beranda"
+                                                        className="inline-flex cursor-not-allowed"
+                                                    >
+                                                        <button
+                                                            type="button"
+                                                            disabled
+                                                            className="w-7 h-7 rounded-lg border border-slate-200 bg-slate-50 text-slate-300 opacity-60 flex items-center justify-center cursor-not-allowed pointer-events-none"
+                                                        >
+                                                            <Eye
+                                                                size={14}
+                                                                aria-hidden="true"
+                                                            />
+                                                        </button>
+                                                    </div>
+                                                )}
                                                 <button
                                                     type="button"
                                                     onClick={() =>

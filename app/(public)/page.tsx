@@ -235,7 +235,7 @@ function EventSlider() {
   }, [currentSlide, banners.length])
 
   return (
-    <section className="bg-white pt-10 pb-2 px-4 md:px-8 lg:px-12">
+    <section id="banner" className="bg-white pt-10 pb-2 px-4 md:px-8 lg:px-12 scroll-mt-20">
       <div className="mx-auto max-w-[1400px]">
         {/* Slider Container - Atur tinggi banner di class h-[...] berikut */}
         <div className="relative w-full h-[135px] sm:h-[195px] md:h-[270px] lg:h-[315px] rounded-2xl md:rounded-3xl overflow-hidden shadow-md group bg-slate-100">
@@ -245,24 +245,38 @@ function EventSlider() {
           ) : (
             <>
               {/* Slides */}
-              {banners.map((banner, index) => (
-                <a
-                  key={banner.id}
-                  href={banner.href || '#'}
-                  className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
-                    }`}
-                  tabIndex={index === currentSlide ? 0 : -1}
-                  aria-hidden={index !== currentSlide}
-                >
-                  <img
-                    src={banner.image}
-                    alt={banner.title}
-                    className="absolute inset-0 w-full h-full object-cover object-center"
-                  />
-                  {/* Subtle gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-                </a>
-              ))}
+              {banners.map((banner, index) => {
+                const hasValidLink = Boolean(
+                  banner.href && banner.href !== '#' && banner.href.trim() !== ''
+                )
+
+                return (
+                  <a
+                    key={banner.id}
+                    href={hasValidLink ? banner.href : '#'}
+                    target={hasValidLink ? '_blank' : undefined}
+                    rel={hasValidLink ? 'noopener noreferrer' : undefined}
+                    onClick={(e) => {
+                      if (!hasValidLink) {
+                        e.preventDefault()
+                      }
+                    }}
+                    className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${
+                      index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                    } ${hasValidLink ? 'cursor-pointer' : 'cursor-default'}`}
+                    tabIndex={index === currentSlide ? 0 : -1}
+                    aria-hidden={index !== currentSlide}
+                  >
+                    <img
+                      src={banner.image}
+                      alt={banner.title}
+                      className="absolute inset-0 w-full h-full object-cover object-center"
+                    />
+                    {/* Subtle gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                  </a>
+                )
+              })}
 
               {/* Prev Button */}
               <button
@@ -1355,7 +1369,7 @@ function TransparansiDokumen() {
   const [currentPage, setCurrentPage] = useState(0)
   const [selectedDocument, setSelectedDocument] = useState<TransparansiDoc | null>(null)
   const [downloadConfirm, setDownloadConfirm] = useState<TransparansiDoc | null>(null)
-  const itemsPerPage = 5
+  const itemsPerPage = 6
   const totalPages = Math.ceil(documents.length / itemsPerPage)
 
   useEffect(() => {
@@ -1446,11 +1460,11 @@ function TransparansiDokumen() {
         {/* Document Cards Grid + Pagination ΓÇö flex-col with min-h keeps pagination position stable */}
         <div className="flex flex-col">
           {/* Document Cards Grid */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {isLoadingDocs ? (
-              <div className="col-span-5 flex items-center justify-center py-16 text-slate-400 text-sm">Memuat dokumen...</div>
+              <div className="col-span-full flex items-center justify-center py-16 text-slate-400 text-sm">Memuat dokumen...</div>
             ) : documents.length === 0 ? (
-              <div className="col-span-5 flex items-center justify-center py-16 text-slate-400 text-sm">Belum ada dokumen transparansi yang diterbitkan.</div>
+              <div className="col-span-full flex items-center justify-center py-16 text-slate-400 text-sm">Belum ada dokumen transparansi yang diterbitkan.</div>
             ) : (
               currentDocuments.map((doc) => (
                 /* Outer Transparent Wrapper (Double-Bezel) */

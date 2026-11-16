@@ -21,6 +21,8 @@ import {
     Image as ImageIcon,
     ExternalLink,
     Loader2,
+    Send,
+    Save,
 } from 'lucide-react'
 import {
     createBannerAction,
@@ -238,7 +240,7 @@ export default function BannerClient({
         if (file) handleImageFile(file)
     }
 
-    const buildValidatedPayload = (): FormData | null => {
+    const buildValidatedPayload = (targetIsActive: boolean): FormData | null => {
         const trimmedTitle = formData.title.trim()
         const trimmedTarget = formData.targetUrl.trim()
 
@@ -260,7 +262,7 @@ export default function BannerClient({
         payload.append('title', trimmedTitle)
         payload.append('target_url', trimmedTarget || '#')
         payload.append('sort_order', String(formData.sortOrder || 1))
-        payload.append('is_active', String(formData.isActive))
+        payload.append('is_active', String(targetIsActive))
 
         if (imageFileObj) {
             payload.append('image_file', imageFileObj)
@@ -271,11 +273,10 @@ export default function BannerClient({
         return payload
     }
 
-    const handleSaveAdd = (e: React.FormEvent) => {
-        e.preventDefault()
+    const handleSaveAdd = (targetIsActive: boolean) => {
         if (isPending) return
 
-        const payload = buildValidatedPayload()
+        const payload = buildValidatedPayload(targetIsActive)
         if (!payload) return
 
         startTransition(async () => {
@@ -290,19 +291,18 @@ export default function BannerClient({
             setIsAddModalOpen(false)
             setFeedback({
                 type: 'success',
-                message: formData.isActive
-                    ? 'Banner baru berhasil ditambahkan dan diaktifkan di beranda.'
-                    : 'Banner baru berhasil disimpan dalam status tidak aktif.',
+                message: targetIsActive
+                    ? 'Banner baru berhasil ditambahkan dan diterbitkan ke beranda.'
+                    : 'Banner baru berhasil disimpan sebagai draf.',
             })
             router.refresh()
         })
     }
 
-    const handleSaveEdit = (e: React.FormEvent) => {
-        e.preventDefault()
+    const handleSaveEdit = (targetIsActive: boolean) => {
         if (isPending || !editingItem) return
 
-        const payload = buildValidatedPayload()
+        const payload = buildValidatedPayload(targetIsActive)
         if (!payload) return
 
         payload.append('id', String(editingItem.id))
@@ -319,7 +319,9 @@ export default function BannerClient({
             setEditingItem(null)
             setFeedback({
                 type: 'success',
-                message: 'Perubahan banner berhasil disimpan.',
+                message: targetIsActive
+                    ? 'Perubahan banner berhasil disimpan dan diterbitkan.'
+                    : 'Draf banner berhasil disimpan.',
             })
             router.refresh()
         })
@@ -410,11 +412,18 @@ export default function BannerClient({
     }
 
     const renderForm = (
-        onSubmit: (e: React.FormEvent) => void,
+        onSubmitAction: (targetIsActive: boolean) => void,
         onClose: () => void,
         isEditMode: boolean
     ) => (
-        <form onSubmit={onSubmit} noValidate className="space-y-4 text-xs">
+        <form
+            onSubmit={(e) => {
+                e.preventDefault()
+                onSubmitAction(true)
+            }}
+            noValidate
+            className="space-y-4 text-xs"
+        >
             {formError && (
                 <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold flex items-center gap-2">
                     <AlertCircle
@@ -592,45 +601,17 @@ export default function BannerClient({
                 />
             </div>
 
-            {/* 5. Status Aktif */}
-            <div>
-                <label className="block font-semibold text-[#172135] mb-1">
+            {/* 5. Status Penayangan */}
+            <div className="space-y-2.5 pt-2 border-t border-slate-100">
+                <label className="block font-semibold text-[#172135]">
                     Status Penayangan
                 </label>
-                <select
-                    disabled={isPending}
-                    value={formData.isActive ? 'active' : 'inactive'}
-                    onChange={(e) =>
-                        setFormData({
-                            ...formData,
-                            isActive: e.target.value === 'active',
-                        })
-                    }
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-[#159447] text-slate-800 text-xs cursor-pointer disabled:opacity-60"
-                >
-                    <option value="active">
-                        Aktif (Ditampilkan di beranda)
-                    </option>
-                    <option value="inactive">
-                        Tidak Aktif (Sembunyikan sementara)
-                    </option>
-                </select>
-            </div>
 
-            {/* Tombol Aksi */}
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                     type="button"
                     disabled={isPending}
-                    onClick={onClose}
-                    className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs cursor-pointer transition-colors disabled:opacity-50"
-                >
-                    Batal
-                </button>
-                <button
-                    type="submit"
-                    disabled={isPending}
-                    className="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-xl bg-[#159447] hover:bg-[#12803d] text-white font-semibold text-xs shadow-xs cursor-pointer transition-all disabled:opacity-60"
+                    onClick={() => onSubmitAction(true)}
+                    className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#159447] hover:bg-[#12803d] text-white font-semibold text-xs shadow-xs cursor-pointer transition-all disabled:opacity-60"
                     style={{ backgroundColor: '#159447' }}
                 >
                     {isPending ? (
@@ -639,11 +620,43 @@ export default function BannerClient({
                             <span>Menyimpan...</span>
                         </>
                     ) : (
-                        <span>
-                            {isEditMode ? 'Simpan Perubahan' : 'Simpan Banner'}
-                        </span>
+                        <>
+                            <Send size={14} aria-hidden="true" />
+                            <span>Terbitkan Banner</span>
+                        </>
                     )}
                 </button>
+
+                <div className="grid grid-cols-2 gap-2.5">
+                    <button
+                        type="button"
+                        disabled={isPending}
+                        onClick={() => onSubmitAction(false)}
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs cursor-pointer transition-colors disabled:opacity-50"
+                    >
+                        <Save size={14} aria-hidden="true" />
+                        <span>Simpan Draf</span>
+                    </button>
+                    <button
+                        type="button"
+                        disabled={isPending || !formData.imagePreview}
+                        onClick={() => {
+                            setPreviewItem({
+                                id: editingItem?.id ?? 0,
+                                title: formData.title.trim() || 'Pratinjau Banner',
+                                imageUrl: formData.imagePreview,
+                                targetUrl: formData.targetUrl.trim() || '#',
+                                sortOrder: formData.sortOrder || 1,
+                                isActive: isEditMode ? formData.isActive : false,
+                                createdAt: editingItem?.createdAt ?? '',
+                            })
+                        }}
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <Eye size={14} aria-hidden="true" />
+                        <span>Pratinjau</span>
+                    </button>
+                </div>
             </div>
         </form>
     )
@@ -889,16 +902,11 @@ export default function BannerClient({
                                         <td className="py-4 px-4">
                                             {item.isActive ? (
                                                 <a
-                                                    href={
-                                                        item.targetUrl &&
-                                                        item.targetUrl !== '#'
-                                                            ? item.targetUrl
-                                                            : '/'
-                                                    }
+                                                    href="/#banner"
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="font-bold text-[#172135] text-[13px] leading-snug hover:text-[#159447] cursor-pointer transition-colors line-clamp-2 block"
-                                                    title={item.title}
+                                                    title={`Lihat "${item.title}" di section banner beranda`}
                                                 >
                                                     {item.title}
                                                 </a>
@@ -955,17 +963,33 @@ export default function BannerClient({
                                         {/* AKSI */}
                                         <td className="py-4 px-4 text-center whitespace-nowrap">
                                             <div className="flex items-center justify-center gap-1.5">
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setPreviewItem(item)
-                                                    }
-                                                    title="Lihat Pratinjau Banner"
-                                                    aria-label="Lihat Pratinjau Banner"
-                                                    className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50 flex items-center justify-center transition-colors cursor-pointer"
-                                                >
-                                                    <Eye size={14} />
-                                                </button>
+                                                {/* 1. Mata (Lihat Pratinjau): Aktif HANYA jika status BUKAN aktif */}
+                                                {!item.isActive ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setPreviewItem(item)
+                                                        }
+                                                        title="Lihat Pratinjau Banner"
+                                                        aria-label="Lihat Pratinjau Banner"
+                                                        className="w-7 h-7 rounded-lg border border-slate-200 bg-white text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50 flex items-center justify-center transition-colors cursor-pointer"
+                                                    >
+                                                        <Eye size={14} />
+                                                    </button>
+                                                ) : (
+                                                    <div
+                                                        title="Judul banner dapat diklik untuk melihat tampilan di beranda"
+                                                        className="inline-flex cursor-not-allowed"
+                                                    >
+                                                        <button
+                                                            type="button"
+                                                            disabled
+                                                            className="w-7 h-7 rounded-lg border border-slate-200 bg-slate-50 text-slate-300 opacity-60 flex items-center justify-center cursor-not-allowed pointer-events-none"
+                                                        >
+                                                            <Eye size={14} />
+                                                        </button>
+                                                    </div>
+                                                )}
                                                 <button
                                                     type="button"
                                                     onClick={() =>
@@ -988,47 +1012,32 @@ export default function BannerClient({
                                                 >
                                                     <Trash2 size={14} />
                                                 </button>
-                                                <button
-                                                    type="button"
-                                                    disabled={
-                                                        isPending &&
-                                                        togglingId === item.id
-                                                    }
-                                                    onClick={() => {
-                                                        if (item.isActive) {
-                                                            setUnpublishingItem(item)
-                                                        } else {
-                                                            handleToggleStatus(item)
+                                                {/* 4. Unpublish (Turunkan Tayang): HANYA muncul jika status banner aktif */}
+                                                {item.isActive && (
+                                                    <button
+                                                        type="button"
+                                                        disabled={
+                                                            isPending &&
+                                                            togglingId === item.id
                                                         }
-                                                    }}
-                                                    title={
-                                                        item.isActive
-                                                            ? 'Nonaktifkan Banner (Sembunyikan dari Beranda)'
-                                                            : 'Aktifkan Banner (Tampilkan di Beranda)'
-                                                    }
-                                                    aria-label={
-                                                        item.isActive
-                                                            ? 'Nonaktifkan Banner'
-                                                            : 'Aktifkan Banner'
-                                                    }
-                                                    className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-colors cursor-pointer disabled:opacity-50 ${
-                                                        item.isActive
-                                                            ? 'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-300'
-                                                            : 'border-emerald-200 bg-emerald-50 text-[#159447] hover:bg-emerald-100 hover:border-emerald-300'
-                                                    }`}
-                                                >
-                                                    {isPending &&
-                                                    togglingId === item.id ? (
-                                                        <Loader2
-                                                            size={13}
-                                                            className="animate-spin"
-                                                        />
-                                                    ) : item.isActive ? (
-                                                        <Undo2 size={14} />
-                                                    ) : (
-                                                        <Check size={14} />
-                                                    )}
-                                                </button>
+                                                        onClick={() =>
+                                                            setUnpublishingItem(item)
+                                                        }
+                                                        title="Nonaktifkan Banner (Sembunyikan dari Beranda)"
+                                                        aria-label="Nonaktifkan Banner"
+                                                        className="w-7 h-7 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-300 flex items-center justify-center transition-colors cursor-pointer disabled:opacity-50"
+                                                    >
+                                                        {isPending &&
+                                                        togglingId === item.id ? (
+                                                            <Loader2
+                                                                size={13}
+                                                                className="animate-spin"
+                                                            />
+                                                        ) : (
+                                                            <Undo2 size={14} />
+                                                        )}
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -1156,14 +1165,31 @@ export default function BannerClient({
                         </div>
 
                         <div className="p-6 space-y-4">
-                            <div className="rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                    src={previewItem.imageUrl}
-                                    alt={previewItem.title}
-                                    className="w-full max-h-[340px] object-cover"
-                                />
-                            </div>
+                            {previewItem.targetUrl && previewItem.targetUrl !== '#' ? (
+                                <a
+                                    href={previewItem.targetUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block relative w-full aspect-[1400/315] rounded-xl overflow-hidden border border-slate-200 bg-slate-100 hover:opacity-95 transition-opacity cursor-pointer"
+                                    title={`Buka tautan banner di tab baru: ${previewItem.targetUrl}`}
+                                >
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                        src={previewItem.imageUrl}
+                                        alt={previewItem.title}
+                                        className="w-full h-full object-cover object-center"
+                                    />
+                                </a>
+                            ) : (
+                                <div className="relative w-full aspect-[1400/315] rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                        src={previewItem.imageUrl}
+                                        alt={previewItem.title}
+                                        className="w-full h-full object-cover object-center"
+                                    />
+                                </div>
+                            )}
                             <div>
                                 <h3 className="font-bold text-[#172135] text-base">
                                     {previewItem.title}
