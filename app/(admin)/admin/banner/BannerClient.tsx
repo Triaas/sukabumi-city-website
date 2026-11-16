@@ -887,9 +887,33 @@ export default function BannerClient({
 
                                         {/* JUDUL & TAUTAN */}
                                         <td className="py-4 px-4">
-                                            <p className="font-bold text-[#172135] text-[13px] leading-snug group-hover:text-[#159447] transition-colors">
-                                                {item.title}
-                                            </p>
+                                            {item.isActive ? (
+                                                <a
+                                                    href={
+                                                        item.targetUrl &&
+                                                        item.targetUrl !== '#'
+                                                            ? item.targetUrl
+                                                            : '/'
+                                                    }
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="font-bold text-[#172135] text-[13px] leading-snug hover:text-[#159447] cursor-pointer transition-colors line-clamp-2 block"
+                                                    title={item.title}
+                                                >
+                                                    {item.title}
+                                                </a>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        openEditModal(item)
+                                                    }
+                                                    className="text-left font-bold text-[#172135] text-[13px] leading-snug hover:text-[#159447] cursor-pointer transition-colors line-clamp-2 block"
+                                                    title="Klik untuk mengedit banner tidak aktif"
+                                                >
+                                                    {item.title}
+                                                </button>
+                                            )}
                                             {item.targetUrl ? (
                                                 <a
                                                     href={item.targetUrl}

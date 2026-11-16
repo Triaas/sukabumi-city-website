@@ -1005,12 +1005,28 @@ export default function TransparansiClient({
 
                                         {/* JUDUL DOKUMEN */}
                                         <td className="py-4 px-4 text-left">
-                                            <p
-                                                className="font-bold text-[#172135] text-xs sm:text-[13px] leading-relaxed group-hover:text-[#159447] transition-colors"
-                                                title={item.title}
-                                            >
-                                                {item.title}
-                                            </p>
+                                            {item.status === 'Diterbitkan' ? (
+                                                <a
+                                                    href="/#transparansi"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="font-bold text-[#172135] text-xs sm:text-[13px] leading-relaxed hover:text-[#159447] cursor-pointer transition-colors line-clamp-2 block"
+                                                    title={item.title}
+                                                >
+                                                    {item.title}
+                                                </a>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        openEditModal(item)
+                                                    }
+                                                    className="text-left font-bold text-[#172135] text-xs sm:text-[13px] leading-relaxed hover:text-[#159447] cursor-pointer transition-colors line-clamp-2 block"
+                                                    title="Klik untuk mengedit draf dokumen"
+                                                >
+                                                    {item.title}
+                                                </button>
+                                            )}
                                         </td>
 
                                         {/* LAMPIRAN */}

@@ -13,7 +13,7 @@ interface ToastNotificationProps {
 export default function ToastNotification({
     message,
     type = 'success',
-    duration = 1500,
+    duration = 1750,
     onClose,
 }: ToastNotificationProps) {
     const onCloseRef = useRef(onClose)
@@ -35,11 +35,10 @@ export default function ToastNotification({
         <div
             role={isSuccess ? 'status' : 'alert'}
             aria-live="polite"
-            className={`fixed top-6 right-6 z-[110] max-w-[396px] w-[calc(100vw-3rem)] sm:w-auto flex items-center justify-between gap-3.5 px-[18px] py-3.5 rounded-xl border text-[13px] font-semibold shadow-lg animate-in fade-in slide-in-from-top-3 duration-200 ${
-                isSuccess
+            className={`fixed top-6 right-6 z-[110] max-w-[396px] w-[calc(100vw-3rem)] sm:w-auto flex items-center justify-between gap-3.5 px-[18px] py-3.5 rounded-xl border text-[13px] font-semibold shadow-lg animate-in fade-in slide-in-from-top-3 duration-200 ${isSuccess
                     ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
                     : 'bg-red-50 border-red-200 text-red-700'
-            }`}
+                }`}
         >
             <div className="flex items-center gap-3">
                 {isSuccess ? (

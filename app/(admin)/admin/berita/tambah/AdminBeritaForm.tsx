@@ -277,9 +277,6 @@ export default function AdminBeritaForm({
     }
 
     const selectTag = (tag: string) => {
-        if (selectedTags.length >= 3 && !selectedTags.includes(tag)) {
-            return
-        }
         if (!selectedTags.includes(tag)) {
             setSelectedTags((prev) => [...prev, tag])
         }
@@ -301,8 +298,7 @@ export default function AdminBeritaForm({
         if (
             !trimmedTagSearch ||
             trimmedTagSearch.length > 30 ||
-            currentUserRole === 'REPORTER' ||
-            selectedTags.length >= 3
+            currentUserRole === 'REPORTER'
         )
             return
         if (exactCategoryMatch) {
@@ -320,8 +316,7 @@ export default function AdminBeritaForm({
         if (
             !trimmed ||
             trimmed.length > 30 ||
-            currentUserRole === 'REPORTER' ||
-            selectedTags.length >= 3
+            currentUserRole === 'REPORTER'
         )
             return
 
@@ -407,11 +402,6 @@ export default function AdminBeritaForm({
 
         if (selectedTags.length === 0) {
             setErrorMessage('Pilih minimal 1 kategori berita.')
-            return
-        }
-
-        if (selectedTags.length > 3) {
-            setErrorMessage('Maksimal 3 kategori berita yang diperbolehkan.')
             return
         }
 
@@ -865,8 +855,8 @@ export default function AdminBeritaForm({
                                         Tag Kategori Berita <span className="text-red-500">*</span>
                                     </span>
                                 </div>
-                                <span className={`text-[11px] font-medium ${selectedTags.length >= 3 ? 'text-amber-600 font-semibold' : 'text-slate-400'}`}>
-                                    {selectedTags.length} / 3 Dipilih
+                                <span className="text-[11px] font-medium text-slate-400">
+                                    {selectedTags.length} Dipilih
                                 </span>
                             </div>
 
@@ -923,13 +913,7 @@ export default function AdminBeritaForm({
                                 {/* List Dropdown */}
                                 {isTagDropdownOpen && (
                                     <div className="absolute left-0 right-0 top-full mt-1.5 max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-10 p-1.5 overscroll-contain">
-                                        {selectedTags.length >= 3 ? (
-                                            <div className="px-3 py-3 text-center">
-                                                <p className="text-xs text-amber-700 font-medium">
-                                                    Maksimal 3 kategori telah dipilih. Hapus salah satu kategori jika ingin memilih yang lain.
-                                                </p>
-                                            </div>
-                                        ) : filteredCategories.length > 0 ? (
+                                        {filteredCategories.length > 0 ? (
                                             <div className="space-y-0.5">
                                                 {filteredCategories.map((cat) => (
                                                     <button
@@ -989,11 +973,7 @@ export default function AdminBeritaForm({
                             {/* Kontrol Inline Tambah Kategori Baru (Khusus Admin) */}
                             {currentUserRole !== 'REPORTER' && (
                                 <div className="mt-3 pt-2.5 border-t border-slate-100">
-                                    {selectedTags.length >= 3 ? (
-                                        <p className="text-[11px] text-slate-400">
-                                            Maksimal 3 kategori telah dipilih.
-                                        </p>
-                                    ) : !isAddingInlineCategory ? (
+                                    {!isAddingInlineCategory ? (
                                         <button
                                             type="button"
                                             onClick={() => setIsAddingInlineCategory(true)}

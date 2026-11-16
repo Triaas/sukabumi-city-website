@@ -129,13 +129,6 @@ export async function createBeritaAction(
       };
     }
 
-    if (categoryInputs.length > 3) {
-      return {
-        success: false,
-        error: 'Maksimal 3 kategori berita yang diperbolehkan.',
-      };
-    }
-
     const isAdmin = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN_BERITA';
     if (isAdmin) {
       if (!publishDateRaw) {
@@ -473,13 +466,6 @@ export async function updateBeritaAction(
       return {
         success: false,
         error: 'Pilih minimal 1 kategori berita.',
-      };
-    }
-
-    if (categoryInputs.length > 3) {
-      return {
-        success: false,
-        error: 'Maksimal 3 kategori berita yang diperbolehkan.',
       };
     }
 

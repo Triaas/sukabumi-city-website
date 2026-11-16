@@ -1021,19 +1021,28 @@ export default function PengumumanClient({
 
                                         {/* JUDUL PENGUMUMAN */}
                                         <td className="py-4 px-4 text-left">
-                                            <a
-                                                href={
-                                                    item.status === 'Diterbitkan'
-                                                        ? `/pengumuman/${item.slug}`
-                                                        : `/pengumuman/${item.slug}?preview=true`
-                                                }
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="font-bold text-[#172135] text-xs sm:text-[13px] hover:text-[#159447] cursor-pointer transition-colors line-clamp-2 leading-relaxed"
-                                                title={item.title}
-                                            >
-                                                {item.title}
-                                            </a>
+                                            {item.status === 'Diterbitkan' ? (
+                                                <a
+                                                    href={`/pengumuman/${item.slug}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="font-bold text-[#172135] text-xs sm:text-[13px] hover:text-[#159447] cursor-pointer transition-colors line-clamp-2 leading-relaxed"
+                                                    title={item.title}
+                                                >
+                                                    {item.title}
+                                                </a>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        openEditModal(item)
+                                                    }
+                                                    className="text-left font-bold text-[#172135] text-xs sm:text-[13px] hover:text-[#159447] cursor-pointer transition-colors line-clamp-2 leading-relaxed"
+                                                    title="Klik untuk mengedit draf pengumuman"
+                                                >
+                                                    {item.title}
+                                                </button>
+                                            )}
                                         </td>
 
                                         {/* LAMPIRAN */}
