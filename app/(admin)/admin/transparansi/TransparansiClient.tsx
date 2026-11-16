@@ -232,6 +232,23 @@ export default function TransparansiClient({
                 formData.pdfFile !== editInitialSnapshot.pdfFile)
     )
 
+    const hasAddChanges = Boolean(
+        isAddModalOpen &&
+            (formData.title.trim().length > 0 ||
+                formData.description.trim().length > 0 ||
+                pdfFileObj !== null ||
+                formData.pdfFile.trim().length > 0)
+    )
+
+    const requestCloseAddModal = () => {
+        if (isPending) return
+        if (hasAddChanges) {
+            setIsExitConfirmOpen(true)
+            return
+        }
+        setIsAddModalOpen(false)
+    }
+
     const requestCloseEditModal = () => {
         if (isPending) return
         if (hasEditChanges) {
@@ -250,7 +267,7 @@ export default function TransparansiClient({
             else if (deletingItem) setDeletingItem(null)
             else if (previewItem) setPreviewItem(null)
             else if (editingItem) requestCloseEditModal()
-            else if (isAddModalOpen) setIsAddModalOpen(false)
+            else if (isAddModalOpen) requestCloseAddModal()
         }
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
@@ -263,6 +280,7 @@ export default function TransparansiClient({
         editingItem,
         isAddModalOpen,
         hasEditChanges,
+        hasAddChanges,
     ])
 
     const filteredData = useMemo(() => {
@@ -464,32 +482,43 @@ export default function TransparansiClient({
         trimmedDesc: string
         trimmedDate: string
     } | null => {
-        const trimmedTitle = formData.title.trim()
+        const isDraft = targetStatus === 'Draf'
+        const rawTitle = formData.title.trim()
+        const trimmedTitle =
+            rawTitle || (isDraft ? '(Draf Dokumen Tanpa Judul)' : '')
         const trimmedDesc = formData.description.trim()
-        const trimmedDate = formData.effectiveDate.trim()
+        const rawDate = formData.effectiveDate.trim()
         const maxDate = getTodayDateWIB()
+        const trimmedDate = rawDate || (isDraft ? maxDate : '')
 
-        if (!trimmedTitle) {
-            setFormError('Judul dokumen wajib diisi.')
-            return null
-        }
-        if (!trimmedDate) {
-            setFormError('Tanggal pemberlakuan wajib diisi.')
-            return null
-        }
-        if (trimmedDate > maxDate) {
+        if (!isDraft) {
+            if (!trimmedTitle) {
+                setFormError('Judul dokumen wajib diisi.')
+                return null
+            }
+            if (!trimmedDate) {
+                setFormError('Tanggal pemberlakuan wajib diisi.')
+                return null
+            }
+            if (trimmedDate > maxDate) {
+                setFormError(
+                    'Tanggal pemberlakuan tidak boleh melebihi tanggal hari ini (WIB).'
+                )
+                return null
+            }
+            if (!trimmedDesc) {
+                setFormError('Deskripsi program wajib diisi.')
+                return null
+            }
+            if (!pdfFileObj && !formData.pdfFile.trim()) {
+                setPdfError(true)
+                setFormError('Berkas dokumen PDF wajib diunggah.')
+                return null
+            }
+        } else if (trimmedDate > maxDate) {
             setFormError(
                 'Tanggal pemberlakuan tidak boleh melebihi tanggal hari ini (WIB).'
             )
-            return null
-        }
-        if (!trimmedDesc) {
-            setFormError('Deskripsi program wajib diisi.')
-            return null
-        }
-        if (!pdfFileObj && !formData.pdfFile.trim()) {
-            setPdfError(true)
-            setFormError('Berkas dokumen PDF wajib diunggah.')
             return null
         }
 
@@ -518,7 +547,10 @@ export default function TransparansiClient({
         if (isPending) return
 
         const validated = buildValidatedPayload(targetStatus)
-        if (!validated) return
+        if (!validated) {
+            setIsExitConfirmOpen(false)
+            return
+        }
 
         const { payload, trimmedTitle, trimmedDesc, trimmedDate } = validated
         setSubmittingStatus(openPreview ? 'Preview' : targetStatus)
@@ -527,12 +559,14 @@ export default function TransparansiClient({
             const result = await createTransparansiAction(payload)
             setSubmittingStatus(null)
             if (!result.success) {
+                setIsExitConfirmOpen(false)
                 setFormError(
                     result.error || 'Gagal menyimpan dokumen transparansi baru.'
                 )
                 return
             }
 
+            setIsExitConfirmOpen(false)
             setIsAddModalOpen(false)
 
             if (openPreview) {
@@ -1325,7 +1359,7 @@ export default function TransparansiClient({
                                 type="button"
                                 aria-label="Tutup modal tambah dokumen"
                                 disabled={isPending}
-                                onClick={() => setIsAddModalOpen(false)}
+                                onClick={requestCloseAddModal}
                                 className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors"
                             >
                                 <X size={18} aria-hidden="true" />
@@ -1606,7 +1640,7 @@ export default function TransparansiClient({
                                 <button
                                     type="button"
                                     disabled={isPending}
-                                    onClick={() => setIsAddModalOpen(false)}
+                                    onClick={requestCloseAddModal}
                                     className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold cursor-pointer transition-colors disabled:opacity-50"
                                 >
                                     Batal
@@ -2355,14 +2389,19 @@ export default function TransparansiClient({
             <ConfirmSaveDraftModal
                 isOpen={isExitConfirmOpen}
                 isSaving={isPending}
-                isPublished={editingItem?.status === 'Diterbitkan'}
+                isPublished={Boolean(
+                    editingItem && editingItem.status === 'Diterbitkan'
+                )}
                 onConfirmSaveDraft={() =>
-                    handleSaveEdit(editingItem?.status ?? 'Draf')
+                    editingItem
+                        ? handleSaveEdit(editingItem.status ?? 'Draf')
+                        : handleSaveAdd('Draf')
                 }
                 onDiscard={() => {
                     setIsExitConfirmOpen(false)
                     setEditingItem(null)
                     setEditInitialSnapshot(null)
+                    setIsAddModalOpen(false)
                 }}
                 onCancel={() => setIsExitConfirmOpen(false)}
             />

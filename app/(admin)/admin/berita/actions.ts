@@ -47,7 +47,7 @@ export async function createBeritaAction(
   formData: FormData
 ): Promise<CreateBeritaResult> {
   try {
-    const title = ((formData.get('title') as string) || '').trim();
+    const rawTitle = ((formData.get('title') as string) || '').trim();
     const content = ((formData.get('content') as string) || '').trim();
     const rawCategory = ((formData.get('category_id') as string) || '').trim();
     const rawCategories = formData
@@ -64,6 +64,8 @@ export async function createBeritaAction(
     const sourceCredit = ((formData.get('source_credit') as string) || '').trim();
     const actionType = ((formData.get('action_type') as BeritaActionType) ||
       'DRAFT') as BeritaActionType;
+    const isDraftAction = actionType === 'DRAFT';
+    const title = rawTitle || (isDraftAction ? '(Draf Tanpa Judul)' : '');
     const authorName =
       ((formData.get('author_name') as string) || '').trim() ||
       'Diskominfo Kota Sukabumi';
@@ -86,7 +88,7 @@ export async function createBeritaAction(
     const hasStringImage =
       typeof imageEntry === 'string' && imageEntry.trim().length > 0;
 
-    if (!hasFileUpload && !hasStringImage) {
+    if (!isDraftAction && !hasFileUpload && !hasStringImage) {
       return {
         success: false,
         error: 'Gambar utama berita wajib diunggah.',
@@ -100,14 +102,14 @@ export async function createBeritaAction(
       };
     }
 
-    if (!caption) {
+    if (!isDraftAction && !caption) {
       return {
         success: false,
         error: 'Keterangan / caption foto wajib diisi.',
       };
     }
 
-    if (!sourceCredit) {
+    if (!isDraftAction && !sourceCredit) {
       return {
         success: false,
         error: 'Sumber foto / atribusi wajib diisi.',
@@ -115,14 +117,14 @@ export async function createBeritaAction(
     }
 
     const plainTextContent = content.replace(/<[^>]*>/g, '').trim();
-    if (!plainTextContent) {
+    if (!isDraftAction && !plainTextContent) {
       return {
         success: false,
         error: 'Naskah narasi berita wajib diisi.',
       };
     }
 
-    if (categoryInputs.length === 0) {
+    if (!isDraftAction && categoryInputs.length === 0) {
       return {
         success: false,
         error: 'Pilih minimal 1 kategori berita.',
@@ -130,7 +132,7 @@ export async function createBeritaAction(
     }
 
     const isAdmin = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN_BERITA';
-    if (isAdmin) {
+    if (!isDraftAction && isAdmin) {
       if (!publishDateRaw) {
         return {
           success: false,
@@ -155,8 +157,11 @@ export async function createBeritaAction(
     }
 
     // 2. Resolusi seluruh kategori ke tabel public.categories
-    const categoryIds = await resolveCategoryIds(categoryInputs, userRole);
-    if (!categoryIds || categoryIds.length === 0) {
+    const categoryIds =
+      categoryInputs.length > 0
+        ? await resolveCategoryIds(categoryInputs, userRole)
+        : [];
+    if (!isDraftAction && (!categoryIds || categoryIds.length === 0)) {
       return {
         success: false,
         error: isAdmin
@@ -164,7 +169,8 @@ export async function createBeritaAction(
           : 'Kategori tidak ditemukan. Reporter tidak diizinkan membuat kategori baru.',
       };
     }
-    const categoryId = categoryIds[0];
+    const resolvedCategoryIds = categoryIds ?? [];
+    const categoryId = resolvedCategoryIds[0] ?? null;
 
     // 3. Unggah gambar fisik HANYA setelah seluruh validasi lolos
     let imageUrl: string | null = null;
@@ -184,7 +190,7 @@ export async function createBeritaAction(
       imageUrl = (imageEntry as string).trim();
     }
 
-    if (!isValidImagePath(imageUrl)) {
+    if (!isDraftAction && !isValidImagePath(imageUrl)) {
       return {
         success: false,
         error: 'Gambar utama berita wajib diunggah.',
@@ -262,7 +268,7 @@ export async function createBeritaAction(
       : undefined;
 
     if (insertedId) {
-      await syncBeritaCategories(insertedId, categoryIds);
+      await syncBeritaCategories(insertedId, resolvedCategoryIds);
     }
 
     revalidateBeritaPaths(newSlug);
@@ -408,7 +414,7 @@ export async function updateBeritaAction(
       };
     }
 
-    const title = ((formData.get('title') as string) || '').trim();
+    const rawTitle = ((formData.get('title') as string) || '').trim();
     const content = ((formData.get('content') as string) || '').trim();
     const rawCategory = ((formData.get('category_id') as string) || '').trim();
     const rawCategories = formData
@@ -425,6 +431,8 @@ export async function updateBeritaAction(
     const sourceCredit = ((formData.get('source_credit') as string) || '').trim();
     const actionType = ((formData.get('action_type') as BeritaActionType) ||
       'DRAFT') as BeritaActionType;
+    const isDraftAction = actionType === 'DRAFT';
+    const title = rawTitle || (isDraftAction ? '(Draf Tanpa Judul)' : '');
     const userRole = ((formData.get('user_role') as UserRole) ||
       'REPORTER') as UserRole;
     const publishDateRaw = ((formData.get('publish_date') as string) || '').trim();
@@ -440,14 +448,14 @@ export async function updateBeritaAction(
       };
     }
 
-    if (!caption) {
+    if (!isDraftAction && !caption) {
       return {
         success: false,
         error: 'Keterangan / caption foto wajib diisi.',
       };
     }
 
-    if (!sourceCredit) {
+    if (!isDraftAction && !sourceCredit) {
       return {
         success: false,
         error: 'Sumber foto / atribusi wajib diisi.',
@@ -455,14 +463,14 @@ export async function updateBeritaAction(
     }
 
     const plainTextContent = content.replace(/<[^>]*>/g, '').trim();
-    if (!plainTextContent) {
+    if (!isDraftAction && !plainTextContent) {
       return {
         success: false,
         error: 'Naskah narasi berita wajib diisi.',
       };
     }
 
-    if (categoryInputs.length === 0) {
+    if (!isDraftAction && categoryInputs.length === 0) {
       return {
         success: false,
         error: 'Pilih minimal 1 kategori berita.',
@@ -470,7 +478,7 @@ export async function updateBeritaAction(
     }
 
     const isAdmin = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN_BERITA';
-    if (isAdmin) {
+    if (!isDraftAction && isAdmin) {
       if (!publishDateRaw) {
         return {
           success: false,
@@ -517,7 +525,7 @@ export async function updateBeritaAction(
     }
 
     const hasFileUpload = imageEntry instanceof File && imageEntry.size > 0;
-    if (!hasFileUpload && !isValidImagePath(existingDbImageUrl)) {
+    if (!isDraftAction && !hasFileUpload && !isValidImagePath(existingDbImageUrl)) {
       return {
         success: false,
         error: 'Gambar utama berita wajib diunggah.',
@@ -534,8 +542,11 @@ export async function updateBeritaAction(
     }
 
     // 3. Resolusi seluruh kategori ke tabel public.categories
-    const categoryIds = await resolveCategoryIds(categoryInputs, userRole);
-    if (!categoryIds || categoryIds.length === 0) {
+    const categoryIds =
+      categoryInputs.length > 0
+        ? await resolveCategoryIds(categoryInputs, userRole)
+        : [];
+    if (!isDraftAction && (!categoryIds || categoryIds.length === 0)) {
       return {
         success: false,
         error: isAdmin
@@ -543,7 +554,8 @@ export async function updateBeritaAction(
           : 'Kategori tidak ditemukan. Reporter tidak diizinkan membuat kategori baru.',
       };
     }
-    const categoryId = categoryIds[0];
+    const resolvedCategoryIds = categoryIds ?? [];
+    const categoryId = resolvedCategoryIds[0] ?? null;
 
     // 4. Unggah gambar baru HANYA setelah seluruh validasi lolos,
     //    atau gunakan fallback langsung dari database (currentRow.image_url).
@@ -562,7 +574,7 @@ export async function updateBeritaAction(
       }
     }
 
-    if (!isValidImagePath(imageUrl)) {
+    if (!isDraftAction && !isValidImagePath(imageUrl)) {
       return {
         success: false,
         error: 'Gambar utama berita wajib diunggah.',
@@ -618,7 +630,7 @@ export async function updateBeritaAction(
 
     const finalSlug = (updated.rows[0]?.slug as string) || currentSlug;
 
-    await syncBeritaCategories(numericId, categoryIds);
+    await syncBeritaCategories(numericId, resolvedCategoryIds);
 
     revalidateBeritaPaths(finalSlug);
 

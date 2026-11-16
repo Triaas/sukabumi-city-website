@@ -135,6 +135,23 @@ export default function BannerClient({
         setEditInitialSnapshot(null)
     }
 
+    const hasAddChanges = Boolean(
+        isAddModalOpen &&
+            (formData.title.trim().length > 0 ||
+                formData.targetUrl.trim().length > 0 ||
+                imageFileObj !== null ||
+                formData.imagePreview.trim().length > 0)
+    )
+
+    const requestCloseAddModal = () => {
+        if (isPending) return
+        if (hasAddChanges) {
+            setIsExitConfirmOpen(true)
+            return
+        }
+        setIsAddModalOpen(false)
+    }
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key !== 'Escape' || isPending) return
@@ -143,7 +160,7 @@ export default function BannerClient({
             else if (deletingItem) setDeletingItem(null)
             else if (previewItem) setPreviewItem(null)
             else if (editingItem) requestCloseEditModal()
-            else if (isAddModalOpen) setIsAddModalOpen(false)
+            else if (isAddModalOpen) requestCloseAddModal()
         }
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
@@ -156,6 +173,7 @@ export default function BannerClient({
         editingItem,
         isAddModalOpen,
         hasEditChanges,
+        hasAddChanges,
     ])
 
     // Filter & Search Logic
@@ -286,18 +304,23 @@ export default function BannerClient({
     }
 
     const buildValidatedPayload = (targetIsActive: boolean): FormData | null => {
-        const trimmedTitle = formData.title.trim()
+        const isDraft = !targetIsActive
+        const rawTitle = formData.title.trim()
+        const trimmedTitle =
+            rawTitle || (isDraft ? '(Draf Banner Tanpa Judul)' : '')
         const trimmedTarget = formData.targetUrl.trim()
 
-        if (!trimmedTitle) {
-            setFormError('Judul / deskripsi banner wajib diisi.')
-            return null
-        }
+        if (!isDraft) {
+            if (!trimmedTitle) {
+                setFormError('Judul / deskripsi banner wajib diisi.')
+                return null
+            }
 
-        if (!imageFileObj && !formData.imagePreview.trim()) {
-            setImageError(true)
-            setFormError('Gambar banner wajib diunggah.')
-            return null
+            if (!imageFileObj && !formData.imagePreview.trim()) {
+                setImageError(true)
+                setFormError('Gambar banner wajib diunggah.')
+                return null
+            }
         }
 
         setImageError(false)
@@ -322,17 +345,22 @@ export default function BannerClient({
         if (isPending) return
 
         const payload = buildValidatedPayload(targetIsActive)
-        if (!payload) return
+        if (!payload) {
+            setIsExitConfirmOpen(false)
+            return
+        }
 
         startTransition(async () => {
             const result = await createBannerAction(payload)
             if (!result.success) {
+                setIsExitConfirmOpen(false)
                 setFormError(
                     result.error || 'Gagal menyimpan banner baru.'
                 )
                 return
             }
 
+            setIsExitConfirmOpen(false)
             setIsAddModalOpen(false)
             setFeedback({
                 type: 'success',
@@ -1310,7 +1338,7 @@ export default function BannerClient({
                             <button
                                 type="button"
                                 disabled={isPending}
-                                onClick={() => setIsAddModalOpen(false)}
+                                onClick={requestCloseAddModal}
                                 className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer transition-colors"
                             >
                                 <X size={18} />
@@ -1318,7 +1346,7 @@ export default function BannerClient({
                         </div>
                         {renderForm(
                             handleSaveAdd,
-                            () => setIsAddModalOpen(false),
+                            requestCloseAddModal,
                             false
                         )}
                     </div>
@@ -1486,12 +1514,15 @@ export default function BannerClient({
                 isSaving={isPending}
                 isPublished={Boolean(editingItem?.isActive)}
                 onConfirmSaveDraft={() =>
-                    handleSaveEdit(editingItem?.isActive ?? false)
+                    editingItem
+                        ? handleSaveEdit(editingItem.isActive)
+                        : handleSaveAdd(false)
                 }
                 onDiscard={() => {
                     setIsExitConfirmOpen(false)
                     setEditingItem(null)
                     setEditInitialSnapshot(null)
+                    setIsAddModalOpen(false)
                 }}
                 onCancel={() => setIsExitConfirmOpen(false)}
             />

@@ -315,17 +315,28 @@ export default function ReporterBeritaForm({
     const [pendingExitHref, setPendingExitHref] = useState<string | null>(null)
     const skipUnsavedGuardRef = useRef(false)
 
-    const hasUnsavedChanges =
-        isEditMode &&
-        !isLockedForReporter &&
-        (title !== (initialData?.title ?? '') ||
-            caption !== (initialData?.caption ?? '') ||
-            sourceCredit !== (initialData?.source_credit ?? '') ||
-            content !== (initialData?.content ?? '') ||
+    const hasNewDraftContent =
+        !isEditMode &&
+        (title.trim().length > 0 ||
+            caption.trim().length > 0 ||
+            sourceCredit.trim().length > 0 ||
+            content.replace(/<[^>]*>/g, '').trim().length > 0 ||
             imageFile !== null ||
-            (existingImageUrl ?? null) !== (initialData?.image_url ?? null) ||
-            selectedTags.length !== initialTags.length ||
-            selectedTags.some((t, i) => t !== initialTags[i]))
+            existingImageUrl !== null ||
+            selectedTags.length > 0)
+
+    const hasUnsavedChanges =
+        !isLockedForReporter &&
+        (isEditMode
+            ? title !== (initialData?.title ?? '') ||
+              caption !== (initialData?.caption ?? '') ||
+              sourceCredit !== (initialData?.source_credit ?? '') ||
+              content !== (initialData?.content ?? '') ||
+              imageFile !== null ||
+              (existingImageUrl ?? null) !== (initialData?.image_url ?? null) ||
+              selectedTags.length !== initialTags.length ||
+              selectedTags.some((t, i) => t !== initialTags[i])
+            : hasNewDraftContent)
 
     useEffect(() => {
         if (!hasUnsavedChanges) return
@@ -406,6 +417,7 @@ export default function ReporterBeritaForm({
         setErrorMessage(null)
         setSuccessMessage(null)
 
+        const isDraftAction = actionType === 'DRAFT'
         const trimmedTitle = title.trim()
         const editorHtml = content.trim()
         const editorText = editorHtml.replace(/<[^>]*>/g, '').trim()
@@ -413,40 +425,42 @@ export default function ReporterBeritaForm({
         const trimmedCaption = caption.trim()
         const trimmedSourceCredit = sourceCredit.trim()
 
-        if (!trimmedTitle) {
-            setPendingExitHref(null)
-            setErrorMessage('Judul berita utama wajib diisi.')
-            return
-        }
+        if (!isDraftAction) {
+            if (!trimmedTitle) {
+                setPendingExitHref(null)
+                setErrorMessage('Judul berita utama wajib diisi.')
+                return
+            }
 
-        if (!hasAnyImage) {
-            setPendingExitHref(null)
-            setErrorMessage('Gambar utama berita wajib diunggah.')
-            return
-        }
+            if (!hasAnyImage) {
+                setPendingExitHref(null)
+                setErrorMessage('Gambar utama berita wajib diunggah.')
+                return
+            }
 
-        if (!trimmedCaption) {
-            setPendingExitHref(null)
-            setErrorMessage('Keterangan / caption foto wajib diisi.')
-            return
-        }
+            if (!trimmedCaption) {
+                setPendingExitHref(null)
+                setErrorMessage('Keterangan / caption foto wajib diisi.')
+                return
+            }
 
-        if (!trimmedSourceCredit) {
-            setPendingExitHref(null)
-            setErrorMessage('Sumber foto / atribusi wajib diisi.')
-            return
-        }
+            if (!trimmedSourceCredit) {
+                setPendingExitHref(null)
+                setErrorMessage('Sumber foto / atribusi wajib diisi.')
+                return
+            }
 
-        if (!editorText) {
-            setPendingExitHref(null)
-            setErrorMessage('Naskah narasi berita wajib diisi.')
-            return
-        }
+            if (!editorText) {
+                setPendingExitHref(null)
+                setErrorMessage('Naskah narasi berita wajib diisi.')
+                return
+            }
 
-        if (selectedTags.length === 0) {
-            setPendingExitHref(null)
-            setErrorMessage('Pilih minimal 1 kategori berita.')
-            return
+            if (selectedTags.length === 0) {
+                setPendingExitHref(null)
+                setErrorMessage('Pilih minimal 1 kategori berita.')
+                return
+            }
         }
 
         if (selectedTags.length > 3) {
@@ -459,7 +473,10 @@ export default function ReporterBeritaForm({
             setSubmittingAction(openPreview ? 'PREVIEW' : actionType)
 
             const formData = new FormData()
-            formData.append('title', trimmedTitle)
+            formData.append(
+                'title',
+                trimmedTitle || (isDraftAction ? '(Draf Tanpa Judul)' : '')
+            )
             formData.append('content', editorHtml)
             formData.append(
                 'category_id',

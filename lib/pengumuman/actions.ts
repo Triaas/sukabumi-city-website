@@ -204,11 +204,14 @@ export async function createPengumumanAction(
   formData: FormData
 ): Promise<PengumumanMutationResult> {
   try {
-    const title = ((formData.get('title') as string) || '').trim();
+    const rawTitle = ((formData.get('title') as string) || '').trim();
     const content = ((formData.get('content') as string) || '').trim();
     const nomorPengumuman =
       ((formData.get('nomor_pengumuman') as string) || '').trim() || null;
     const rawStatus = ((formData.get('status') as string) || 'Diterbitkan').trim();
+    const dbStatus = normalizeDbStatus(rawStatus);
+    const isDraft = dbStatus === 'DRAFT';
+    const title = rawTitle || (isDraft ? '(Draf Pengumuman Tanpa Judul)' : '');
     const publishDate = ((formData.get('publish_date') as string) || '').trim();
     const publishTime = ((formData.get('publish_time') as string) || '').trim();
 
@@ -230,7 +233,7 @@ export async function createPengumumanAction(
     }
 
     const plainTextContent = content.replace(/<[^>]*>/g, '').trim();
-    if (!plainTextContent) {
+    if (!isDraft && !plainTextContent) {
       return {
         success: false,
         error: 'Isi pengumuman wajib diisi.',
@@ -239,7 +242,7 @@ export async function createPengumumanAction(
 
     const hasAttachmentFile =
       attachmentEntry instanceof File && attachmentEntry.size > 0;
-    if (!hasAttachmentFile && !existingAttachmentUrl) {
+    if (!isDraft && !hasAttachmentFile && !existingAttachmentUrl) {
       return {
         success: false,
         error: 'Berkas dokumen lampiran (PDF) wajib diunggah.',
@@ -257,7 +260,6 @@ export async function createPengumumanAction(
     }
 
     const slug = await generateUniquePengumumanSlug(title);
-    const dbStatus = normalizeDbStatus(rawStatus);
     const parsedPublishAt = parseCustomPublishTimestamp(publishDate, publishTime);
     const publishedAt =
       parsedPublishAt || (dbStatus === 'PUBLISHED' ? new Date().toISOString() : null);
@@ -344,7 +346,7 @@ export async function updatePengumumanAction(
     }
 
     const currentRow = existingCheck.rows[0];
-    const title = ((formData.get('title') as string) || '').trim();
+    const rawTitle = ((formData.get('title') as string) || '').trim();
     const content = ((formData.get('content') as string) || '').trim();
     const nomorPengumumanRaw = formData.get('nomor_pengumuman');
     const nomorPengumuman =
@@ -352,6 +354,9 @@ export async function updatePengumumanAction(
         ? String(nomorPengumumanRaw).trim() || null
         : currentRow.nomor_pengumuman;
     const rawStatus = ((formData.get('status') as string) || 'Diterbitkan').trim();
+    const dbStatus = normalizeDbStatus(rawStatus);
+    const isDraft = dbStatus === 'DRAFT';
+    const title = rawTitle || (isDraft ? '(Draf Pengumuman Tanpa Judul)' : '');
     const publishDate = ((formData.get('publish_date') as string) || '').trim();
     const publishTime = ((formData.get('publish_time') as string) || '').trim();
 
@@ -373,7 +378,7 @@ export async function updatePengumumanAction(
     }
 
     const plainTextContent = content.replace(/<[^>]*>/g, '').trim();
-    if (!plainTextContent) {
+    if (!isDraft && !plainTextContent) {
       return {
         success: false,
         error: 'Isi pengumuman wajib diisi.',
@@ -382,7 +387,7 @@ export async function updatePengumumanAction(
 
     const hasAttachmentFile =
       attachmentEntry instanceof File && attachmentEntry.size > 0;
-    if (!hasAttachmentFile && !existingAttachmentUrl) {
+    if (!isDraft && !hasAttachmentFile && !existingAttachmentUrl) {
       return {
         success: false,
         error: 'Berkas dokumen lampiran (PDF) wajib diunggah.',
@@ -404,7 +409,6 @@ export async function updatePengumumanAction(
         ? await generateUniquePengumumanSlug(title, numericId)
         : currentRow.slug;
 
-    const dbStatus = normalizeDbStatus(rawStatus);
     const parsedPublishAt = parseCustomPublishTimestamp(publishDate, publishTime);
     const publishedAt =
       parsedPublishAt ||

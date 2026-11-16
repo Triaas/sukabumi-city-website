@@ -110,10 +110,11 @@ export async function createBannerAction(
   try {
     await ensureEventBannersTable();
 
-    const title = ((formData.get('title') as string) || '').trim();
+    const rawTitle = ((formData.get('title') as string) || '').trim();
     const rawTargetUrl = ((formData.get('target_url') as string) || '').trim();
     const rawSortOrder = ((formData.get('sort_order') as string) || '').trim();
     const isActive = parseBooleanStatus(formData.get('is_active'), true);
+    const title = rawTitle || (!isActive ? '(Draf Banner Tanpa Judul)' : '');
 
     const imageFileEntry = formData.get('image_file');
     const existingImageUrl = (
@@ -129,7 +130,7 @@ export async function createBannerAction(
 
     const hasImageFile =
       imageFileEntry instanceof File && imageFileEntry.size > 0;
-    if (!hasImageFile && !existingImageUrl) {
+    if (isActive && !hasImageFile && !existingImageUrl) {
       return {
         success: false,
         error: 'Gambar banner wajib diunggah.',
@@ -218,13 +219,14 @@ export async function updateBannerAction(
 
     const currentRow = existingRes.rows[0];
 
-    const title = ((formData.get('title') as string) || '').trim();
+    const rawTitle = ((formData.get('title') as string) || '').trim();
     const rawTargetUrl = ((formData.get('target_url') as string) || '').trim();
     const rawSortOrder = ((formData.get('sort_order') as string) || '').trim();
     const isActive = parseBooleanStatus(
       formData.get('is_active'),
       currentRow.is_active !== false
     );
+    const title = rawTitle || (!isActive ? '(Draf Banner Tanpa Judul)' : '');
 
     const imageFileEntry = formData.get('image_file');
     const existingImageUrl =
@@ -240,7 +242,7 @@ export async function updateBannerAction(
 
     const hasImageFile =
       imageFileEntry instanceof File && imageFileEntry.size > 0;
-    if (!hasImageFile && !existingImageUrl) {
+    if (isActive && !hasImageFile && !existingImageUrl) {
       return {
         success: false,
         error: 'Gambar banner wajib tersedia.',

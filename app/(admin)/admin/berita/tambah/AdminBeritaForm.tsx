@@ -368,20 +368,30 @@ export default function AdminBeritaForm({
         }
     }, [])
 
-    const hasUnsavedChanges =
-        isEditMode &&
-        (title !== (initialData?.title ?? '') ||
-            caption !== (initialData?.caption ?? '') ||
-            sourceCredit !== (initialData?.source_credit ?? '') ||
-            content !== (initialData?.content ?? '') ||
+    const hasNewDraftContent =
+        !isEditMode &&
+        (title.trim().length > 0 ||
+            caption.trim().length > 0 ||
+            sourceCredit.trim().length > 0 ||
+            content.replace(/<[^>]*>/g, '').trim().length > 0 ||
             imageFile !== null ||
-            (existingImageUrl ?? null) !== (initialData?.image_url ?? null) ||
-            selectedTags.length !== initialTags.length ||
-            selectedTags.some((t, i) => t !== initialTags[i]) ||
-            (initialScheduleRef.current !== null &&
-                publishDate !== '' &&
-                (publishDate !== initialScheduleRef.current.date ||
-                    publishTime !== initialScheduleRef.current.time)))
+            existingImageUrl !== null ||
+            selectedTags.length > 0)
+
+    const hasUnsavedChanges = isEditMode
+        ? title !== (initialData?.title ?? '') ||
+          caption !== (initialData?.caption ?? '') ||
+          sourceCredit !== (initialData?.source_credit ?? '') ||
+          content !== (initialData?.content ?? '') ||
+          imageFile !== null ||
+          (existingImageUrl ?? null) !== (initialData?.image_url ?? null) ||
+          selectedTags.length !== initialTags.length ||
+          selectedTags.some((t, i) => t !== initialTags[i]) ||
+          (initialScheduleRef.current !== null &&
+              publishDate !== '' &&
+              (publishDate !== initialScheduleRef.current.date ||
+                  publishTime !== initialScheduleRef.current.time))
+        : hasNewDraftContent
 
     useEffect(() => {
         if (!hasUnsavedChanges) return
@@ -462,6 +472,7 @@ export default function AdminBeritaForm({
         setErrorMessage(null)
         setSuccessMessage(null)
 
+        const isDraftAction = actionType === 'DRAFT'
         const trimmedTitle = title.trim()
         const editorHtml = content.trim()
         const editorText = editorHtml.replace(/<[^>]*>/g, '').trim()
@@ -469,52 +480,54 @@ export default function AdminBeritaForm({
         const trimmedCaption = caption.trim()
         const trimmedSourceCredit = sourceCredit.trim()
 
-        if (!trimmedTitle) {
-            setPendingExitHref(null)
-            setErrorMessage('Judul berita utama wajib diisi.')
-            return
-        }
-
-        if (!hasAnyImage) {
-            setPendingExitHref(null)
-            setErrorMessage('Gambar utama berita wajib diunggah.')
-            return
-        }
-
-        if (!trimmedCaption) {
-            setPendingExitHref(null)
-            setErrorMessage('Keterangan / caption foto wajib diisi.')
-            return
-        }
-
-        if (!trimmedSourceCredit) {
-            setPendingExitHref(null)
-            setErrorMessage('Sumber foto / atribusi wajib diisi.')
-            return
-        }
-
-        if (!editorText) {
-            setPendingExitHref(null)
-            setErrorMessage('Naskah narasi berita wajib diisi.')
-            return
-        }
-
-        if (selectedTags.length === 0) {
-            setPendingExitHref(null)
-            setErrorMessage('Pilih minimal 1 kategori berita.')
-            return
-        }
-
-        if (currentUserRole !== 'REPORTER') {
-            if (!publishDate) {
+        if (!isDraftAction) {
+            if (!trimmedTitle) {
                 setPendingExitHref(null)
-                setErrorMessage('Tanggal publikasi wajib diisi.')
+                setErrorMessage('Judul berita utama wajib diisi.')
                 return
             }
-            if (!publishTime) {
+
+            if (!hasAnyImage) {
                 setPendingExitHref(null)
-                setErrorMessage('Waktu publikasi (WIB) wajib diisi.')
+                setErrorMessage('Gambar utama berita wajib diunggah.')
                 return
+            }
+
+            if (!trimmedCaption) {
+                setPendingExitHref(null)
+                setErrorMessage('Keterangan / caption foto wajib diisi.')
+                return
+            }
+
+            if (!trimmedSourceCredit) {
+                setPendingExitHref(null)
+                setErrorMessage('Sumber foto / atribusi wajib diisi.')
+                return
+            }
+
+            if (!editorText) {
+                setPendingExitHref(null)
+                setErrorMessage('Naskah narasi berita wajib diisi.')
+                return
+            }
+
+            if (selectedTags.length === 0) {
+                setPendingExitHref(null)
+                setErrorMessage('Pilih minimal 1 kategori berita.')
+                return
+            }
+
+            if (currentUserRole !== 'REPORTER') {
+                if (!publishDate) {
+                    setPendingExitHref(null)
+                    setErrorMessage('Tanggal publikasi wajib diisi.')
+                    return
+                }
+                if (!publishTime) {
+                    setPendingExitHref(null)
+                    setErrorMessage('Waktu publikasi (WIB) wajib diisi.')
+                    return
+                }
             }
         }
 
@@ -522,7 +535,10 @@ export default function AdminBeritaForm({
             setSubmittingAction(openPreview ? 'PREVIEW' : actionType)
 
             const formData = new FormData()
-            formData.append('title', trimmedTitle)
+            formData.append(
+                'title',
+                trimmedTitle || (isDraftAction ? '(Draf Tanpa Judul)' : '')
+            )
             formData.append('content', editorHtml)
             formData.append(
                 'category_id',

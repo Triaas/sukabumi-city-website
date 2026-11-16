@@ -239,6 +239,23 @@ export default function PengumumanClient({
                 thumbnailFile !== null)
     )
 
+    const hasAddChanges = Boolean(
+        isAddModalOpen &&
+            (formData.title.trim().length > 0 ||
+                stripHtmlTags(formData.content).length > 0 ||
+                attachmentFile !== null ||
+                thumbnailFile !== null)
+    )
+
+    const requestCloseAddModal = () => {
+        if (isPending) return
+        if (hasAddChanges) {
+            setIsExitConfirmOpen(true)
+            return
+        }
+        setIsAddModalOpen(false)
+    }
+
     const requestCloseEditModal = () => {
         if (isPending) return
         if (hasEditChanges) {
@@ -257,7 +274,7 @@ export default function PengumumanClient({
             else if (deletingItem) setDeletingItem(null)
             else if (previewItem) setPreviewItem(null)
             else if (editingItem) requestCloseEditModal()
-            else if (isAddModalOpen) setIsAddModalOpen(false)
+            else if (isAddModalOpen) requestCloseAddModal()
         }
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
@@ -270,6 +287,7 @@ export default function PengumumanClient({
         editingItem,
         isAddModalOpen,
         hasEditChanges,
+        hasAddChanges,
     ])
 
     // ─── Filter & Search Logic ────────────────────────────────────────────────
@@ -547,23 +565,26 @@ export default function PengumumanClient({
     ) => {
         if (isPending) return
 
+        const isDraft = targetStatus === 'Draf'
         const trimmedTitle = formData.title.trim()
         const plainContent = stripHtmlTags(formData.content)
 
-        if (!trimmedTitle) {
-            setIsExitConfirmOpen(false)
-            setFormError('Judul pengumuman wajib diisi.')
-            return
-        }
-        if (!plainContent) {
-            setIsExitConfirmOpen(false)
-            setFormError('Isi pengumuman wajib diisi.')
-            return
-        }
-        if (!attachmentFile && !formData.attachment) {
-            setIsExitConfirmOpen(false)
-            setAttachmentError(true)
-            return
+        if (!isDraft) {
+            if (!trimmedTitle) {
+                setIsExitConfirmOpen(false)
+                setFormError('Judul pengumuman wajib diisi.')
+                return
+            }
+            if (!plainContent) {
+                setIsExitConfirmOpen(false)
+                setFormError('Isi pengumuman wajib diisi.')
+                return
+            }
+            if (!attachmentFile && !formData.attachment) {
+                setIsExitConfirmOpen(false)
+                setAttachmentError(true)
+                return
+            }
         }
 
         setAttachmentError(false)
@@ -571,7 +592,10 @@ export default function PengumumanClient({
         setSubmittingStatus(openPreview ? 'Preview' : targetStatus)
 
         const payload = new FormData()
-        payload.append('title', trimmedTitle)
+        payload.append(
+            'title',
+            trimmedTitle || (isDraft ? '(Draf Pengumuman Tanpa Judul)' : '')
+        )
         payload.append('content', formData.content)
         payload.append('status', targetStatus)
         payload.append('publish_date', formData.publishDate)
@@ -593,11 +617,14 @@ export default function PengumumanClient({
             const result = await createPengumumanAction(payload)
             setSubmittingStatus(null)
             if (!result.success) {
+                setIsExitConfirmOpen(false)
                 setFormError(
                     result.error || 'Gagal menyimpan pengumuman baru.'
                 )
                 return
             }
+
+            setIsExitConfirmOpen(false)
 
             if (openPreview && result.slug) {
                 window.open(
@@ -633,23 +660,26 @@ export default function PengumumanClient({
     ) => {
         if (isPending || !editingItem) return
 
+        const isDraft = targetStatus === 'Draf'
         const trimmedTitle = formData.title.trim()
         const plainContent = stripHtmlTags(formData.content)
 
-        if (!trimmedTitle) {
-            setIsExitConfirmOpen(false)
-            setFormError('Judul pengumuman wajib diisi.')
-            return
-        }
-        if (!plainContent) {
-            setIsExitConfirmOpen(false)
-            setFormError('Isi pengumuman wajib diisi.')
-            return
-        }
-        if (!attachmentFile && !formData.attachment) {
-            setIsExitConfirmOpen(false)
-            setAttachmentError(true)
-            return
+        if (!isDraft) {
+            if (!trimmedTitle) {
+                setIsExitConfirmOpen(false)
+                setFormError('Judul pengumuman wajib diisi.')
+                return
+            }
+            if (!plainContent) {
+                setIsExitConfirmOpen(false)
+                setFormError('Isi pengumuman wajib diisi.')
+                return
+            }
+            if (!attachmentFile && !formData.attachment) {
+                setIsExitConfirmOpen(false)
+                setAttachmentError(true)
+                return
+            }
         }
 
         setAttachmentError(false)
@@ -658,7 +688,10 @@ export default function PengumumanClient({
 
         const payload = new FormData()
         payload.append('id', String(editingItem.id))
-        payload.append('title', trimmedTitle)
+        payload.append(
+            'title',
+            trimmedTitle || (isDraft ? '(Draf Pengumuman Tanpa Judul)' : '')
+        )
         payload.append('content', formData.content)
         payload.append('status', targetStatus)
         payload.append('publish_date', formData.publishDate)
@@ -1373,7 +1406,7 @@ export default function PengumumanClient({
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setIsAddModalOpen(false)}
+                                onClick={requestCloseAddModal}
                                 disabled={isPending}
                                 className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
                             >
@@ -1751,7 +1784,7 @@ export default function PengumumanClient({
                             <div className="flex items-center justify-end pt-2 border-t border-slate-100">
                                 <button
                                     type="button"
-                                    onClick={() => setIsAddModalOpen(false)}
+                                    onClick={requestCloseAddModal}
                                     disabled={isPending}
                                     className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold cursor-pointer disabled:opacity-50"
                                 >
@@ -2429,14 +2462,19 @@ export default function PengumumanClient({
             <ConfirmSaveDraftModal
                 isOpen={isExitConfirmOpen}
                 isSaving={isPending}
-                isPublished={editingItem?.status === 'Diterbitkan'}
+                isPublished={Boolean(
+                    editingItem && editingItem.status === 'Diterbitkan'
+                )}
                 onConfirmSaveDraft={() =>
-                    handleSaveEdit(editingItem?.status ?? 'Draf')
+                    editingItem
+                        ? handleSaveEdit(editingItem.status ?? 'Draf')
+                        : handleSaveAdd('Draf')
                 }
                 onDiscard={() => {
                     setIsExitConfirmOpen(false)
                     setEditingItem(null)
                     setEditInitialSnapshot(null)
+                    setIsAddModalOpen(false)
                 }}
                 onCancel={() => setIsExitConfirmOpen(false)}
             />

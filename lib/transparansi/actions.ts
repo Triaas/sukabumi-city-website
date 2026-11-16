@@ -218,14 +218,24 @@ export async function createTransparansiAction(
   try {
     await ensureTransparansiTable();
 
-    const title = ((formData.get('title') as string) || '').trim();
+    const rawTitle = ((formData.get('title') as string) || '').trim();
     const description = ((formData.get('description') as string) || '').trim();
-    const effectiveDate = (
+    const rawEffectiveDate = (
       (formData.get('effective_date') as string) || ''
     ).trim();
     const rawStatus = (
       (formData.get('status') as string) || 'Diterbitkan'
     ).trim();
+    const dbStatus = normalizeDbStatus(rawStatus);
+    const isDraft = dbStatus === 'DRAFT';
+    const title = rawTitle || (isDraft ? '(Draf Dokumen Tanpa Judul)' : '');
+    const todayWib = getTodayDateWIB();
+    const effectiveDate =
+      rawEffectiveDate && /^\d{4}-\d{2}-\d{2}$/.test(rawEffectiveDate)
+        ? rawEffectiveDate
+        : isDraft
+          ? todayWib
+          : rawEffectiveDate;
 
     const pdfFileEntry = formData.get('pdf_file') || formData.get('attachment');
     const existingPdfUrl = (
@@ -240,7 +250,7 @@ export async function createTransparansiAction(
       };
     }
 
-    if (!description) {
+    if (!isDraft && !description) {
       return {
         success: false,
         error: 'Deskripsi program wajib diisi.',
@@ -254,7 +264,6 @@ export async function createTransparansiAction(
       };
     }
 
-    const todayWib = getTodayDateWIB();
     if (effectiveDate > todayWib) {
       return {
         success: false,
@@ -264,7 +273,7 @@ export async function createTransparansiAction(
     }
 
     const hasPdfFile = pdfFileEntry instanceof File && pdfFileEntry.size > 0;
-    if (!hasPdfFile && !existingPdfUrl) {
+    if (!isDraft && !hasPdfFile && !existingPdfUrl) {
       return {
         success: false,
         error: 'Berkas dokumen PDF wajib diunggah.',
@@ -277,7 +286,6 @@ export async function createTransparansiAction(
     }
 
     const slug = await generateUniqueTransparansiSlug(title);
-    const dbStatus = normalizeDbStatus(rawStatus);
 
     const insertResult = await pool.query<{ id: number; slug: string }>(
       `INSERT INTO public.transparansi (
@@ -350,14 +358,24 @@ export async function updateTransparansiAction(
     }
 
     const currentRow = existingCheck.rows[0];
-    const title = ((formData.get('title') as string) || '').trim();
+    const rawTitle = ((formData.get('title') as string) || '').trim();
     const description = ((formData.get('description') as string) || '').trim();
-    const effectiveDate = (
+    const rawEffectiveDate = (
       (formData.get('effective_date') as string) || ''
     ).trim();
     const rawStatus = (
       (formData.get('status') as string) || 'Diterbitkan'
     ).trim();
+    const dbStatus = normalizeDbStatus(rawStatus);
+    const isDraft = dbStatus === 'DRAFT';
+    const title = rawTitle || (isDraft ? '(Draf Dokumen Tanpa Judul)' : '');
+    const todayWib = getTodayDateWIB();
+    const effectiveDate =
+      rawEffectiveDate && /^\d{4}-\d{2}-\d{2}$/.test(rawEffectiveDate)
+        ? rawEffectiveDate
+        : isDraft
+          ? todayWib
+          : rawEffectiveDate;
 
     const pdfFileEntry = formData.get('pdf_file') || formData.get('attachment');
     const existingPdfUrl = (
@@ -372,7 +390,7 @@ export async function updateTransparansiAction(
       };
     }
 
-    if (!description) {
+    if (!isDraft && !description) {
       return {
         success: false,
         error: 'Deskripsi program wajib diisi.',
@@ -386,7 +404,6 @@ export async function updateTransparansiAction(
       };
     }
 
-    const todayWib = getTodayDateWIB();
     if (effectiveDate > todayWib) {
       return {
         success: false,
@@ -396,7 +413,7 @@ export async function updateTransparansiAction(
     }
 
     const hasPdfFile = pdfFileEntry instanceof File && pdfFileEntry.size > 0;
-    if (!hasPdfFile && !existingPdfUrl) {
+    if (!isDraft && !hasPdfFile && !existingPdfUrl) {
       return {
         success: false,
         error: 'Berkas dokumen PDF wajib diunggah.',
@@ -412,8 +429,6 @@ export async function updateTransparansiAction(
       title.toLowerCase() !== currentRow.title.toLowerCase()
         ? await generateUniqueTransparansiSlug(title, numericId)
         : currentRow.slug;
-
-    const dbStatus = normalizeDbStatus(rawStatus);
 
     await pool.query(
       `UPDATE public.transparansi
