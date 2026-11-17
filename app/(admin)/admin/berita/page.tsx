@@ -65,6 +65,9 @@ interface AdminBeritaPageProps {
         q?: string
         category?: string
         status?: string
+        date?: string
+        start?: string
+        end?: string
         notif?: string
     }>
 }
@@ -74,6 +77,9 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
     const searchQuery = (resolvedParams.q || '').trim()
     const selectedCategory = resolvedParams.category || 'Semua kategori'
     const selectedStatus = resolvedParams.status || 'ALL'
+    const selectedDateFilter = resolvedParams.date || 'ALL'
+    const startDate = resolvedParams.start || ''
+    const endDate = resolvedParams.end || ''
     const notifKey = resolvedParams.notif
 
     const [allRows, availableCategories]: [BeritaAdminRow[], string[]] =
@@ -102,7 +108,42 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
         const matchStatus =
             selectedStatus === 'ALL' || row.status === (selectedStatus as NewsStatus)
 
-        return matchSearch && matchCategory && matchStatus
+        let matchDate = true
+        if (selectedDateFilter === 'MONTH') {
+            const rawDate = row.published_at || row.created_at
+            if (rawDate) {
+                const d = new Date(rawDate)
+                const now = new Date()
+                matchDate =
+                    !Number.isNaN(d.getTime()) &&
+                    d.getMonth() === now.getMonth() &&
+                    d.getFullYear() === now.getFullYear()
+            } else {
+                matchDate = false
+            }
+        } else if (selectedDateFilter === 'CUSTOM' && (startDate || endDate)) {
+            const rawDate = row.published_at || row.created_at
+            if (rawDate) {
+                const d = new Date(rawDate)
+                if (Number.isNaN(d.getTime())) {
+                    matchDate = false
+                } else {
+                    const rowTime = d.getTime()
+                    if (startDate) {
+                        const s = new Date(`${startDate}T00:00:00`).getTime()
+                        if (rowTime < s) matchDate = false
+                    }
+                    if (endDate) {
+                        const e = new Date(`${endDate}T23:59:59`).getTime()
+                        if (rowTime > e) matchDate = false
+                    }
+                }
+            } else {
+                matchDate = false
+            }
+        }
+
+        return matchSearch && matchCategory && matchStatus && matchDate
     })
 
     const totalNaskah = allRows.length
@@ -194,6 +235,10 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                 availableCategories={availableCategories}
                 role="ADMIN_BERITA"
                 placeholder="Cari judul berita atau nama penulis..."
+                showDateFilter={true}
+                selectedDateFilter={selectedDateFilter}
+                startDate={startDate}
+                endDate={endDate}
             />
 
             {/* 4. TABEL DATA BERITA */}

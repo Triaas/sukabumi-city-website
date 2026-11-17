@@ -126,13 +126,13 @@ export function Footer() {
           </div>
           <div>
             <h3 className="text-lg font-bold">MEDIA SOSIAL</h3>
-            <div className="mt-8 flex gap-4">
+            <div className="mt-8 flex gap-3.5">
               <a
                 href="https://www.facebook.com/kotasukabumi.id?locale=id_ID"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
-                className="flex items-center justify-center w-12 h-12 rounded-full bg-[#159447] text-white hover:opacity-80 transition"
+                className="flex items-center justify-center w-11 h-11 rounded-full bg-white/5 border border-white/15 text-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-[#1877F2] hover:border-[#1877F2] hover:text-white hover:-translate-y-1 hover:shadow-lg hover:shadow-[#1877F2]/30 active:scale-95"
               >
                 <FacebookLogo />
               </a>
@@ -141,7 +141,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="X"
-                className="flex items-center justify-center w-12 h-12 rounded-full bg-[#159447] text-white hover:opacity-80 transition"
+                className="flex items-center justify-center w-11 h-11 rounded-full bg-white/5 border border-white/15 text-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-black hover:border-white/30 hover:text-white hover:-translate-y-1 hover:shadow-lg hover:shadow-black/40 active:scale-95"
               >
                 <XLogo />
               </a>
@@ -150,7 +150,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
-                className="flex items-center justify-center w-12 h-12 rounded-full bg-[#159447] text-white hover:opacity-80 transition"
+                className="flex items-center justify-center w-11 h-11 rounded-full bg-white/5 border border-white/15 text-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-[#E4405F] hover:border-[#E4405F] hover:text-white hover:-translate-y-1 hover:shadow-lg hover:shadow-[#E4405F]/30 active:scale-95"
               >
                 <InstagramLogo />
               </a>
@@ -159,7 +159,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Youtube"
-                className="flex items-center justify-center w-12 h-12 rounded-full bg-[#159447] text-white hover:opacity-80 transition"
+                className="flex items-center justify-center w-11 h-11 rounded-full bg-white/5 border border-white/15 text-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-[#FF0000] hover:border-[#FF0000] hover:text-white hover:-translate-y-1 hover:shadow-lg hover:shadow-[#FF0000]/30 active:scale-95"
               >
                 <YoutubeLogo />
               </a>

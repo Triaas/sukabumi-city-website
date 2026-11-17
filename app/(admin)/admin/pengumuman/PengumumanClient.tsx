@@ -923,7 +923,10 @@ export default function PengumumanClient({
                                 }}
                                 className="flex items-center justify-between gap-3 min-w-[130px] px-3.5 py-2 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:border-[#159447] hover:text-[#159447] transition-all cursor-pointer whitespace-nowrap"
                             >
-                                <span className="truncate">{statusFilter}</span>
+                                <span className="flex items-center gap-2 truncate">
+                                    <CheckCircle2 size={14} className="shrink-0 text-slate-500" aria-hidden="true" />
+                                    <span className="truncate">{statusFilter}</span>
+                                </span>
                                 <ChevronDown
                                     size={14}
                                     className={`shrink-0 transition-transform duration-200 ${
