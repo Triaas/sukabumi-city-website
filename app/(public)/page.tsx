@@ -213,13 +213,15 @@ function Profile() {
 
 function EventSlider() {
   const [banners, setBanners] = useState<EventBanner[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [currentSlide, setCurrentSlide] = useState(0)
 
   useEffect(() => {
     fetch('/api/event-banners', { cache: 'no-store' })
       .then((res) => res.json())
-      .then((data: EventBanner[]) => setBanners(data))
+      .then((data: EventBanner[]) => setBanners(Array.isArray(data) ? data : []))
       .catch((err) => console.error('Gagal memuat event banners:', err))
+      .finally(() => setIsLoading(false))
   }, [])
 
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % Math.max(banners.length, 1))
@@ -234,14 +236,18 @@ function EventSlider() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSlide, banners.length])
 
+  if (!isLoading && banners.length === 0) {
+    return null
+  }
+
   return (
     <section id="banner" className="bg-white pt-10 pb-2 px-4 md:px-8 lg:px-12 scroll-mt-20">
       <div className="mx-auto max-w-[1400px]">
         {/* Slider Container - Atur tinggi banner di class h-[...] berikut */}
         <div className="relative w-full h-[135px] sm:h-[195px] md:h-[270px] lg:h-[315px] rounded-2xl md:rounded-3xl overflow-hidden shadow-md group bg-slate-100">
 
-          {banners.length === 0 ? (
-            <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-sm">Memuat slider...</div>
+          {isLoading ? (
+            <div className="absolute inset-0 animate-pulse bg-slate-100" />
           ) : (
             <>
               {/* Slides */}
