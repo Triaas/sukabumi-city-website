@@ -225,6 +225,12 @@ export default function PengumumanClient({
 
     const [isDragging, setIsDragging] = useState(false)
     const [attachmentError, setAttachmentError] = useState(false)
+    const [attachmentErrorMessage, setAttachmentErrorMessage] = useState<
+        string | null
+    >(null)
+    const [thumbnailErrorMessage, setThumbnailErrorMessage] = useState<
+        string | null
+    >(null)
 
     const hasEditChanges = Boolean(
         editingItem &&
@@ -515,14 +521,19 @@ export default function PengumumanClient({
 
         const allowed = ['image/jpeg', 'image/jpg', 'image/png']
         if (!allowed.includes(file.type.toLowerCase())) {
-            setFormError('Thumbnail hanya mendukung gambar format JPG atau PNG.')
+            e.target.value = ''
+            setThumbnailErrorMessage(
+                'Thumbnail hanya mendukung gambar format JPG atau PNG.'
+            )
             return
         }
         if (file.size > 5 * 1024 * 1024) {
-            setFormError('Ukuran gambar thumbnail maksimal 5 MB.')
+            e.target.value = ''
+            setThumbnailErrorMessage('Ukuran gambar thumbnail maksimal 5 MB.')
             return
         }
 
+        setThumbnailErrorMessage(null)
         setFormError(null)
         setThumbnailFile(file)
         setThumbnailPreview(URL.createObjectURL(file))
@@ -537,26 +548,45 @@ export default function PengumumanClient({
             editThumbnailInputRef.current.value = ''
     }
 
+    const isPdfFile = (file: File) =>
+        file.type === 'application/pdf' ||
+        file.name.toLowerCase().endsWith('.pdf')
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
-        if (file) {
-            setAttachmentFile(file)
-            setFormData((prev) => ({ ...prev, attachment: file.name }))
-            setAttachmentError(false)
-            setFormError(null)
+        if (!file) return
+        if (!isPdfFile(file)) {
+            e.target.value = ''
+            setAttachmentError(true)
+            setAttachmentErrorMessage(
+                'Format lampiran tidak valid. Hanya file PDF (.pdf) yang diperbolehkan.'
+            )
+            return
         }
+        setAttachmentFile(file)
+        setFormData((prev) => ({ ...prev, attachment: file.name }))
+        setAttachmentError(false)
+        setAttachmentErrorMessage(null)
+        setFormError(null)
     }
 
     const handleDropFile = (e: React.DragEvent) => {
         e.preventDefault()
         setIsDragging(false)
         const file = e.dataTransfer.files?.[0]
-        if (file && file.name.toLowerCase().endsWith('.pdf')) {
-            setAttachmentFile(file)
-            setFormData((prev) => ({ ...prev, attachment: file.name }))
-            setAttachmentError(false)
-            setFormError(null)
+        if (!file) return
+        if (!isPdfFile(file)) {
+            setAttachmentError(true)
+            setAttachmentErrorMessage(
+                'Format lampiran tidak valid. Hanya file PDF (.pdf) yang diperbolehkan.'
+            )
+            return
         }
+        setAttachmentFile(file)
+        setFormData((prev) => ({ ...prev, attachment: file.name }))
+        setAttachmentError(false)
+        setAttachmentErrorMessage(null)
+        setFormError(null)
     }
 
     const handleSaveAdd = (
@@ -1079,6 +1109,27 @@ export default function PengumumanClient({
                                 </>
                             )}
                         </div>
+
+                        {(Boolean(searchTerm.trim()) ||
+                            statusFilter !== 'Semua Status' ||
+                            dateFilter !== 'Semua Waktu') && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSearchTerm('')
+                                    setStatusFilter('Semua Status')
+                                    setDateFilter('Semua Waktu')
+                                    setStartDate('')
+                                    setEndDate('')
+                                    setIsStatusOpen(false)
+                                    setIsDateOpen(false)
+                                    setCurrentPage(1)
+                                }}
+                                className="px-3 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold transition-colors cursor-pointer"
+                            >
+                                Reset
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -1538,6 +1589,15 @@ export default function PengumumanClient({
                                         </p>
                                     </div>
                                 )}
+                                {thumbnailErrorMessage && (
+                                    <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                        <AlertCircle
+                                            size={13}
+                                            className="shrink-0"
+                                        />
+                                        {thumbnailErrorMessage}
+                                    </p>
+                                )}
                             </div>
 
                             {/* 4. Jadwal Publikasi Publik (Grid 2 Kolom) */}
@@ -1680,13 +1740,14 @@ export default function PengumumanClient({
                                         </p>
                                     </div>
                                 )}
-                                {attachmentError && !formData.attachment && (
+                                {attachmentError && (
                                     <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
                                         <AlertCircle
                                             size={13}
                                             className="shrink-0"
                                         />
-                                        Berkas dokumen lampiran (PDF) wajib diunggah.
+                                        {attachmentErrorMessage ||
+                                            'Berkas dokumen lampiran (PDF) wajib diunggah.'}
                                     </p>
                                 )}
                             </div>
@@ -1948,6 +2009,15 @@ export default function PengumumanClient({
                                         </p>
                                     </div>
                                 )}
+                                {thumbnailErrorMessage && (
+                                    <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                        <AlertCircle
+                                            size={13}
+                                            className="shrink-0"
+                                        />
+                                        {thumbnailErrorMessage}
+                                    </p>
+                                )}
                             </div>
 
                             {/* 4. Jadwal Publikasi Publik (Grid 2 Kolom) */}
@@ -2090,13 +2160,14 @@ export default function PengumumanClient({
                                         </p>
                                     </div>
                                 )}
-                                {attachmentError && !formData.attachment && (
+                                {attachmentError && (
                                     <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
                                         <AlertCircle
                                             size={13}
                                             className="shrink-0"
                                         />
-                                        Berkas dokumen lampiran (PDF) wajib diunggah.
+                                        {attachmentErrorMessage ||
+                                            'Berkas dokumen lampiran (PDF) wajib diunggah.'}
                                     </p>
                                 )}
                             </div>

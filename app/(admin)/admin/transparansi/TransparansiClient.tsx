@@ -205,6 +205,7 @@ export default function TransparansiClient({
     const [pdfFileObj, setPdfFileObj] = useState<File | null>(null)
     const [formError, setFormError] = useState<string | null>(null)
     const [pdfError, setPdfError] = useState(false)
+    const [pdfErrorMessage, setPdfErrorMessage] = useState<string | null>(null)
     const [submittingStatus, setSubmittingStatus] = useState<
         'Diterbitkan' | 'Draf' | 'Preview' | null
     >(null)
@@ -450,16 +451,25 @@ export default function TransparansiClient({
         })
     }
 
+    const isPdfFile = (file: File) =>
+        file.type === 'application/pdf' ||
+        file.name.toLowerCase().endsWith('.pdf')
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (!file) return
-        if (!file.name.toLowerCase().endsWith('.pdf')) {
-            setFormError('Hanya berkas dengan format .pdf yang diperbolehkan.')
+        if (!isPdfFile(file)) {
+            e.target.value = ''
+            setPdfError(true)
+            setPdfErrorMessage(
+                'Hanya berkas dengan format .pdf yang diperbolehkan.'
+            )
             return
         }
         setPdfFileObj(file)
         setFormData((prev) => ({ ...prev, pdfFile: file.name }))
         setPdfError(false)
+        setPdfErrorMessage(null)
         setFormError(null)
     }
 
@@ -468,13 +478,17 @@ export default function TransparansiClient({
         setIsDragging(false)
         const file = e.dataTransfer.files?.[0]
         if (!file) return
-        if (!file.name.toLowerCase().endsWith('.pdf')) {
-            setFormError('Hanya berkas dengan format .pdf yang diperbolehkan.')
+        if (!isPdfFile(file)) {
+            setPdfError(true)
+            setPdfErrorMessage(
+                'Hanya berkas dengan format .pdf yang diperbolehkan.'
+            )
             return
         }
         setPdfFileObj(file)
         setFormData((prev) => ({ ...prev, pdfFile: file.name }))
         setPdfError(false)
+        setPdfErrorMessage(null)
         setFormError(null)
     }
 
@@ -516,7 +530,7 @@ export default function TransparansiClient({
             }
             if (!pdfFileObj && !formData.pdfFile.trim()) {
                 setPdfError(true)
-                setFormError('Berkas dokumen PDF wajib diunggah.')
+                setPdfErrorMessage('Berkas dokumen PDF wajib diunggah.')
                 return null
             }
         } else if (trimmedDate > maxDate) {
@@ -527,6 +541,7 @@ export default function TransparansiClient({
         }
 
         setPdfError(false)
+        setPdfErrorMessage(null)
         setFormError(null)
 
         const payload = new FormData()
@@ -1040,6 +1055,27 @@ export default function TransparansiClient({
                                 </>
                             )}
                         </div>
+
+                        {(Boolean(searchTerm.trim()) ||
+                            statusFilter !== 'Semua Status' ||
+                            dateFilter !== 'Semua Waktu') && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSearchTerm('')
+                                    setStatusFilter('Semua Status')
+                                    setDateFilter('Semua Waktu')
+                                    setStartDate('')
+                                    setEndDate('')
+                                    setIsStatusOpen(false)
+                                    setIsDateOpen(false)
+                                    setCurrentPage(1)
+                                }}
+                                className="px-3 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold transition-colors cursor-pointer"
+                            >
+                                Reset
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -1564,6 +1600,15 @@ export default function TransparansiClient({
                                         </p>
                                     </div>
                                 )}
+                                {pdfError && pdfErrorMessage && (
+                                    <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                        <AlertCircle
+                                            size={13}
+                                            className="shrink-0"
+                                        />
+                                        {pdfErrorMessage}
+                                    </p>
+                                )}
                             </div>
 
                             {/* 5. Status Publikasi & Aksi */}
@@ -1884,6 +1929,15 @@ export default function TransparansiClient({
                                             • Format PDF (Maks. 25 MB)
                                         </p>
                                     </div>
+                                )}
+                                {pdfError && pdfErrorMessage && (
+                                    <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                        <AlertCircle
+                                            size={13}
+                                            className="shrink-0"
+                                        />
+                                        {pdfErrorMessage}
+                                    </p>
                                 )}
                             </div>
 

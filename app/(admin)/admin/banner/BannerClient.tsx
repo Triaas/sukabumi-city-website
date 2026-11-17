@@ -112,6 +112,9 @@ export default function BannerClient({
     const [imageFileObj, setImageFileObj] = useState<File | null>(null)
     const [formError, setFormError] = useState<string | null>(null)
     const [imageError, setImageError] = useState(false)
+    const [imageErrorMessage, setImageErrorMessage] = useState<string | null>(
+        null
+    )
 
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [isDragging, setIsDragging] = useState(false)
@@ -268,14 +271,14 @@ export default function BannerClient({
         const isAllowedExt = /\.(jpe?g|png|webp)$/i.test(file.name)
         if (!ALLOWED_IMAGE_MIME_TYPES.includes(mime) && !isAllowedExt) {
             setImageError(true)
-            setFormError(
+            setImageErrorMessage(
                 'Format berkas gambar tidak didukung. Gunakan JPG, PNG, atau WebP.'
             )
             return
         }
         if (file.size > MAX_IMAGE_SIZE_BYTES) {
             setImageError(true)
-            setFormError(
+            setImageErrorMessage(
                 'Ukuran berkas gambar melebihi batas maksimal 5 MB.'
             )
             return
@@ -284,6 +287,7 @@ export default function BannerClient({
         const objectUrl = URL.createObjectURL(file)
         setImageFileObj(file)
         setImageError(false)
+        setImageErrorMessage(null)
         setFormError(null)
         setFormData((prev) => ({
             ...prev,
@@ -319,12 +323,13 @@ export default function BannerClient({
 
             if (!imageFileObj && !formData.imagePreview.trim()) {
                 setImageError(true)
-                setFormError('Gambar banner wajib diunggah.')
+                setImageErrorMessage('Gambar banner wajib diunggah.')
                 return null
             }
         }
 
         setImageError(false)
+        setImageErrorMessage(null)
         setFormError(null)
 
         const payload = new FormData()
@@ -630,6 +635,12 @@ export default function BannerClient({
                         </p>
                     </div>
                 )}
+                {imageError && imageErrorMessage && (
+                    <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                        <AlertCircle size={13} className="shrink-0" />
+                        {imageErrorMessage}
+                    </p>
+                )}
             </div>
 
             {/* 3. Tautan Tujuan (Opsional) */}
@@ -910,6 +921,22 @@ export default function BannerClient({
                             </>
                         )}
                     </div>
+
+                    {(Boolean(searchTerm.trim()) ||
+                        statusFilter !== 'Semua Status') && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setSearchTerm('')
+                                setStatusFilter('Semua Status')
+                                setIsStatusOpen(false)
+                                setCurrentPage(1)
+                            }}
+                            className="px-3 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold transition-colors cursor-pointer shrink-0"
+                        >
+                            Reset
+                        </button>
+                    )}
                 </div>
             </div>
 

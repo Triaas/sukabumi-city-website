@@ -169,6 +169,7 @@ export default function ReporterBeritaForm({
 
     // Image Upload State (menyimpan file fisik + preview lokal atau URL eksisting)
     const [imageFile, setImageFile] = useState<File | null>(null)
+    const [imageErrorMessage, setImageErrorMessage] = useState<string | null>(null)
     const [imagePreview, setImagePreview] = useState<string | null>(
         initialData?.image_url ?? null
     )
@@ -207,12 +208,12 @@ export default function ReporterBeritaForm({
         setErrorMessage(null)
 
         if (!ALLOWED_IMAGE_TYPES.includes(file.type.toLowerCase())) {
-            setErrorMessage('Format berkas tidak didukung. Gunakan format JPG, PNG, atau WebP.')
+            setImageErrorMessage('Format berkas tidak didukung. Gunakan format JPG, PNG, atau WebP.')
             return
         }
 
         if (file.size > MAX_IMAGE_SIZE) {
-            setErrorMessage('Ukuran berkas gambar melebihi batas maksimal 5 MB.')
+            setImageErrorMessage('Ukuran berkas gambar melebihi batas maksimal 5 MB.')
             return
         }
 
@@ -220,6 +221,7 @@ export default function ReporterBeritaForm({
             URL.revokeObjectURL(imagePreview)
         }
 
+        setImageErrorMessage(null)
         setImageFile(file)
         setExistingImageUrl(null)
         setImagePreview(URL.createObjectURL(file))
@@ -437,7 +439,7 @@ export default function ReporterBeritaForm({
 
             if (!hasAnyImage) {
                 setPendingExitHref(null)
-                setErrorMessage('Gambar utama berita wajib diunggah.')
+                setImageErrorMessage('Gambar utama berita wajib diunggah.')
                 return
             }
 
@@ -734,9 +736,11 @@ export default function ReporterBeritaForm({
                                     onDrop={handleDrop}
                                     onClick={() => fileInputRef.current?.click()}
                                     className={`w-full aspect-video sm:aspect-[21/9] rounded-xl border-2 border-dashed flex flex-col items-center justify-center p-6 text-center cursor-pointer transition-all duration-200 ${
-                                        isDragging
-                                            ? 'border-[#159447] bg-[#f0fdf4]'
-                                            : 'border-slate-300 bg-slate-50 hover:bg-slate-100/80 hover:border-slate-400'
+                                        imageErrorMessage
+                                            ? 'border-red-400 bg-red-50/40'
+                                            : isDragging
+                                                ? 'border-[#159447] bg-[#f0fdf4]'
+                                                : 'border-slate-300 bg-slate-50 hover:bg-slate-100/80 hover:border-slate-400'
                                     }`}
                                 >
                                     <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200/80 flex items-center justify-center text-slate-400 mb-3 shadow-xs">
@@ -760,6 +764,13 @@ export default function ReporterBeritaForm({
                                         <span>Pilih Berkas</span>
                                     </button>
                                 </div>
+                            )}
+
+                            {imageErrorMessage && (
+                                <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                    <AlertCircle size={13} className="shrink-0" />
+                                    {imageErrorMessage}
+                                </p>
                             )}
 
                             {/* Caption & Source */}
