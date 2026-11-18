@@ -97,48 +97,10 @@ function Welcome() {
   return (
     <section className="bg-white px-4 py-10 md:px-8 lg:px-12 md:py-16">
       <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-10 lg:flex-row lg:gap-8">
-        <article className="w-full max-w-[440px] rounded-3xl bg-[#eff4f8] p-7 md:p-9 shadow-sm">
-          <div className="flex items-center gap-2 mb-2.5">
-            <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#ba8500]">Motto Kota Sukabumi</span>
-          </div>
-          <h2 className="text-2xl md:text-3xl font-semibold leading-tight text-[#18243b]">
-            Reugreug Pageuh Repeh Rapih
-          </h2>
-          <div className="mt-7 pt-6 border-t border-slate-200/80 grid grid-cols-2 gap-x-6 gap-y-6">
-            <div className="flex flex-col">
-              <div className="flex items-baseline gap-2">
-                <h3 className="text-base md:text-lg font-bold text-[#159447]">Reugreug</h3>
-              </div>
-              <p className="mt-1 text-xs md:text-sm leading-snug text-[#29364a]">
-                Hati tenteram dan penuh rasa aman.
-              </p>
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-baseline gap-2">
-                <h3 className="text-base md:text-lg font-bold text-[#159447]">Pageuh</h3>
-              </div>
-              <p className="mt-1 text-xs md:text-sm leading-snug text-[#29364a]">
-                Teguh memegang norma & toleransi.
-              </p>
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-baseline gap-2">
-                <h3 className="text-base md:text-lg font-bold text-[#159447]">Repeh</h3>
-              </div>
-              <p className="mt-1 text-xs md:text-sm leading-snug text-[#29364a]">
-                Hidup rukun damai tanpa kegaduhan.
-              </p>
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-baseline gap-2">
-                <h3 className="text-base md:text-lg font-bold text-[#159447]">Rapih</h3>
-              </div>
-              <p className="mt-1 text-xs md:text-sm leading-snug text-[#29364a]">
-                Tertib tatanan & saling memuliakan.
-              </p>
-            </div>
-          </div>
-        </article>
+        <div className="w-full max-w-[440px] aspect-[4/3] rounded-3xl bg-[#eff4f8] shadow-sm overflow-hidden flex items-center justify-center">
+          {/* Tempat untuk foto yang akan dipasang */}
+          <span className="text-sm font-medium text-slate-400">Foto</span>
+        </div>
 
         <div className="flex flex-1 items-center justify-center gap-4 lg:gap-8">
           <div className="relative z-10 w-full max-w-[500px] lg:max-w-[600px] self-end shrink-0">
