@@ -106,12 +106,12 @@ export default async function ArticlePage({
 
               {/* Featured Image */}
               <figure className="mb-10 w-full">
-                <div className="relative w-full rounded-xl overflow-hidden shadow-sm mb-3 border border-slate-200 bg-slate-100 flex items-center justify-center">
+                <div className="relative w-fit max-w-full mx-auto rounded-xl overflow-hidden shadow-sm mb-3 border border-slate-200 bg-slate-100 flex items-center justify-center">
                   {article.image ? (
                     <FallbackImage
                       src={article.image}
                       alt={article.caption || article.title}
-                      className="w-full h-auto max-h-[650px] object-contain"
+                      className="w-auto max-w-full h-auto max-h-[455px] block"
                     />
                   ) : (
                     <div className="flex flex-col items-center justify-center text-slate-400 h-[300px] md:h-[450px] w-full">
