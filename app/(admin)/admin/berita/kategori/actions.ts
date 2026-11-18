@@ -5,7 +5,10 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
+  getNewsByCategoryId,
+  reassignAndDeleteCategory,
   type CategoryMutationResult,
+  type CategoryLinkedNewsItem,
 } from '@/lib/berita/category';
 
 function revalidateCategoryRoutes() {
@@ -66,3 +69,31 @@ export async function deleteCategoryAction(
   return result;
 }
 
+/**
+ * Server Action untuk mengambil daftar berita yang masih terikat pada suatu kategori.
+ */
+export async function getCategoryLinkedNewsAction(
+  categoryId: number
+): Promise<CategoryLinkedNewsItem[]> {
+  return getNewsByCategoryId(categoryId);
+}
+
+/**
+ * Server Action untuk memindahkan seluruh berita dari satu kategori ke kategori tujuan
+ * lalu menghapus kategori asalnya dalam satu transaksi.
+ */
+export async function reassignAndDeleteCategoryAction(
+  sourceCategoryId: number,
+  targetCategoryId: number
+): Promise<CategoryMutationResult> {
+  const result = await reassignAndDeleteCategory(
+    sourceCategoryId,
+    targetCategoryId
+  );
+
+  if (result.success) {
+    revalidateCategoryRoutes();
+  }
+
+  return result;
+}

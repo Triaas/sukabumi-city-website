@@ -14,10 +14,22 @@ export interface CategoryWithCount {
 export interface CategoryMutationResult {
   success: boolean;
   error?: string;
+  movedCount?: number;
   category?: {
     id: number;
     name: string;
   };
+}
+
+export interface CategoryLinkedNewsItem {
+  id: number;
+  uuid: string | null;
+  title: string;
+  status: string;
+  author_name: string;
+  author_role: string | null;
+  is_reporter_private_draft: boolean;
+  other_categories: string[];
 }
 
 let beritaCategoriesEnsuredPromise: Promise<void> | null = null;
@@ -398,6 +410,191 @@ export async function deleteCategory(
       success: false,
       error: 'Gagal menghapus kategori dari database.',
     };
+  }
+}
+
+/**
+ * Mengambil daftar ringkas berita yang terikat pada suatu kategori,
+ * termasuk informasi kategori lain yang menempel pada berita tersebut.
+ */
+export async function getNewsByCategoryId(
+  categoryId: number
+): Promise<CategoryLinkedNewsItem[]> {
+  try {
+    const numericId = Number(categoryId);
+    if (!Number.isFinite(numericId) || numericId <= 0) {
+      return [];
+    }
+
+    await ensureBeritaCategoriesTable();
+
+    const result = await pool.query<{
+      id: number;
+      uuid: string | null;
+      title: string;
+      status: string;
+      author_name: string | null;
+      author_role: string | null;
+      other_categories: string[] | null;
+    }>(
+      `WITH linked_berita AS (
+         SELECT berita_id FROM public.berita_categories WHERE category_id = $1
+         UNION
+         SELECT id AS berita_id FROM public.berita WHERE category_id = $1
+       )
+       SELECT
+         b.id,
+         b.uuid,
+         b.title,
+         b.status,
+         b.author_name,
+         b.author_role,
+         COALESCE(
+           ARRAY(
+             SELECT c2.name
+             FROM public.berita_categories bc2
+             INNER JOIN public.categories c2 ON c2.id = bc2.category_id
+             WHERE bc2.berita_id = b.id AND c2.id <> $1
+             ORDER BY bc2.position ASC, c2.name ASC
+           ),
+           ARRAY[]::text[]
+         ) AS other_categories
+       FROM linked_berita lb
+       INNER JOIN public.berita b ON b.id = lb.berita_id
+       ORDER BY COALESCE(b.published_at, b.created_at) DESC, b.id DESC`,
+      [numericId]
+    );
+
+    return result.rows.map((row) => ({
+      id: Number(row.id),
+      uuid: row.uuid ?? null,
+      title: row.title || '(Tanpa Judul)',
+      status: row.status || 'DRAFT',
+      author_name: row.author_name || 'Admin',
+      author_role: row.author_role ?? null,
+      is_reporter_private_draft:
+        row.status === 'DRAFT' && row.author_role === 'REPORTER',
+      other_categories: Array.isArray(row.other_categories)
+        ? row.other_categories.filter(Boolean)
+        : [],
+    }));
+  } catch (error: unknown) {
+    console.error('Error in getNewsByCategoryId:', error);
+    return [];
+  }
+}
+
+/**
+ * Memindahkan seluruh berita yang terikat pada `sourceCategoryId` ke `targetCategoryId`
+ * lalu menghapus `sourceCategoryId` dalam satu transaksi database.
+ */
+export async function reassignAndDeleteCategory(
+  sourceCategoryId: number,
+  targetCategoryId: number
+): Promise<CategoryMutationResult> {
+  const sourceId = Number(sourceCategoryId);
+  const targetId = Number(targetCategoryId);
+
+  if (
+    !Number.isFinite(sourceId) ||
+    sourceId <= 0 ||
+    !Number.isFinite(targetId) ||
+    targetId <= 0
+  ) {
+    return {
+      success: false,
+      error: 'Kategori asal atau tujuan tidak valid.',
+    };
+  }
+
+  if (sourceId === targetId) {
+    return {
+      success: false,
+      error: 'Kategori tujuan harus berbeda dari kategori yang akan dihapus.',
+    };
+  }
+
+  await ensureBeritaCategoriesTable();
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const cats = await client.query<{ id: number; name: string }>(
+      'SELECT id, name FROM public.categories WHERE id = ANY($1::int[])',
+      [[sourceId, targetId]]
+    );
+
+    const sourceCat = cats.rows.find((c) => Number(c.id) === sourceId);
+    const targetCat = cats.rows.find((c) => Number(c.id) === targetId);
+
+    if (!sourceCat) {
+      await client.query('ROLLBACK');
+      return {
+        success: false,
+        error: 'Kategori yang akan dihapus tidak ditemukan.',
+      };
+    }
+
+    if (!targetCat) {
+      await client.query('ROLLBACK');
+      return {
+        success: false,
+        error: 'Kategori tujuan tidak ditemukan.',
+      };
+    }
+
+    const linkedRes = await client.query<{ berita_id: number }>(
+      `SELECT berita_id FROM public.berita_categories WHERE category_id = $1
+       UNION
+       SELECT id AS berita_id FROM public.berita WHERE category_id = $1`,
+      [sourceId]
+    );
+
+    const affectedIds = linkedRes.rows.map((r) => Number(r.berita_id));
+
+    if (affectedIds.length > 0) {
+      await client.query(
+        `INSERT INTO public.berita_categories (berita_id, category_id, position)
+         SELECT unnest($1::int[]), $2, 0
+         ON CONFLICT (berita_id, category_id) DO NOTHING`,
+        [affectedIds, targetId]
+      );
+
+      await client.query(
+        'DELETE FROM public.berita_categories WHERE category_id = $1',
+        [sourceId]
+      );
+
+      await client.query(
+        'UPDATE public.berita SET category_id = $2 WHERE category_id = $1',
+        [sourceId, targetId]
+      );
+    }
+
+    await client.query('DELETE FROM public.categories WHERE id = $1', [
+      sourceId,
+    ]);
+
+    await client.query('COMMIT');
+
+    return {
+      success: true,
+      movedCount: affectedIds.length,
+      category: {
+        id: targetId,
+        name: targetCat.name,
+      },
+    };
+  } catch (error: unknown) {
+    await client.query('ROLLBACK');
+    console.error('Error in reassignAndDeleteCategory:', error);
+    return {
+      success: false,
+      error: 'Gagal memindahkan berita dan menghapus kategori.',
+    };
+  } finally {
+    client.release();
   }
 }
 
