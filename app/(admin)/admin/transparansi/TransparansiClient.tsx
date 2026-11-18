@@ -204,6 +204,11 @@ export default function TransparansiClient({
 
     const [pdfFileObj, setPdfFileObj] = useState<File | null>(null)
     const [formError, setFormError] = useState<string | null>(null)
+    const [fieldErrors, setFieldErrors] = useState<{
+        title?: string
+        effectiveDate?: string
+        description?: string
+    }>({})
     const [pdfError, setPdfError] = useState(false)
     const [pdfErrorMessage, setPdfErrorMessage] = useState<string | null>(null)
     const [submittingStatus, setSubmittingStatus] = useState<
@@ -404,6 +409,7 @@ export default function TransparansiClient({
         const maxDate = getTodayDateWIB()
         setTodayWib(maxDate)
         setFormError(null)
+        setFieldErrors({})
         setPdfError(false)
         setPdfFileObj(null)
         setFormData({
@@ -420,6 +426,7 @@ export default function TransparansiClient({
         const maxDate = getTodayDateWIB()
         setTodayWib(maxDate)
         setFormError(null)
+        setFieldErrors({})
         setPdfError(false)
         setPdfFileObj(null)
         setIsExitConfirmOpen(false)
@@ -510,36 +517,47 @@ export default function TransparansiClient({
         const trimmedDate = rawDate || (isDraft ? maxDate : '')
 
         if (!isDraft) {
+            const nextErrors: {
+                title?: string
+                effectiveDate?: string
+                description?: string
+            } = {}
             if (!trimmedTitle) {
-                setFormError('Judul dokumen wajib diisi.')
-                return null
+                nextErrors.title = 'Judul dokumen wajib diisi.'
             }
             if (!trimmedDate) {
-                setFormError('Tanggal pemberlakuan wajib diisi.')
-                return null
-            }
-            if (trimmedDate > maxDate) {
-                setFormError(
+                nextErrors.effectiveDate = 'Tanggal pemberlakuan wajib diisi.'
+            } else if (trimmedDate > maxDate) {
+                nextErrors.effectiveDate =
                     'Tanggal pemberlakuan tidak boleh melebihi tanggal hari ini (WIB).'
-                )
-                return null
             }
             if (!trimmedDesc) {
-                setFormError('Deskripsi program wajib diisi.')
-                return null
+                nextErrors.description = 'Deskripsi program wajib diisi.'
             }
-            if (!pdfFileObj && !formData.pdfFile.trim()) {
+            const missingPdf = !pdfFileObj && !formData.pdfFile.trim()
+            if (missingPdf) {
                 setPdfError(true)
                 setPdfErrorMessage('Berkas dokumen PDF wajib diunggah.')
+            } else {
+                setPdfError(false)
+                setPdfErrorMessage(null)
+            }
+
+            if (Object.keys(nextErrors).length > 0 || missingPdf) {
+                setFieldErrors(nextErrors)
+                setFormError(null)
                 return null
             }
         } else if (trimmedDate > maxDate) {
-            setFormError(
-                'Tanggal pemberlakuan tidak boleh melebihi tanggal hari ini (WIB).'
-            )
+            setFieldErrors({
+                effectiveDate:
+                    'Tanggal pemberlakuan tidak boleh melebihi tanggal hari ini (WIB).',
+            })
+            setFormError(null)
             return null
         }
 
+        setFieldErrors({})
         setPdfError(false)
         setPdfErrorMessage(null)
         setFormError(null)
@@ -1380,7 +1398,12 @@ export default function TransparansiClient({
 
             {/* Modal Tambah Dokumen Baru */}
             {isAddModalOpen && (
-                <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+                <div
+                    onMouseDown={(e) => {
+                        if (e.target === e.currentTarget) requestCloseAddModal()
+                    }}
+                    className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"
+                >
                     <div
                         role="dialog"
                         aria-modal="true"
@@ -1445,14 +1468,30 @@ export default function TransparansiClient({
                                     required
                                     placeholder="Contoh: Peraturan Daerah tentang APBD TA 2026..."
                                     value={formData.title}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
                                         setFormData({
                                             ...formData,
                                             title: e.target.value,
                                         })
-                                    }
-                                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] text-slate-800 text-xs"
+                                        if (fieldErrors.title) {
+                                            setFieldErrors((prev) => ({
+                                                ...prev,
+                                                title: undefined,
+                                            }))
+                                        }
+                                    }}
+                                    className={`w-full px-3 py-2.5 rounded-xl border focus:outline-none focus:ring-1 text-slate-800 text-xs transition-all ${
+                                        fieldErrors.title
+                                            ? 'border-red-400 bg-red-50/40 focus:ring-red-400 focus:border-red-500'
+                                            : 'border-slate-200 bg-white focus:ring-[#159447] focus:border-[#159447]'
+                                    }`}
                                 />
+                                {fieldErrors.title && (
+                                    <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                        <AlertCircle size={13} className="shrink-0" />
+                                        {fieldErrors.title}
+                                    </p>
+                                )}
                             </div>
 
                             {/* 2. Tanggal Pemberlakuan */}
@@ -1466,13 +1505,29 @@ export default function TransparansiClient({
                                     required
                                     max={todayWib || getTodayDateWIB()}
                                     value={formData.effectiveDate}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
                                         handleEffectiveDateChange(
                                             e.target.value
                                         )
-                                    }
-                                    className="w-full bg-[#f8fafc] border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] focus:bg-white transition-all cursor-pointer"
+                                        if (fieldErrors.effectiveDate) {
+                                            setFieldErrors((prev) => ({
+                                                ...prev,
+                                                effectiveDate: undefined,
+                                            }))
+                                        }
+                                    }}
+                                    className={`w-full border rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none focus:ring-1 transition-all cursor-pointer ${
+                                        fieldErrors.effectiveDate
+                                            ? 'border-red-400 bg-red-50/40 focus:ring-red-400 focus:border-red-500'
+                                            : 'bg-[#f8fafc] border-slate-200/80 focus:ring-[#159447] focus:border-[#159447] focus:bg-white'
+                                    }`}
                                 />
+                                {fieldErrors.effectiveDate && (
+                                    <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                        <AlertCircle size={13} className="shrink-0" />
+                                        {fieldErrors.effectiveDate}
+                                    </p>
+                                )}
                                 <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
                                     Dapat memilih tanggal lampau hingga hari ini (WIB), tidak boleh memilih tanggal masa depan.
                                 </p>
@@ -1489,14 +1544,30 @@ export default function TransparansiClient({
                                     required
                                     placeholder="Tuliskan ringkasan pokok, keterangan, atau rincian dokumen..."
                                     value={formData.description}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
                                         setFormData({
                                             ...formData,
                                             description: e.target.value,
                                         })
-                                    }
-                                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] text-slate-800 text-xs leading-relaxed"
+                                        if (fieldErrors.description) {
+                                            setFieldErrors((prev) => ({
+                                                ...prev,
+                                                description: undefined,
+                                            }))
+                                        }
+                                    }}
+                                    className={`w-full px-3 py-2.5 rounded-xl border focus:outline-none focus:ring-1 text-slate-800 text-xs leading-relaxed transition-all ${
+                                        fieldErrors.description
+                                            ? 'border-red-400 bg-red-50/40 focus:ring-red-400 focus:border-red-500'
+                                            : 'border-slate-200 bg-white focus:ring-[#159447] focus:border-[#159447]'
+                                    }`}
                                 />
+                                {fieldErrors.description && (
+                                    <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                        <AlertCircle size={13} className="shrink-0" />
+                                        {fieldErrors.description}
+                                    </p>
+                                )}
                             </div>
 
                             {/* 4. File Dokumen PDF */}
@@ -1711,7 +1782,12 @@ export default function TransparansiClient({
 
             {/* Modal Edit Dokumen */}
             {editingItem && (
-                <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+                <div
+                    onMouseDown={(e) => {
+                        if (e.target === e.currentTarget) requestCloseEditModal()
+                    }}
+                    className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"
+                >
                     <div
                         role="dialog"
                         aria-modal="true"
@@ -1775,14 +1851,30 @@ export default function TransparansiClient({
                                     type="text"
                                     required
                                     value={formData.title}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
                                         setFormData({
                                             ...formData,
                                             title: e.target.value,
                                         })
-                                    }
-                                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] text-slate-800 text-xs"
+                                        if (fieldErrors.title) {
+                                            setFieldErrors((prev) => ({
+                                                ...prev,
+                                                title: undefined,
+                                            }))
+                                        }
+                                    }}
+                                    className={`w-full px-3 py-2.5 rounded-xl border focus:outline-none focus:ring-1 text-slate-800 text-xs transition-all ${
+                                        fieldErrors.title
+                                            ? 'border-red-400 bg-red-50/40 focus:ring-red-400 focus:border-red-500'
+                                            : 'border-slate-200 bg-white focus:ring-[#159447] focus:border-[#159447]'
+                                    }`}
                                 />
+                                {fieldErrors.title && (
+                                    <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                        <AlertCircle size={13} className="shrink-0" />
+                                        {fieldErrors.title}
+                                    </p>
+                                )}
                             </div>
 
                             {/* 2. Tanggal Pemberlakuan */}
@@ -1796,13 +1888,29 @@ export default function TransparansiClient({
                                     required
                                     max={todayWib || getTodayDateWIB()}
                                     value={formData.effectiveDate}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
                                         handleEffectiveDateChange(
                                             e.target.value
                                         )
-                                    }
-                                    className="w-full bg-[#f8fafc] border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] focus:bg-white transition-all cursor-pointer"
+                                        if (fieldErrors.effectiveDate) {
+                                            setFieldErrors((prev) => ({
+                                                ...prev,
+                                                effectiveDate: undefined,
+                                            }))
+                                        }
+                                    }}
+                                    className={`w-full border rounded-xl px-3 py-2.5 text-xs text-slate-700 focus:outline-none focus:ring-1 transition-all cursor-pointer ${
+                                        fieldErrors.effectiveDate
+                                            ? 'border-red-400 bg-red-50/40 focus:ring-red-400 focus:border-red-500'
+                                            : 'bg-[#f8fafc] border-slate-200/80 focus:ring-[#159447] focus:border-[#159447] focus:bg-white'
+                                    }`}
                                 />
+                                {fieldErrors.effectiveDate && (
+                                    <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                        <AlertCircle size={13} className="shrink-0" />
+                                        {fieldErrors.effectiveDate}
+                                    </p>
+                                )}
                                 <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
                                     Dapat memilih tanggal lampau hingga hari ini (WIB), tidak boleh memilih tanggal masa depan.
                                 </p>
@@ -1819,14 +1927,30 @@ export default function TransparansiClient({
                                     required
                                     placeholder="Tuliskan ringkasan pokok, keterangan, atau rincian dokumen..."
                                     value={formData.description}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
                                         setFormData({
                                             ...formData,
                                             description: e.target.value,
                                         })
-                                    }
-                                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] text-slate-800 text-xs leading-relaxed"
+                                        if (fieldErrors.description) {
+                                            setFieldErrors((prev) => ({
+                                                ...prev,
+                                                description: undefined,
+                                            }))
+                                        }
+                                    }}
+                                    className={`w-full px-3 py-2.5 rounded-xl border focus:outline-none focus:ring-1 text-slate-800 text-xs leading-relaxed transition-all ${
+                                        fieldErrors.description
+                                            ? 'border-red-400 bg-red-50/40 focus:ring-red-400 focus:border-red-500'
+                                            : 'border-slate-200 bg-white focus:ring-[#159447] focus:border-[#159447]'
+                                    }`}
                                 />
+                                {fieldErrors.description && (
+                                    <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                        <AlertCircle size={13} className="shrink-0" />
+                                        {fieldErrors.description}
+                                    </p>
+                                )}
                             </div>
 
                             {/* 4. File Dokumen PDF */}

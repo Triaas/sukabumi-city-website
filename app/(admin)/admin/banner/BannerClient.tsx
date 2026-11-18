@@ -111,6 +111,7 @@ export default function BannerClient({
     })
     const [imageFileObj, setImageFileObj] = useState<File | null>(null)
     const [formError, setFormError] = useState<string | null>(null)
+    const [titleError, setTitleError] = useState<string | null>(null)
     const [imageError, setImageError] = useState(false)
     const [imageErrorMessage, setImageErrorMessage] = useState<string | null>(
         null
@@ -238,6 +239,7 @@ export default function BannerClient({
         })
         setImageFileObj(null)
         setFormError(null)
+        setTitleError(null)
         setImageError(false)
         if (fileInputRef.current) fileInputRef.current.value = ''
         setIsAddModalOpen(true)
@@ -262,6 +264,7 @@ export default function BannerClient({
         })
         setImageFileObj(null)
         setFormError(null)
+        setTitleError(null)
         setImageError(false)
         if (fileInputRef.current) fileInputRef.current.value = ''
     }
@@ -316,18 +319,30 @@ export default function BannerClient({
         const trimmedTarget = formData.targetUrl.trim()
 
         if (!isDraft) {
+            let hasError = false
             if (!trimmedTitle) {
-                setFormError('Judul / deskripsi banner wajib diisi.')
-                return null
+                setTitleError('Judul / deskripsi banner wajib diisi.')
+                hasError = true
+            } else {
+                setTitleError(null)
             }
 
             if (!imageFileObj && !formData.imagePreview.trim()) {
                 setImageError(true)
                 setImageErrorMessage('Gambar banner wajib diunggah.')
+                hasError = true
+            } else {
+                setImageError(false)
+                setImageErrorMessage(null)
+            }
+
+            if (hasError) {
+                setFormError(null)
                 return null
             }
         }
 
+        setTitleError(null)
         setImageError(false)
         setImageErrorMessage(null)
         setFormError(null)
@@ -535,11 +550,22 @@ export default function BannerClient({
                     disabled={isPending}
                     placeholder="Contoh: Peringatan Hari Jadi Kota Sukabumi ke-112"
                     value={formData.title}
-                    onChange={(e) =>
+                    onChange={(e) => {
                         setFormData({ ...formData, title: e.target.value })
-                    }
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] text-slate-800 text-xs disabled:opacity-60"
+                        if (titleError) setTitleError(null)
+                    }}
+                    className={`w-full px-3 py-2.5 rounded-xl border focus:outline-none focus:ring-1 text-slate-800 text-xs disabled:opacity-60 transition-all ${
+                        titleError
+                            ? 'border-red-400 bg-red-50/40 focus:ring-red-400 focus:border-red-500'
+                            : 'border-slate-200 bg-white focus:ring-[#159447] focus:border-[#159447]'
+                    }`}
                 />
+                {titleError && (
+                    <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                        <AlertCircle size={13} className="shrink-0" />
+                        {titleError}
+                    </p>
+                )}
             </div>
 
             {/* 2. Gambar Banner (Wajib) */}
@@ -1356,7 +1382,12 @@ export default function BannerClient({
 
             {/* Modal Tambah Banner */}
             {isAddModalOpen && (
-                <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+                <div
+                    onMouseDown={(e) => {
+                        if (e.target === e.currentTarget) requestCloseAddModal()
+                    }}
+                    className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"
+                >
                     <div className="bg-white rounded-2xl border border-slate-200 max-w-lg w-full p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 space-y-4 max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                             <div className="flex items-center gap-2.5">
@@ -1392,7 +1423,12 @@ export default function BannerClient({
 
             {/* Modal Edit Banner */}
             {editingItem && (
-                <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+                <div
+                    onMouseDown={(e) => {
+                        if (e.target === e.currentTarget) requestCloseEditModal()
+                    }}
+                    className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"
+                >
                     <div className="bg-white rounded-2xl border border-slate-200 max-w-lg w-full p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 space-y-4 max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                             <div className="flex items-center gap-2.5">

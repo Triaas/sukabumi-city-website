@@ -183,6 +183,38 @@ export default function AdminBeritaForm({
     // Image Upload State (menyimpan file fisik + preview lokal atau URL eksisting)
     const [imageFile, setImageFile] = useState<File | null>(null)
     const [imageErrorMessage, setImageErrorMessage] = useState<string | null>(null)
+    const [fieldErrors, setFieldErrors] = useState<
+        Partial<
+            Record<
+                | 'title'
+                | 'caption'
+                | 'sourceCredit'
+                | 'content'
+                | 'tags'
+                | 'publishDate'
+                | 'publishTime',
+                string
+            >
+        >
+    >({})
+
+    const clearFieldError = (
+        field:
+            | 'title'
+            | 'caption'
+            | 'sourceCredit'
+            | 'content'
+            | 'tags'
+            | 'publishDate'
+            | 'publishTime'
+    ) => {
+        setFieldErrors((prev) => {
+            if (!prev[field]) return prev
+            const next = { ...prev }
+            delete next[field]
+            return next
+        })
+    }
     const [imagePreview, setImagePreview] = useState<string | null>(
         initialData?.image_url ?? null
     )
@@ -476,6 +508,7 @@ export default function AdminBeritaForm({
 
         setErrorMessage(null)
         setSuccessMessage(null)
+        setFieldErrors({})
 
         const isDraftAction = actionType === 'DRAFT'
         const trimmedTitle = title.trim()
@@ -486,53 +519,56 @@ export default function AdminBeritaForm({
         const trimmedSourceCredit = sourceCredit.trim()
 
         if (!isDraftAction) {
+            const nextErrors: Partial<
+                Record<
+                    | 'title'
+                    | 'caption'
+                    | 'sourceCredit'
+                    | 'content'
+                    | 'tags'
+                    | 'publishDate'
+                    | 'publishTime',
+                    string
+                >
+            > = {}
+
             if (!trimmedTitle) {
-                setPendingExitHref(null)
-                setErrorMessage('Judul berita utama wajib diisi.')
-                return
+                nextErrors.title = 'Judul berita utama wajib diisi.'
             }
 
             if (!hasAnyImage) {
-                setPendingExitHref(null)
                 setImageErrorMessage('Gambar utama berita wajib diunggah.')
-                return
             }
 
             if (!trimmedCaption) {
-                setPendingExitHref(null)
-                setErrorMessage('Keterangan / caption foto wajib diisi.')
-                return
+                nextErrors.caption = 'Keterangan / caption foto wajib diisi.'
             }
 
             if (!trimmedSourceCredit) {
-                setPendingExitHref(null)
-                setErrorMessage('Sumber foto wajib diisi.')
-                return
+                nextErrors.sourceCredit = 'Sumber foto wajib diisi.'
             }
 
             if (!editorText) {
-                setPendingExitHref(null)
-                setErrorMessage('Naskah narasi berita wajib diisi.')
-                return
+                nextErrors.content = 'Naskah narasi berita wajib diisi.'
             }
 
             if (selectedTags.length === 0) {
-                setPendingExitHref(null)
-                setErrorMessage('Pilih minimal 1 kategori berita.')
-                return
+                nextErrors.tags = 'Pilih minimal 1 kategori berita.'
             }
 
             if (currentUserRole !== 'REPORTER') {
                 if (!publishDate) {
-                    setPendingExitHref(null)
-                    setErrorMessage('Tanggal publikasi wajib diisi.')
-                    return
+                    nextErrors.publishDate = 'Tanggal publikasi wajib diisi.'
                 }
                 if (!publishTime) {
-                    setPendingExitHref(null)
-                    setErrorMessage('Waktu publikasi (WIB) wajib diisi.')
-                    return
+                    nextErrors.publishTime = 'Waktu publikasi (WIB) wajib diisi.'
                 }
+            }
+
+            if (Object.keys(nextErrors).length > 0 || !hasAnyImage) {
+                setFieldErrors(nextErrors)
+                setPendingExitHref(null)
+                return
             }
         }
 
@@ -728,10 +764,24 @@ export default function AdminBeritaForm({
                                 type="text"
                                 maxLength={120}
                                 value={title}
-                                onChange={(e) => setTitle(e.target.value)}
+                                onChange={(e) => {
+                                    setTitle(e.target.value)
+                                    clearFieldError('title')
+                                }}
                                 placeholder="Pemerintah Luncurkan Sistem Satu Data Terpadu untuk Pelayanan..."
-                                className="w-full bg-[#f8fafc] text-lg font-bold text-[#172135] placeholder:text-slate-300 placeholder:font-normal border-0 border-b-2 border-transparent focus:border-[#159447] focus:bg-white outline-none rounded-xl px-4 py-3 transition-all duration-200"
+                                className={`w-full text-lg font-bold text-[#172135] placeholder:text-slate-300 placeholder:font-normal outline-none rounded-xl px-4 py-3 transition-all duration-200 ${
+                                    fieldErrors.title
+                                        ? 'bg-red-50/40 border border-red-400 focus:border-red-500'
+                                        : 'bg-[#f8fafc] border-0 border-b-2 border-transparent focus:border-[#159447] focus:bg-white'
+                                }`}
                             />
+
+                            {fieldErrors.title && (
+                                <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                    <AlertCircle size={13} className="shrink-0" />
+                                    {fieldErrors.title}
+                                </p>
+                            )}
 
                             <p className="text-[11px] text-slate-400 mt-2.5 leading-relaxed">
                                 Pastikan judul tidak melebihi 120 karakter untuk optimalisasi indeks pencarian publik dan portal berita seluler.
@@ -850,10 +900,23 @@ export default function AdminBeritaForm({
                                     <input
                                         type="text"
                                         value={caption}
-                                        onChange={(e) => setCaption(e.target.value)}
+                                        onChange={(e) => {
+                                            setCaption(e.target.value)
+                                            clearFieldError('caption')
+                                        }}
                                         placeholder="Wakil Gubernur bersama Kepala Dinas..."
-                                        className="w-full bg-[#f8fafc] border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] transition-all"
+                                        className={`w-full border rounded-xl px-3.5 py-2.5 text-xs text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-1 transition-all ${
+                                            fieldErrors.caption
+                                                ? 'bg-red-50/40 border-red-400 focus:ring-red-400 focus:border-red-500'
+                                                : 'bg-[#f8fafc] border-slate-200/80 focus:ring-[#159447] focus:border-[#159447]'
+                                        }`}
                                     />
+                                    {fieldErrors.caption && (
+                                        <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                            <AlertCircle size={13} className="shrink-0" />
+                                            {fieldErrors.caption}
+                                        </p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-[11px] font-semibold text-slate-500 mb-1.5">
@@ -862,10 +925,23 @@ export default function AdminBeritaForm({
                                     <input
                                         type="text"
                                         value={sourceCredit}
-                                        onChange={(e) => setSourceCredit(e.target.value)}
+                                        onChange={(e) => {
+                                            setSourceCredit(e.target.value)
+                                            clearFieldError('sourceCredit')
+                                        }}
                                         placeholder="Biro Administrasi Pimpinan & Humas"
-                                        className="w-full bg-[#f8fafc] border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] transition-all"
+                                        className={`w-full border rounded-xl px-3.5 py-2.5 text-xs text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-1 transition-all ${
+                                            fieldErrors.sourceCredit
+                                                ? 'bg-red-50/40 border-red-400 focus:ring-red-400 focus:border-red-500'
+                                                : 'bg-[#f8fafc] border-slate-200/80 focus:ring-[#159447] focus:border-[#159447]'
+                                        }`}
                                     />
+                                    {fieldErrors.sourceCredit && (
+                                        <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                            <AlertCircle size={13} className="shrink-0" />
+                                            {fieldErrors.sourceCredit}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -884,12 +960,29 @@ export default function AdminBeritaForm({
                         </div>
 
                         <div className="p-3 sm:p-4">
-                            <RichTextEditor
-                                value={content}
-                                onChange={setContent}
-                                placeholder="Tulis naskah berita lengkap di sini..."
-                                minHeight="320px"
-                            />
+                            <div
+                                className={
+                                    fieldErrors.content
+                                        ? 'rounded-xl border border-red-400 bg-red-50/40 p-0.5'
+                                        : ''
+                                }
+                            >
+                                <RichTextEditor
+                                    value={content}
+                                    onChange={(val) => {
+                                        setContent(val)
+                                        clearFieldError('content')
+                                    }}
+                                    placeholder="Tulis naskah berita lengkap di sini..."
+                                    minHeight="320px"
+                                />
+                            </div>
+                            {fieldErrors.content && (
+                                <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                    <AlertCircle size={13} className="shrink-0" />
+                                    {fieldErrors.content}
+                                </p>
+                            )}
                         </div>
                     </Card>
                 </div>
@@ -919,9 +1012,22 @@ export default function AdminBeritaForm({
                                             type="date"
                                             value={publishDate}
                                             max={nowWib?.date}
-                                            onChange={(e) => handlePublishDateChange(e.target.value)}
-                                            className="w-full bg-[#f8fafc] border border-slate-200/80 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] transition-all cursor-pointer"
+                                            onChange={(e) => {
+                                                handlePublishDateChange(e.target.value)
+                                                clearFieldError('publishDate')
+                                            }}
+                                            className={`w-full border rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-1 transition-all cursor-pointer ${
+                                                fieldErrors.publishDate
+                                                    ? 'bg-red-50/40 border-red-400 focus:ring-red-400 focus:border-red-500'
+                                                    : 'bg-[#f8fafc] border-slate-200/80 focus:ring-[#159447] focus:border-[#159447]'
+                                            }`}
                                         />
+                                        {fieldErrors.publishDate && (
+                                            <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                                <AlertCircle size={13} className="shrink-0" />
+                                                {fieldErrors.publishDate}
+                                            </p>
+                                        )}
                                     </div>
                                     <div>
                                         <label className="block text-[11px] font-semibold text-slate-500 mb-1.5">
@@ -931,9 +1037,22 @@ export default function AdminBeritaForm({
                                             type="time"
                                             value={publishTime}
                                             max={nowWib && publishDate === nowWib.date ? nowWib.time : undefined}
-                                            onChange={(e) => handlePublishTimeChange(e.target.value)}
-                                            className="w-full bg-[#f8fafc] border border-slate-200/80 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] transition-all cursor-pointer"
+                                            onChange={(e) => {
+                                                handlePublishTimeChange(e.target.value)
+                                                clearFieldError('publishTime')
+                                            }}
+                                            className={`w-full border rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-1 transition-all cursor-pointer ${
+                                                fieldErrors.publishTime
+                                                    ? 'bg-red-50/40 border-red-400 focus:ring-red-400 focus:border-red-500'
+                                                    : 'bg-[#f8fafc] border-slate-200/80 focus:ring-[#159447] focus:border-[#159447]'
+                                            }`}
                                         />
+                                        {fieldErrors.publishTime && (
+                                            <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                                <AlertCircle size={13} className="shrink-0" />
+                                                {fieldErrors.publishTime}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
 
@@ -1044,7 +1163,11 @@ export default function AdminBeritaForm({
                                         }}
                                         onFocus={() => setIsTagDropdownOpen(true)}
                                         placeholder="Cari atau pilih kategori..."
-                                        className="w-full bg-[#f8fafc] border border-slate-200/80 rounded-xl pl-8.5 pr-8 py-2 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#159447] focus:border-[#159447] transition-all"
+                                        className={`w-full border rounded-xl pl-8.5 pr-8 py-2 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-1 transition-all ${
+                                            fieldErrors.tags
+                                                ? 'bg-red-50/40 border-red-400 focus:ring-red-400 focus:border-red-500'
+                                                : 'bg-[#f8fafc] border-slate-200/80 focus:ring-[#159447] focus:border-[#159447]'
+                                        }`}
                                     />
                                     <button
                                         type="button"
@@ -1057,6 +1180,13 @@ export default function AdminBeritaForm({
                                         />
                                     </button>
                                 </div>
+
+                                {fieldErrors.tags && (
+                                    <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                        <AlertCircle size={13} className="shrink-0" />
+                                        {fieldErrors.tags}
+                                    </p>
+                                )}
 
                                 {/* List Dropdown */}
                                 {isTagDropdownOpen && (

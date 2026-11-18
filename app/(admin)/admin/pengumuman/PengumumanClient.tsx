@@ -217,6 +217,10 @@ export default function PengumumanClient({
         'Diterbitkan' | 'Draf' | 'Preview' | null
     >(null)
     const [formError, setFormError] = useState<string | null>(null)
+    const [fieldErrors, setFieldErrors] = useState<{
+        title?: string
+        content?: string
+    }>({})
 
     const fileInputRef = useRef<HTMLInputElement>(null)
     const editFileInputRef = useRef<HTMLInputElement>(null)
@@ -449,6 +453,7 @@ export default function PengumumanClient({
     const openAddModal = () => {
         setAttachmentError(false)
         setFormError(null)
+        setFieldErrors({})
         setAttachmentFile(null)
         setThumbnailFile(null)
         setThumbnailPreview(null)
@@ -471,6 +476,7 @@ export default function PengumumanClient({
     const openEditModal = (item: PengumumanItem) => {
         setAttachmentError(false)
         setFormError(null)
+        setFieldErrors({})
         setAttachmentFile(null)
         setThumbnailFile(null)
         setThumbnailPreview(item.thumbnail_url || null)
@@ -600,25 +606,32 @@ export default function PengumumanClient({
         const plainContent = stripHtmlTags(formData.content)
 
         if (!isDraft) {
+            const nextErrors: { title?: string; content?: string } = {}
             if (!trimmedTitle) {
-                setIsExitConfirmOpen(false)
-                setFormError('Judul pengumuman wajib diisi.')
-                return
+                nextErrors.title = 'Judul pengumuman wajib diisi.'
             }
             if (!plainContent) {
-                setIsExitConfirmOpen(false)
-                setFormError('Isi pengumuman wajib diisi.')
-                return
+                nextErrors.content = 'Isi pengumuman wajib diisi.'
             }
-            if (!attachmentFile && !formData.attachment) {
-                setIsExitConfirmOpen(false)
+            const missingAttachment = !attachmentFile && !formData.attachment
+            if (missingAttachment) {
                 setAttachmentError(true)
+            } else {
+                setAttachmentError(false)
+            }
+
+            if (Object.keys(nextErrors).length > 0 || missingAttachment) {
+                setIsExitConfirmOpen(false)
+                setFieldErrors(nextErrors)
+                setFormError(null)
                 return
             }
         }
 
         setAttachmentError(false)
+        setFieldErrors({})
         setFormError(null)
+        setFieldErrors({})
         setSubmittingStatus(openPreview ? 'Preview' : targetStatus)
 
         const payload = new FormData()
@@ -695,25 +708,32 @@ export default function PengumumanClient({
         const plainContent = stripHtmlTags(formData.content)
 
         if (!isDraft) {
+            const nextErrors: { title?: string; content?: string } = {}
             if (!trimmedTitle) {
-                setIsExitConfirmOpen(false)
-                setFormError('Judul pengumuman wajib diisi.')
-                return
+                nextErrors.title = 'Judul pengumuman wajib diisi.'
             }
             if (!plainContent) {
-                setIsExitConfirmOpen(false)
-                setFormError('Isi pengumuman wajib diisi.')
-                return
+                nextErrors.content = 'Isi pengumuman wajib diisi.'
             }
-            if (!attachmentFile && !formData.attachment) {
-                setIsExitConfirmOpen(false)
+            const missingAttachment = !attachmentFile && !formData.attachment
+            if (missingAttachment) {
                 setAttachmentError(true)
+            } else {
+                setAttachmentError(false)
+            }
+
+            if (Object.keys(nextErrors).length > 0 || missingAttachment) {
+                setIsExitConfirmOpen(false)
+                setFieldErrors(nextErrors)
+                setFormError(null)
                 return
             }
         }
 
         setAttachmentError(false)
+        setFieldErrors({})
         setFormError(null)
+        setFieldErrors({})
         setSubmittingStatus(openPreview ? 'Preview' : targetStatus)
 
         const payload = new FormData()
@@ -1441,7 +1461,12 @@ export default function PengumumanClient({
 
             {/* 5. MODAL: TAMBAH PENGUMUMAN BARU */}
             {isAddModalOpen && (
-                <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+                <div
+                    onMouseDown={(e) => {
+                        if (e.target === e.currentTarget) requestCloseAddModal()
+                    }}
+                    className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"
+                >
                     <div className="bg-white rounded-2xl border border-slate-200 max-w-2xl w-full p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 space-y-4 max-h-[90vh] overflow-y-auto">
                         {/* Header Modal */}
                         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -1476,6 +1501,7 @@ export default function PengumumanClient({
                         )}
 
                         <form
+                            noValidate
                             onSubmit={(e) => {
                                 e.preventDefault()
                                 handleSaveAdd('Diterbitkan')
@@ -1493,14 +1519,30 @@ export default function PengumumanClient({
                                     required
                                     placeholder="Contoh: Jadwal Pemadaman Listrik Sementara..."
                                     value={formData.title}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
                                         setFormData({
                                             ...formData,
                                             title: e.target.value,
                                         })
-                                    }
-                                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] text-slate-800 text-xs"
+                                        if (fieldErrors.title) {
+                                            setFieldErrors((prev) => ({
+                                                ...prev,
+                                                title: undefined,
+                                            }))
+                                        }
+                                    }}
+                                    className={`w-full px-3 py-2.5 rounded-xl border focus:outline-none focus:ring-1 text-slate-800 text-xs transition-all ${
+                                        fieldErrors.title
+                                            ? 'border-red-400 bg-red-50/40 focus:ring-red-400 focus:border-red-500'
+                                            : 'border-slate-200 focus:ring-[#159447] focus:border-[#159447]'
+                                    }`}
                                 />
+                                {fieldErrors.title && (
+                                    <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                        <AlertCircle size={13} className="shrink-0" />
+                                        {fieldErrors.title}
+                                    </p>
+                                )}
                             </div>
 
                             {/* 2. Isi Pengumuman (Rich Text Editor) */}
@@ -1509,16 +1551,36 @@ export default function PengumumanClient({
                                     Isi Pengumuman{' '}
                                     <span className="text-red-500">*</span>
                                 </label>
-                                <RichTextEditor
-                                    value={formData.content}
-                                    onChange={(html) =>
-                                        setFormData((prev) => ({
-                                            ...prev,
-                                            content: html,
-                                        }))
+                                <div
+                                    className={
+                                        fieldErrors.content
+                                            ? 'rounded-xl border border-red-400 bg-red-50/40 p-0.5'
+                                            : ''
                                     }
-                                    placeholder="Tuliskan naskah pengumuman atau instruksi edaran selengkapnya di sini..."
-                                />
+                                >
+                                    <RichTextEditor
+                                        value={formData.content}
+                                        onChange={(html) => {
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                content: html,
+                                            }))
+                                            if (fieldErrors.content) {
+                                                setFieldErrors((prev) => ({
+                                                    ...prev,
+                                                    content: undefined,
+                                                }))
+                                            }
+                                        }}
+                                        placeholder="Tuliskan naskah pengumuman atau instruksi edaran selengkapnya di sini..."
+                                    />
+                                </div>
+                                {fieldErrors.content && (
+                                    <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                        <AlertCircle size={13} className="shrink-0" />
+                                        {fieldErrors.content}
+                                    </p>
+                                )}
                             </div>
 
                             {/* 3. Thumbnail Kartu Depan (thumbnail_url) */}
@@ -1862,7 +1924,12 @@ export default function PengumumanClient({
 
             {/* 6. MODAL: EDIT PENGUMUMAN */}
             {editingItem && (
-                <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+                <div
+                    onMouseDown={(e) => {
+                        if (e.target === e.currentTarget) requestCloseEditModal()
+                    }}
+                    className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"
+                >
                     <div className="bg-white rounded-2xl border border-slate-200 max-w-2xl w-full p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 space-y-4 max-h-[90vh] overflow-y-auto">
                         {/* Header Modal */}
                         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -1897,6 +1964,7 @@ export default function PengumumanClient({
                         )}
 
                         <form
+                            noValidate
                             onSubmit={(e) => {
                                 e.preventDefault()
                                 handleSaveEdit(editingItem.status)
@@ -1913,14 +1981,30 @@ export default function PengumumanClient({
                                     type="text"
                                     required
                                     value={formData.title}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
                                         setFormData({
                                             ...formData,
                                             title: e.target.value,
                                         })
-                                    }
-                                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] text-slate-800 text-xs"
+                                        if (fieldErrors.title) {
+                                            setFieldErrors((prev) => ({
+                                                ...prev,
+                                                title: undefined,
+                                            }))
+                                        }
+                                    }}
+                                    className={`w-full px-3 py-2.5 rounded-xl border focus:outline-none focus:ring-1 text-slate-800 text-xs transition-all ${
+                                        fieldErrors.title
+                                            ? 'border-red-400 bg-red-50/40 focus:ring-red-400 focus:border-red-500'
+                                            : 'border-slate-200 focus:ring-[#159447] focus:border-[#159447]'
+                                    }`}
                                 />
+                                {fieldErrors.title && (
+                                    <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                        <AlertCircle size={13} className="shrink-0" />
+                                        {fieldErrors.title}
+                                    </p>
+                                )}
                             </div>
 
                             {/* 2. Isi Pengumuman (Rich Text Editor) */}
@@ -1929,16 +2013,36 @@ export default function PengumumanClient({
                                     Isi Pengumuman{' '}
                                     <span className="text-red-500">*</span>
                                 </label>
-                                <RichTextEditor
-                                    value={formData.content}
-                                    onChange={(html) =>
-                                        setFormData((prev) => ({
-                                            ...prev,
-                                            content: html,
-                                        }))
+                                <div
+                                    className={
+                                        fieldErrors.content
+                                            ? 'rounded-xl border border-red-400 bg-red-50/40 p-0.5'
+                                            : ''
                                     }
-                                    placeholder="Tuliskan naskah pengumuman atau instruksi edaran selengkapnya di sini..."
-                                />
+                                >
+                                    <RichTextEditor
+                                        value={formData.content}
+                                        onChange={(html) => {
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                content: html,
+                                            }))
+                                            if (fieldErrors.content) {
+                                                setFieldErrors((prev) => ({
+                                                    ...prev,
+                                                    content: undefined,
+                                                }))
+                                            }
+                                        }}
+                                        placeholder="Tuliskan naskah pengumuman atau instruksi edaran selengkapnya di sini..."
+                                    />
+                                </div>
+                                {fieldErrors.content && (
+                                    <p className="text-[11px] text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                                        <AlertCircle size={13} className="shrink-0" />
+                                        {fieldErrors.content}
+                                    </p>
+                                )}
                             </div>
 
                             {/* 3. Thumbnail Kartu Depan (thumbnail_url) */}
