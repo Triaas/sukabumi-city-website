@@ -7,8 +7,6 @@ import {
   Trash2,
   RotateCcw,
   Save,
-  CheckCircle2,
-  AlertCircle,
 } from 'lucide-react'
 import type { HeaderFooterSettings } from '@/lib/site-settings/types'
 import {
@@ -20,9 +18,11 @@ import {
 export default function HeaderFooterTab({
   initialData,
   onSaved,
+  onNotify,
 }: {
   initialData: HeaderFooterSettings
   onSaved: (data: HeaderFooterSettings) => void
+  onNotify: (type: 'success' | 'error', message: string) => void
 }) {
   const [formData, setFormData] = useState<HeaderFooterSettings>(initialData)
   const [uploadingLogo, setUploadingLogo] = useState<
@@ -31,10 +31,6 @@ export default function HeaderFooterTab({
   const [isSaving, setIsSaving] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
-  const [feedback, setFeedback] = useState<{
-    type: 'success' | 'error'
-    message: string
-  } | null>(null)
 
   const handleLogoUpload = async (
     targetField: 'headerLogoUrl' | 'footerLogoUrl',
@@ -44,33 +40,25 @@ export default function HeaderFooterTab({
     if (!file) return
 
     setUploadingLogo(targetField)
-    setFeedback(null)
 
     try {
       const fd = new FormData()
       fd.append('file', file)
       const res = await uploadSiteImageAction(fd)
       if (!res.success || !res.imageUrl) {
-        setFeedback({
-          type: 'error',
-          message: res.error || 'Gagal mengunggah logo.',
-        })
+        onNotify('error', res.error || 'Gagal mengunggah logo.')
       } else {
         setFormData((prev) => ({
           ...prev,
           [targetField]: res.imageUrl!,
         }))
-        setFeedback({
-          type: 'success',
-          message:
-            'Logo berhasil diunggah. Klik Simpan Perubahan untuk memperbarui Header & Footer.',
-        })
+        onNotify(
+          'success',
+          'Logo berhasil diunggah. Klik Simpan Perubahan untuk memperbarui Header & Footer.'
+        )
       }
     } catch {
-      setFeedback({
-        type: 'error',
-        message: 'Terjadi kesalahan saat mengunggah logo.',
-      })
+      onNotify('error', 'Terjadi kesalahan saat mengunggah logo.')
     } finally {
       setUploadingLogo(null)
       e.target.value = ''
@@ -109,7 +97,6 @@ export default function HeaderFooterTab({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSaving(true)
-    setFeedback(null)
 
     const res = await updateSiteSectionAction('headerFooter', formData)
     setIsSaving(false)
@@ -117,22 +104,20 @@ export default function HeaderFooterTab({
     if (res.success && res.data) {
       setFormData(res.data)
       onSaved(res.data)
-      setFeedback({
-        type: 'success',
-        message:
-          'Pengaturan Header & Footer berhasil disimpan dan langsung diperbarui di seluruh halaman publik.',
-      })
+      onNotify(
+        'success',
+        'Pengaturan Header & Footer berhasil disimpan dan langsung diperbarui di seluruh halaman publik.'
+      )
     } else {
-      setFeedback({
-        type: 'error',
-        message: res.error || 'Gagal menyimpan pengaturan Header & Footer.',
-      })
+      onNotify(
+        'error',
+        res.error || 'Gagal menyimpan pengaturan Header & Footer.'
+      )
     }
   }
 
   const handleConfirmReset = async () => {
     setIsResetting(true)
-    setFeedback(null)
 
     const res = await resetSiteSectionAction('headerFooter')
     setIsResetting(false)
@@ -141,38 +126,17 @@ export default function HeaderFooterTab({
     if (res.success && res.data) {
       setFormData(res.data)
       onSaved(res.data)
-      setFeedback({
-        type: 'success',
-        message: 'Header & Footer berhasil dikembalikan ke pengaturan awal.',
-      })
+      onNotify(
+        'success',
+        'Header & Footer berhasil dikembalikan ke pengaturan awal.'
+      )
     } else {
-      setFeedback({
-        type: 'error',
-        message: res.error || 'Gagal mereset Header & Footer.',
-      })
+      onNotify('error', res.error || 'Gagal mereset Header & Footer.')
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {feedback && (
-        <div
-          role="alert"
-          className={`flex items-start gap-3 rounded-xl border p-4 text-sm ${
-            feedback.type === 'success'
-              ? 'border-green-200 bg-green-50 text-[#159447]'
-              : 'border-red-200 bg-red-50 text-red-700'
-          }`}
-        >
-          {feedback.type === 'success' ? (
-            <CheckCircle2 size={18} className="shrink-0 mt-0.5" />
-          ) : (
-            <AlertCircle size={18} className="shrink-0 mt-0.5" />
-          )}
-          <span>{feedback.message}</span>
-        </div>
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Kolom Kiri: Identitas Brand & Logo */}
         <div className="lg:col-span-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">

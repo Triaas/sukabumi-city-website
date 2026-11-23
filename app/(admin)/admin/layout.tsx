@@ -67,10 +67,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     });
 
     return (
-        <div className="flex h-screen w-full bg-[#f4f7f6] overflow-hidden" style={{ fontFamily: "'Inter', Arial, sans-serif" }}>
+        <div className="flex min-h-screen w-full bg-[#f4f7f6]" style={{ fontFamily: "'Inter', Arial, sans-serif" }}>
 
             {/* SIDEBAR */}
-            <aside className="w-[260px] bg-[#f8fafc] border-r border-slate-200 flex flex-col shrink-0">
+            <aside className="sticky top-0 h-screen w-[260px] bg-[#f8fafc] border-r border-slate-200 flex flex-col shrink-0">
 
                 {/* Logo / Header Sidebar */}
                 <div className="px-5 py-5 flex items-center gap-3.5 border-b border-slate-200/60 mb-2">
@@ -190,11 +190,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </aside>
 
             {/* KONTEN UTAMA (Kanan) */}
-            <main className="flex-1 flex flex-col h-screen overflow-hidden">
-                {/* Konten tiap halaman akan dirender di sini dan bisa di-scroll mandiri */}
-                <div className="h-full overflow-y-auto p-6 md:p-8">
-                    {children}
-                </div>
+            <main className="flex-1 min-w-0 p-6 md:p-8">
+                {children}
             </main>
 
         </div>

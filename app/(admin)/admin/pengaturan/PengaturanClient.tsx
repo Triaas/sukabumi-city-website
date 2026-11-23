@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import {
   Sparkles,
   Image as ImageIcon,
@@ -9,6 +9,7 @@ import {
   Lock,
 } from 'lucide-react'
 import type { SiteSettingsMap } from '@/lib/site-settings/types'
+import ToastNotification from '@/components/ToastNotification'
 import HeroTab from './tabs/HeroTab'
 import WelcomeTab from './tabs/WelcomeTab'
 import MediaTab from './tabs/MediaTab'
@@ -63,6 +64,17 @@ export default function PengaturanClient({
 }) {
   const [settings, setSettings] = useState<SiteSettingsMap>(initialSettings)
   const [activeTab, setActiveTab] = useState<ActiveTabId>('hero')
+  const [toast, setToast] = useState<{
+    type: 'success' | 'error'
+    message: string
+  } | null>(null)
+
+  const showToast = useCallback(
+    (type: 'success' | 'error', message: string) => {
+      setToast({ type, message })
+    },
+    []
+  )
 
   return (
     <div className="space-y-6 pb-10">
@@ -159,6 +171,7 @@ export default function PengaturanClient({
             onSaved={(newHero) =>
               setSettings((prev) => ({ ...prev, hero: newHero }))
             }
+            onNotify={showToast}
           />
         )}
 
@@ -168,6 +181,7 @@ export default function PengaturanClient({
             onSaved={(newWelcome) =>
               setSettings((prev) => ({ ...prev, welcome: newWelcome }))
             }
+            onNotify={showToast}
           />
         )}
 
@@ -177,6 +191,7 @@ export default function PengaturanClient({
             onSaved={(newMedia) =>
               setSettings((prev) => ({ ...prev, media: newMedia }))
             }
+            onNotify={showToast}
           />
         )}
 
@@ -189,9 +204,17 @@ export default function PengaturanClient({
                 headerFooter: newHeaderFooter,
               }))
             }
+            onNotify={showToast}
           />
         )}
       </div>
+
+      <ToastNotification
+        message={toast?.message}
+        type={toast?.type}
+        duration={3500}
+        onClose={() => setToast(null)}
+      />
     </div>
   )
 }

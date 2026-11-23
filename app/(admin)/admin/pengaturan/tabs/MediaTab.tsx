@@ -1,12 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  RotateCcw,
-  Save,
-  CheckCircle2,
-  AlertCircle,
-} from 'lucide-react'
+import { RotateCcw, Save } from 'lucide-react'
 import type { MediaSettings } from '@/lib/site-settings/types'
 import { normalizeYoutubeEmbedUrl } from '@/lib/site-settings/defaults'
 import {
@@ -17,25 +12,22 @@ import {
 export default function MediaTab({
   initialData,
   onSaved,
+  onNotify,
 }: {
   initialData: MediaSettings
   onSaved: (data: MediaSettings) => void
+  onNotify: (type: 'success' | 'error', message: string) => void
 }) {
   const [formData, setFormData] = useState<MediaSettings>(initialData)
   const [isSaving, setIsSaving] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
-  const [feedback, setFeedback] = useState<{
-    type: 'success' | 'error'
-    message: string
-  } | null>(null)
 
   const previewEmbedUrl = normalizeYoutubeEmbedUrl(formData.youtubeEmbedUrl)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSaving(true)
-    setFeedback(null)
 
     const normalizedPayload: MediaSettings = {
       ...formData,
@@ -48,21 +40,14 @@ export default function MediaTab({
     if (res.success && res.data) {
       setFormData(res.data)
       onSaved(res.data)
-      setFeedback({
-        type: 'success',
-        message: 'Pengaturan Media & GPR Komdigi berhasil disimpan.',
-      })
+      onNotify('success', 'Pengaturan Media & GPR Komdigi berhasil disimpan.')
     } else {
-      setFeedback({
-        type: 'error',
-        message: res.error || 'Gagal menyimpan pengaturan Media Section.',
-      })
+      onNotify('error', res.error || 'Gagal menyimpan pengaturan Media Section.')
     }
   }
 
   const handleConfirmReset = async () => {
     setIsResetting(true)
-    setFeedback(null)
 
     const res = await resetSiteSectionAction('media')
     setIsResetting(false)
@@ -71,38 +56,17 @@ export default function MediaTab({
     if (res.success && res.data) {
       setFormData(res.data)
       onSaved(res.data)
-      setFeedback({
-        type: 'success',
-        message: 'Media Section berhasil dikembalikan ke pengaturan awal.',
-      })
+      onNotify(
+        'success',
+        'Media Section berhasil dikembalikan ke pengaturan awal.'
+      )
     } else {
-      setFeedback({
-        type: 'error',
-        message: res.error || 'Gagal mereset Media Section.',
-      })
+      onNotify('error', res.error || 'Gagal mereset Media Section.')
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {feedback && (
-        <div
-          role="alert"
-          className={`flex items-start gap-3 rounded-xl border p-4 text-sm ${
-            feedback.type === 'success'
-              ? 'border-green-200 bg-green-50 text-[#159447]'
-              : 'border-red-200 bg-red-50 text-red-700'
-          }`}
-        >
-          {feedback.type === 'success' ? (
-            <CheckCircle2 size={18} className="shrink-0 mt-0.5" />
-          ) : (
-            <AlertCircle size={18} className="shrink-0 mt-0.5" />
-          )}
-          <span>{feedback.message}</span>
-        </div>
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Form Input */}
         <div className="lg:col-span-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
@@ -142,28 +106,6 @@ export default function MediaTab({
                 {previewEmbedUrl}
               </code>
             </p>
-          </div>
-
-          <div>
-            <label
-              htmlFor="media-youtube-title"
-              className="block text-xs font-bold uppercase tracking-wider text-[#172135] mb-1.5"
-            >
-              Judul Video YouTube (Atribut Title)
-            </label>
-            <input
-              id="media-youtube-title"
-              type="text"
-              value={formData.youtubeTitle}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  youtubeTitle: e.target.value,
-                }))
-              }
-              placeholder="Profil Kota Sukabumi"
-              className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-[#172135] focus:border-[#159447] focus:outline-none focus:ring-2 focus:ring-[#159447]/20"
-            />
           </div>
 
           <div className="pt-3 border-t border-slate-100 space-y-4">

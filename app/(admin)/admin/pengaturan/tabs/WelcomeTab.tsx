@@ -6,8 +6,6 @@ import {
   Trash2,
   RotateCcw,
   Save,
-  CheckCircle2,
-  AlertCircle,
 } from 'lucide-react'
 import type { WelcomeSettings } from '@/lib/site-settings/types'
 import {
@@ -21,19 +19,17 @@ type PhotoSlotKey = 'leftContainerImage' | 'leaderImage' | 'sloganImage'
 export default function WelcomeTab({
   initialData,
   onSaved,
+  onNotify,
 }: {
   initialData: WelcomeSettings
   onSaved: (data: WelcomeSettings) => void
+  onNotify: (type: 'success' | 'error', message: string) => void
 }) {
   const [formData, setFormData] = useState<WelcomeSettings>(initialData)
   const [uploadingSlot, setUploadingSlot] = useState<PhotoSlotKey | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
-  const [feedback, setFeedback] = useState<{
-    type: 'success' | 'error'
-    message: string
-  } | null>(null)
 
   const handleFileUpload = async (
     slot: PhotoSlotKey,
@@ -43,33 +39,25 @@ export default function WelcomeTab({
     if (!file) return
 
     setUploadingSlot(slot)
-    setFeedback(null)
 
     try {
       const fd = new FormData()
       fd.append('file', file)
       const res = await uploadSiteImageAction(fd)
       if (!res.success || !res.imageUrl) {
-        setFeedback({
-          type: 'error',
-          message: res.error || 'Gagal mengunggah foto.',
-        })
+        onNotify('error', res.error || 'Gagal mengunggah foto.')
       } else {
         setFormData((prev) => ({
           ...prev,
           [slot]: res.imageUrl!,
         }))
-        setFeedback({
-          type: 'success',
-          message:
-            'Foto berhasil diunggah. Klik Simpan Perubahan untuk menerapkan ke halaman utama.',
-        })
+        onNotify(
+          'success',
+          'Foto berhasil diunggah. Klik Simpan Perubahan untuk menerapkan ke halaman utama.'
+        )
       }
     } catch {
-      setFeedback({
-        type: 'error',
-        message: 'Terjadi kesalahan saat mengunggah foto.',
-      })
+      onNotify('error', 'Terjadi kesalahan saat mengunggah foto.')
     } finally {
       setUploadingSlot(null)
       e.target.value = ''
@@ -79,7 +67,6 @@ export default function WelcomeTab({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSaving(true)
-    setFeedback(null)
 
     const res = await updateSiteSectionAction('welcome', formData)
     setIsSaving(false)
@@ -87,21 +74,14 @@ export default function WelcomeTab({
     if (res.success && res.data) {
       setFormData(res.data)
       onSaved(res.data)
-      setFeedback({
-        type: 'success',
-        message: 'Foto pada bagian Welcome berhasil diperbarui.',
-      })
+      onNotify('success', 'Foto pada bagian Welcome berhasil diperbarui.')
     } else {
-      setFeedback({
-        type: 'error',
-        message: res.error || 'Gagal menyimpan pengaturan foto Welcome.',
-      })
+      onNotify('error', res.error || 'Gagal menyimpan pengaturan foto Welcome.')
     }
   }
 
   const handleConfirmReset = async () => {
     setIsResetting(true)
-    setFeedback(null)
 
     const res = await resetSiteSectionAction('welcome')
     setIsResetting(false)
@@ -110,38 +90,17 @@ export default function WelcomeTab({
     if (res.success && res.data) {
       setFormData(res.data)
       onSaved(res.data)
-      setFeedback({
-        type: 'success',
-        message: 'Bagian Welcome berhasil dikembalikan ke pengaturan awal.',
-      })
+      onNotify(
+        'success',
+        'Bagian Welcome berhasil dikembalikan ke pengaturan awal.'
+      )
     } else {
-      setFeedback({
-        type: 'error',
-        message: res.error || 'Gagal mereset bagian Welcome.',
-      })
+      onNotify('error', res.error || 'Gagal mereset bagian Welcome.')
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {feedback && (
-        <div
-          role="alert"
-          className={`flex items-start gap-3 rounded-xl border p-4 text-sm ${
-            feedback.type === 'success'
-              ? 'border-green-200 bg-green-50 text-[#159447]'
-              : 'border-red-200 bg-red-50 text-red-700'
-          }`}
-        >
-          {feedback.type === 'success' ? (
-            <CheckCircle2 size={18} className="shrink-0 mt-0.5" />
-          ) : (
-            <AlertCircle size={18} className="shrink-0 mt-0.5" />
-          )}
-          <span>{feedback.message}</span>
-        </div>
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Card 1: Wadah Kontainer Kiri */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between space-y-4">
