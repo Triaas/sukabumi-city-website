@@ -83,7 +83,7 @@ function Hero({ settings }: { settings: HeroSettings }) {
   return (
     <section
       id="beranda"
-      className="relative flex h-screen min-h-[650px] items-center overflow-hidden bg-[#0c1d26] pt-20"
+      className="relative flex min-h-[82dvh] sm:min-h-[88dvh] lg:h-screen lg:min-h-[650px] items-center overflow-hidden bg-[#0c1d26] pt-24 pb-12 lg:py-0 lg:pt-20"
     >
       {images.map((src, index) => (
         <img
@@ -99,13 +99,13 @@ function Hero({ settings }: { settings: HeroSettings }) {
       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/40 to-slate-950/30 z-10" />
       <div className="relative z-20 w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
         <div className="max-w-xl">
-          <p className="mb-3 text-sm font-bold uppercase tracking-[0.24em] text-[#f3c338]">
+          <p className="mb-3 text-xs sm:text-sm font-bold uppercase tracking-[0.24em] text-[#f3c338]">
             {settings.eyebrow}
           </p>
-          <h1 className="text-5xl font-bold leading-tight text-white md:text-7xl">
+          <h1 className="text-4xl font-bold leading-tight text-white sm:text-5xl md:text-7xl">
             {settings.title}
           </h1>
-          <p className="mt-5 text-lg leading-relaxed text-white/85 md:text-xl">
+          <p className="mt-4 text-base leading-relaxed text-white/85 sm:mt-5 sm:text-lg md:text-xl">
             {settings.subtitle}
           </p>
         </div>
@@ -130,15 +130,15 @@ function Welcome({ settings }: { settings: WelcomeSettings }) {
           )}
         </div>
 
-        <div className="flex flex-1 items-center justify-center gap-4 lg:gap-8">
-          <div className="relative z-10 w-full max-w-[500px] lg:max-w-[600px] self-end shrink-0">
+        <div className="flex flex-1 min-w-0 w-full items-center justify-center gap-4 lg:gap-6">
+          <div className="relative z-10 flex-1 min-w-0 max-w-[500px] lg:max-w-[560px] self-end">
             <img
               src={settings.leaderImage || '/images/walikota dan wakil.png'}
-              className="w-full"
+              className="w-full h-auto"
               alt={settings.leaderAlt || 'Walikota dan Wakil Walikota Sukabumi'}
             />
           </div>
-          <div className="ml-4 lg:ml-8 hidden max-w-[260px] lg:max-w-[320px] md:block self-center shrink-0">
+          <div className="hidden max-w-[200px] lg:max-w-[240px] xl:max-w-[300px] flex-1 min-w-0 md:block self-center">
             <img
               src={settings.sloganImage || '/images/Iman.png'}
               alt={
@@ -709,13 +709,13 @@ function Opd({
           <SectionHeading subtitle={settings.subtitle}>
             {settings.heading}
           </SectionHeading>
-          <div className="flex min-h-[560px] overflow-hidden rounded-xl border border-[#e2e8ed] bg-white shadow-[0_24px_40px_-28px_rgba(15,23,42,0.5)]">
-            <div className="flex w-full flex-col gap-5 md:w-[28%] p-5 md:p-8 border-r border-[#e5e7eb]">
+          <div className="flex flex-col md:flex-row md:min-h-[560px] overflow-hidden rounded-xl border border-[#e2e8ed] bg-white shadow-[0_24px_40px_-28px_rgba(15,23,42,0.5)]">
+            <div className="flex w-full flex-row overflow-x-auto hide-scrollbar gap-2 p-3.5 border-b border-[#e5e7eb] md:w-[28%] md:flex-col md:gap-4 md:p-8 md:border-b-0 md:border-r">
               {categoryKeys.map((category) => (
                 <button
                   key={category}
                   onClick={() => handleCategoryChange(category)}
-                  className={`px-6 py-4 text-base text-left font-medium transition-all duration-200 rounded-lg border-2 ${
+                  className={`shrink-0 whitespace-nowrap md:whitespace-normal min-h-[44px] px-4 py-2.5 md:px-6 md:py-4 text-sm md:text-base text-left font-medium transition-all duration-200 rounded-lg border-2 ${
                     activeCategory === category
                       ? 'border-[#159447] bg-[#159447] text-white'
                       : 'border-[#e5e7eb] bg-white text-[#4b5563] hover:bg-slate-50 hover:shadow-md'
@@ -727,20 +727,20 @@ function Opd({
               ))}
             </div>
 
-            <div className="hidden flex-1 flex-col p-8 md:flex min-h-[560px]">
+            <div className="flex flex-1 flex-col p-4 sm:p-6 md:p-8 md:min-h-[560px]">
               <div
                 key={`page-${activeCategory}-${cardPage}`}
                 className="flex flex-1 flex-col animate-[fadeInUp_0.5s_ease-out]"
               >
                 <div className="mb-4">
-                  <h3 className="text-2xl font-bold text-[#1b293c]">
+                  <h3 className="text-xl md:text-2xl font-bold text-[#1b293c]">
                     {currentPage.title}
                   </h3>
                 </div>
 
-                <div className="flex-1 min-h-[350px]">
+                <div className="flex-1 md:min-h-[350px]">
                   {currentPage.items.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full min-h-[350px] text-center p-8 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                    <div className="flex flex-col items-center justify-center h-full min-h-[220px] md:min-h-[350px] text-center p-6 md:p-8 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
                       <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
                         <Building size={24} className="text-slate-400" />
                       </div>
@@ -752,7 +752,7 @@ function Opd({
                       </p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 content-start min-h-[350px]">
+                    <div className="grid grid-cols-1 gap-3.5 md:gap-4 md:grid-cols-2 content-start md:min-h-[350px]">
                       {currentPage.items.map(
                         (service: OpdServiceCard, index: number) => {
                           const outerClasses =
@@ -1592,12 +1592,14 @@ function Partners({ settings }: { settings: PartnersSettings }) {
 
 function MediaSection({ settings }: { settings: MediaSettings }) {
   const widgetViewportRef = useRef<HTMLDivElement>(null)
+  const [widgetLoaded, setWidgetLoaded] = useState(false)
 
   useEffect(() => {
     const container = document.getElementById('gpr-kominfo-widget-container')
     if (!container) return
 
     container.innerHTML = ''
+    setWidgetLoaded(false)
 
     const oldScript = document.getElementById('gpr-kominfo-script')
     if (oldScript) {
@@ -1616,8 +1618,22 @@ function MediaSection({ settings }: { settings: MediaSettings }) {
       const viewport = widgetViewportRef.current
       if (!viewport || !container) return
 
+      if (container.childElementCount > 0) {
+        setWidgetLoaded(true)
+      }
+
       const viewportH = viewport.clientHeight
       if (viewportH <= 0) return
+
+      const rootWidget = container.firstElementChild as HTMLElement | null
+      if (rootWidget) {
+        rootWidget.style.width = '100%'
+        rootWidget.style.maxWidth = '100%'
+        rootWidget.style.height = `${viewportH}px`
+        rootWidget.style.maxHeight = `${viewportH}px`
+        rootWidget.style.overflow = 'hidden'
+        rootWidget.style.boxSizing = 'border-box'
+      }
 
       const allEls = Array.from(container.querySelectorAll<HTMLElement>('*'))
       const scrollableList = allEls.find((el) => {
@@ -1653,13 +1669,8 @@ function MediaSection({ settings }: { settings: MediaSettings }) {
       scrollableList.style.height = `${targetListHeight}px`
       scrollableList.style.maxHeight = `${targetListHeight}px`
 
-      const rootWidget = container.firstElementChild as HTMLElement | null
       if (rootWidget) {
-        rootWidget.style.height = `${viewportH}px`
-        rootWidget.style.maxHeight = `${viewportH}px`
-        rootWidget.style.overflow = 'hidden'
         rootWidget.style.paddingBottom = `${bottomFooterSpace}px`
-        rootWidget.style.boxSizing = 'border-box'
       }
     }
 
@@ -1693,9 +1704,9 @@ function MediaSection({ settings }: { settings: MediaSettings }) {
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
         <div className="lg:col-span-4 lg:relative lg:h-full">
           <div className="group p-1.5 rounded-[22px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex flex-col lg:absolute lg:inset-0">
-            <div className="flex flex-col flex-1 h-full rounded-2xl bg-white border border-slate-200/90 p-5 shadow-sm transition-all duration-300 group-hover:border-[#159447]/40">
-              <div className="flex items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-100 shrink-0">
-                <div>
+            <div className="flex flex-col flex-1 h-full rounded-2xl bg-white border border-slate-200/90 p-3.5 sm:p-5 shadow-sm transition-all duration-300 group-hover:border-[#159447]/40">
+              <div className="flex items-center justify-between gap-3 pb-3.5 mb-3.5 sm:pb-4 sm:mb-4 border-b border-slate-100 shrink-0">
+                <div className="min-w-0">
                   <h3 className="text-sm font-bold tracking-wide text-[#172135] uppercase">
                     {settings.gprTitle}
                   </h3>
@@ -1707,7 +1718,7 @@ function MediaSection({ settings }: { settings: MediaSettings }) {
                   href={settings.gprPortalUrl || 'https://www.komdigi.go.id'}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-[#172135] transition-colors hover:border-[#159447] hover:text-[#159447]"
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-2 sm:py-1.5 min-h-[44px] sm:min-h-0 text-xs font-semibold text-[#172135] transition-colors hover:border-[#159447] hover:text-[#159447]"
                 >
                   Portal
                   <svg
@@ -1715,6 +1726,7 @@ function MediaSection({ settings }: { settings: MediaSettings }) {
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
                     <path
                       strokeLinecap="round"
@@ -1728,11 +1740,16 @@ function MediaSection({ settings }: { settings: MediaSettings }) {
 
               <div
                 ref={widgetViewportRef}
-                className="relative w-full flex-1 min-h-[380px] lg:min-h-0 overflow-hidden rounded-xl bg-[#1e1b6e]"
+                className="relative w-full h-[440px] sm:h-[480px] lg:h-auto lg:flex-1 lg:min-h-0 overflow-hidden rounded-xl bg-[#1e1b6e]"
               >
+                {!widgetLoaded && (
+                  <div className="absolute inset-0 flex items-center justify-center px-4 text-center text-xs font-medium text-white/80 pointer-events-none">
+                    Memuat widget GPR Komdigi...
+                  </div>
+                )}
                 <div
                   id="gpr-kominfo-widget-container"
-                  className="w-full h-full"
+                  className="w-full h-full max-w-full"
                 />
               </div>
             </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Search } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import type { HeaderFooterSettings } from '@/lib/site-settings/types'
@@ -18,6 +18,7 @@ export function Navbar({
 
   const pathname = usePathname()
   const [activeSection, setActiveSection] = useState('beranda')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 })
   const navRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({})
@@ -90,33 +91,73 @@ export function Navbar({
     return () => window.removeEventListener('scroll', handleScroll)
   }, [pathname])
 
+  useEffect(() => {
+    setIsMobileMenuOpen(false)
+  }, [pathname])
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsMobileMenuOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isMobileMenuOpen])
+
+  const handleNavItemClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    item: { id: string; href: string }
+  ) => {
+    setIsMobileMenuOpen(false)
+    if (item.href.startsWith('/#') && window.location.pathname === '/') {
+      e.preventDefault()
+
+      isScrollingRef.current = true
+      setActiveSection(item.id)
+
+      const el = document.getElementById(item.id)
+      if (el) {
+        const rect = el.getBoundingClientRect()
+        const offsetTop = rect.top + window.scrollY - 100
+        window.scrollTo({ top: offsetTop, behavior: 'smooth' })
+
+        setTimeout(() => {
+          isScrollingRef.current = false
+        }, 1000)
+      }
+    }
+  }
+
   return (
-    <header id="main-navbar" className="fixed top-4 left-0 right-0 z-50 px-4 md:px-8 lg:px-12 flex justify-center w-full">
-      <div className="w-full max-w-[1400px] bg-slate-900/70 backdrop-blur-md rounded-2xl border border-white/10 px-6 py-3 shadow-xl transition-all duration-300 flex items-center justify-between gap-8 md:gap-12">
+    <header id="main-navbar" className="fixed top-3 sm:top-4 left-0 right-0 z-50 px-3 sm:px-4 md:px-8 lg:px-12 flex flex-col items-center w-full">
+      <div className="w-full max-w-[1400px] bg-slate-900/75 backdrop-blur-md rounded-2xl border border-white/10 px-3.5 py-2 sm:px-6 sm:py-3 shadow-xl transition-all duration-300 flex items-center justify-between gap-3 sm:gap-8 md:gap-12">
         <Link
           href="/"
           onClick={(e) => {
+            setIsMobileMenuOpen(false)
             if (pathname === '/') {
               e.preventDefault()
               window.scrollTo({ top: 0, behavior: 'smooth' })
               setActiveSection('beranda')
             }
           }}
-          className="flex items-center gap-3.5 md:gap-4 group cursor-pointer"
+          className="flex items-center gap-2.5 sm:gap-3.5 md:gap-4 group cursor-pointer min-w-0"
         >
           <img
             src={settings.headerLogoUrl || '/logo.png'}
             alt={settings.orgName || 'Logo Kota Sukabumi'}
-            className="h-14 sm:h-16 md:h-[68px] w-auto object-contain shrink-0 group-hover:scale-105 transition-transform duration-200"
+            className="h-10 sm:h-14 md:h-[68px] w-auto object-contain shrink-0 group-hover:scale-105 transition-transform duration-200"
           />
-          <div className="flex flex-col justify-between py-0.5">
-            <p className="text-[11px] sm:text-xs font-semibold tracking-[0.12em] text-white/75 leading-tight uppercase">
+          <div className="flex flex-col justify-between py-0.5 min-w-0">
+            <p className="text-[10px] sm:text-xs font-semibold tracking-[0.12em] text-white/75 leading-tight uppercase truncate">
               {settings.topLabel}
             </p>
-            <p className="text-lg sm:text-xl md:text-2xl font-bold text-white leading-tight">
+            <p className="text-base sm:text-xl md:text-2xl font-bold text-white leading-tight truncate">
               {settings.orgName}
             </p>
-            <p className="font-serif text-xs sm:text-sm md:text-base italic text-[#f4ce4b] leading-tight">
+            <p className="font-serif text-[11px] sm:text-sm md:text-base italic text-[#f4ce4b] leading-tight truncate">
               {settings.mottoText}
             </p>
           </div>
@@ -130,27 +171,7 @@ export function Navbar({
                 key={item.id}
                 ref={(el) => { itemRefs.current[item.id] = el }}
                 href={item.href}
-                onClick={(e) => {
-                  if (item.href.startsWith('/#')) {
-                    if (window.location.pathname === '/') {
-                      e.preventDefault()
-
-                      isScrollingRef.current = true
-                      setActiveSection(item.id)
-
-                      const el = document.getElementById(item.id)
-                      if (el) {
-                        const rect = el.getBoundingClientRect()
-                        const offsetTop = rect.top + window.scrollY - 100
-                        window.scrollTo({ top: offsetTop, behavior: 'smooth' })
-
-                        setTimeout(() => {
-                          isScrollingRef.current = false
-                        }, 1000)
-                      }
-                    }
-                  }
-                }}
+                onClick={(e) => handleNavItemClick(e, item)}
                 className={`pb-1 transition-colors duration-200 ${isActive ? 'text-white font-bold' : 'text-slate-300 hover:text-white'
                   }`}
               >
@@ -168,10 +189,51 @@ export function Navbar({
           />
         </nav>
 
-        <button className="rounded-lg p-2 text-white lg:hidden" aria-label="Buka pencarian">
-          <Search />
+        <button
+          type="button"
+          onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/10 px-3 min-h-[44px] text-xs font-semibold text-white transition-colors hover:bg-white/20 lg:hidden shrink-0"
+          aria-label={isMobileMenuOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
+          aria-expanded={isMobileMenuOpen}
+          aria-controls="mobile-nav-menu"
+        >
+          {isMobileMenuOpen ? (
+            <X className="h-5 w-5" aria-hidden="true" />
+          ) : (
+            <Menu className="h-5 w-5" aria-hidden="true" />
+          )}
+          <span>Menu</span>
         </button>
       </div>
+
+      {isMobileMenuOpen && (
+        <nav
+          id="mobile-nav-menu"
+          aria-label="Navigasi mobile"
+          className="mt-2 w-full max-w-[1400px] rounded-2xl border border-white/10 bg-slate-900/95 p-2 shadow-2xl lg:hidden"
+        >
+          <ul className="flex flex-col gap-1">
+            {navItems.map((item) => {
+              const isActive = activeSection === item.id
+              return (
+                <li key={item.id}>
+                  <a
+                    href={item.href}
+                    onClick={(e) => handleNavItemClick(e, item)}
+                    className={`flex min-h-[44px] items-center rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors ${
+                      isActive
+                        ? 'bg-white/10 text-[#f9c74f]'
+                        : 'text-slate-200 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              )
+            })}
+          </ul>
+        </nav>
+      )}
     </header>
   )
 }
