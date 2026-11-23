@@ -1,8 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import Link from 'next/link'
+import { Plus, FileEdit } from 'lucide-react'
 import type { ProfileSettings } from '@/lib/site-settings/types'
+import {
+  isValidProfilePageSlug,
+  type ProfilePageSlug,
+} from '@/lib/profile-pages/types'
 import {
   updateSiteSectionAction,
   resetSiteSectionAction,
@@ -17,6 +22,14 @@ import {
   LABEL_CLASS,
   type NotifyFn,
 } from './shared'
+
+function extractProfileSlug(href: string): ProfilePageSlug | null {
+  const cleaned = href
+    .trim()
+    .split(/[?#]/)[0]
+    .replace(/^\/+|\/+$/g, '')
+  return isValidProfilePageSlug(cleaned) ? cleaned : null
+}
 
 export default function ProfileTab({
   initialData,
@@ -180,82 +193,97 @@ export default function ProfileTab({
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {formData.cards.map((card, index) => (
-          <div
-            key={index}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <span className="inline-block rounded-md bg-green-50 px-2.5 py-1 text-[11px] font-bold text-[#159447]">
-                Kartu #{index + 1}
-              </span>
-              <ReorderDeleteButtons
-                index={index}
-                total={formData.cards.length}
-                noun="kartu"
-                onMove={(direction) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    cards: moveItem(prev.cards, index, direction),
-                  }))
-                }
-                onDelete={() => setDeleteIndex(index)}
-              />
-            </div>
+        {formData.cards.map((card, index) => {
+          const detailSlug = extractProfileSlug(card.href)
+          return (
+            <div
+              key={index}
+              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-block rounded-md bg-green-50 px-2.5 py-1 text-[11px] font-bold text-[#159447]">
+                  Kartu #{index + 1}
+                </span>
+                <ReorderDeleteButtons
+                  index={index}
+                  total={formData.cards.length}
+                  noun="kartu"
+                  onMove={(direction) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      cards: moveItem(prev.cards, index, direction),
+                    }))
+                  }
+                  onDelete={() => setDeleteIndex(index)}
+                />
+              </div>
 
-            <ImageField
-              id={`profile-card-${index}-image`}
-              label="Gambar Latar Kartu"
-              value={card.image}
-              onChange={(url) => updateCard(index, { image: url })}
-              onNotify={onNotify}
-              aspectClass="aspect-[16/7]"
-            />
-
-            <div>
-              <label htmlFor={`profile-card-${index}-title`} className={LABEL_CLASS}>
-                Judul Kartu
-              </label>
-              <input
-                id={`profile-card-${index}-title`}
-                type="text"
-                value={card.title}
-                onChange={(e) => updateCard(index, { title: e.target.value })}
-                placeholder="Sejarah"
-                className={INPUT_CLASS}
+              <ImageField
+                id={`profile-card-${index}-image`}
+                label="Gambar Latar Kartu"
+                value={card.image}
+                onChange={(url) => updateCard(index, { image: url })}
+                onNotify={onNotify}
+                aspectClass="aspect-[16/7]"
               />
-            </div>
 
-            <div>
-              <label htmlFor={`profile-card-${index}-desc`} className={LABEL_CLASS}>
-                Deskripsi Singkat
-              </label>
-              <textarea
-                id={`profile-card-${index}-desc`}
-                rows={2}
-                value={card.description}
-                onChange={(e) =>
-                  updateCard(index, { description: e.target.value })
-                }
-                className={INPUT_CLASS}
-              />
-            </div>
+              <div>
+                <label htmlFor={`profile-card-${index}-title`} className={LABEL_CLASS}>
+                  Judul Kartu
+                </label>
+                <input
+                  id={`profile-card-${index}-title`}
+                  type="text"
+                  value={card.title}
+                  onChange={(e) => updateCard(index, { title: e.target.value })}
+                  placeholder="Sejarah"
+                  className={INPUT_CLASS}
+                />
+              </div>
 
-            <div>
-              <label htmlFor={`profile-card-${index}-href`} className={LABEL_CLASS}>
-                Tautan Tujuan
-              </label>
-              <input
-                id={`profile-card-${index}-href`}
-                type="text"
-                value={card.href}
-                onChange={(e) => updateCard(index, { href: e.target.value })}
-                placeholder="/sejarah"
-                className={`${INPUT_CLASS} font-mono`}
-              />
+              <div>
+                <label htmlFor={`profile-card-${index}-desc`} className={LABEL_CLASS}>
+                  Deskripsi Singkat
+                </label>
+                <textarea
+                  id={`profile-card-${index}-desc`}
+                  rows={2}
+                  value={card.description}
+                  onChange={(e) =>
+                    updateCard(index, { description: e.target.value })
+                  }
+                  className={INPUT_CLASS}
+                />
+              </div>
+
+              <div>
+                <label htmlFor={`profile-card-${index}-href`} className={LABEL_CLASS}>
+                  Tautan Tujuan
+                </label>
+                <input
+                  id={`profile-card-${index}-href`}
+                  type="text"
+                  value={card.href}
+                  onChange={(e) => updateCard(index, { href: e.target.value })}
+                  placeholder="/sejarah"
+                  className={`${INPUT_CLASS} font-mono`}
+                />
+              </div>
+
+              {detailSlug && (
+                <div className="pt-2 border-t border-slate-100">
+                  <Link
+                    href={`/admin/pengaturan/profil/${detailSlug}`}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#159447]/30 bg-emerald-50/70 px-4 py-2.5 text-xs font-bold text-[#159447] hover:bg-[#159447] hover:text-white transition-colors min-h-[44px]"
+                  >
+                    <FileEdit size={15} aria-hidden="true" />
+                    Edit Halaman Detail
+                  </Link>
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       <SaveResetBar

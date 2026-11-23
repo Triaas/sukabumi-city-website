@@ -83,11 +83,28 @@ const TABS: TabDefinition[] = [
 
 export default function PengaturanClient({
   initialSettings,
+  initialTab,
 }: {
   initialSettings: SiteSettingsMap
+  initialTab?: string
 }) {
+  const validTabs: ActiveTabId[] = [
+    'hero',
+    'welcome',
+    'profile',
+    'media',
+    'opd',
+    'partners',
+    'headerFooter',
+  ]
+  const resolvedInitialTab: ActiveTabId = validTabs.includes(
+    initialTab as ActiveTabId
+  )
+    ? (initialTab as ActiveTabId)
+    : 'hero'
+
   const [settings, setSettings] = useState<SiteSettingsMap>(initialSettings)
-  const [activeTab, setActiveTab] = useState<ActiveTabId>('hero')
+  const [activeTab, setActiveTab] = useState<ActiveTabId>(resolvedInitialTab)
   const [toast, setToast] = useState<{
     type: 'success' | 'error'
     message: string

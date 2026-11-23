@@ -3,8 +3,20 @@ import PengaturanClient from './PengaturanClient'
 
 export const dynamic = 'force-dynamic'
 
-export default async function AdminPengaturanPage() {
-  const initialSettings = await getSiteSettings()
+export default async function AdminPengaturanPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>
+}) {
+  const [initialSettings, resolvedSearchParams] = await Promise.all([
+    getSiteSettings(),
+    searchParams,
+  ])
 
-  return <PengaturanClient initialSettings={initialSettings} />
+  return (
+    <PengaturanClient
+      initialSettings={initialSettings}
+      initialTab={resolvedSearchParams?.tab}
+    />
+  )
 }
