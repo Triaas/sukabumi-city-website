@@ -254,6 +254,38 @@ export async function saveSiteAssetImage(file: File): Promise<string> {
   return `/uploads/site/${fileName}`;
 }
 
+export async function saveProfileAssetImage(file: File): Promise<string> {
+  if (!file || file.size === 0) {
+    throw new Error('Berkas gambar tidak ditemukan atau kosong.');
+  }
+
+  const ext = ALLOWED_SITE_ASSET_MIME_TYPES[file.type.toLowerCase()];
+  if (!ext) {
+    throw new Error(
+      'Format berkas gambar tidak didukung. Gunakan format JPG, PNG, WebP, atau SVG.'
+    );
+  }
+
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    throw new Error(
+      'Ukuran berkas gambar melebihi batas maksimal 5 MB.'
+    );
+  }
+
+  const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'profile');
+  await fs.mkdir(uploadDir, { recursive: true });
+
+  const randomStr = Math.random().toString(36).substring(2, 10);
+  const fileName = `${Date.now()}-${randomStr}.${ext}`;
+  const filePath = path.join(uploadDir, fileName);
+
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  await fs.writeFile(filePath, buffer);
+
+  return `/uploads/profile/${fileName}`;
+}
+
 
 
 

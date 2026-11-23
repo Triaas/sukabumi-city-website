@@ -1,11 +1,18 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { useEditor, EditorContent, type Editor } from '@tiptap/react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+    useEditor,
+    EditorContent,
+    type AnyExtension,
+    type Editor,
+} from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import Placeholder from '@tiptap/extension-placeholder'
 import Link from '@tiptap/extension-link'
+import Image from '@tiptap/extension-image'
+import { TableKit } from '@tiptap/extension-table'
 import {
     Bold,
     Italic,
@@ -19,6 +26,11 @@ import {
     Undo2,
     Redo2,
     Maximize2,
+    ImagePlus,
+    Table as TableIcon,
+    Upload,
+    Trash2,
+    Loader2,
 } from 'lucide-react'
 
 interface ToolbarButtonProps {
@@ -51,7 +63,7 @@ function ToolbarButton({
                     : 'text-slate-600 border-transparent hover:bg-slate-100 hover:text-slate-800'
             }`}
         >
-            <Icon size={14} strokeWidth={active ? 2.4 : 2} />
+            <Icon size={14} strokeWidth={active ? 2.4 : 2} aria-hidden="true" />
         </button>
     )
 }
@@ -59,15 +71,19 @@ function ToolbarButton({
 interface MenuBarProps {
     editor: Editor | null
     disabled?: boolean
+    enableExtendedTools?: boolean
     onToggleFullscreen?: () => void
     onOpenLinkModal: () => void
+    onOpenImageModal?: () => void
 }
 
 function MenuBar({
     editor,
     disabled = false,
+    enableExtendedTools = false,
     onToggleFullscreen,
     onOpenLinkModal,
+    onOpenImageModal,
 }: MenuBarProps) {
     if (!editor) return null
 
@@ -77,8 +93,10 @@ function MenuBar({
         !editor.isActive('heading', { level: 3 }) &&
         !editor.isActive('blockquote')
 
+    const isInsideTable = enableExtendedTools && editor.isActive('table')
+
     return (
-        <div className="px-3.5 py-2 border-b border-slate-100 bg-[#fafafa]">
+        <div className="px-3.5 py-2 border-b border-slate-100 bg-[#fafafa] space-y-2">
             <div className="flex flex-wrap items-center gap-1">
                 <ToolbarButton
                     icon={Bold}
@@ -185,6 +203,38 @@ function MenuBar({
                     onClick={onOpenLinkModal}
                 />
 
+                {enableExtendedTools && (
+                    <>
+                        <div className="w-px h-5 bg-slate-200 mx-1" />
+                        {onOpenImageModal && (
+                            <ToolbarButton
+                                icon={ImagePlus}
+                                label="Sisip Gambar"
+                                active={editor.isActive('image')}
+                                disabled={disabled}
+                                onClick={onOpenImageModal}
+                            />
+                        )}
+                        <ToolbarButton
+                            icon={TableIcon}
+                            label="Sisip Tabel (3x3)"
+                            active={editor.isActive('table')}
+                            disabled={disabled}
+                            onClick={() =>
+                                editor
+                                    .chain()
+                                    .focus()
+                                    .insertTable({
+                                        rows: 3,
+                                        cols: 3,
+                                        withHeaderRow: true,
+                                    })
+                                    .run()
+                            }
+                        />
+                    </>
+                )}
+
                 <div className="w-px h-5 bg-slate-200 mx-1" />
 
                 <ToolbarButton
@@ -212,6 +262,96 @@ function MenuBar({
                     />
                 )}
             </div>
+
+            {isInsideTable && (
+                <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-200/70">
+                    <span className="text-[11px] font-semibold text-slate-500 mr-1">
+                        Tabel:
+                    </span>
+                    <button
+                        type="button"
+                        disabled={disabled || !editor.can().addRowBefore()}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() =>
+                            editor.chain().focus().addRowBefore().run()
+                        }
+                        className="h-6 px-2 rounded-md text-[11px] font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                        + Baris Atas
+                    </button>
+                    <button
+                        type="button"
+                        disabled={disabled || !editor.can().addRowAfter()}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() =>
+                            editor.chain().focus().addRowAfter().run()
+                        }
+                        className="h-6 px-2 rounded-md text-[11px] font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                        + Baris Bawah
+                    </button>
+                    <button
+                        type="button"
+                        disabled={disabled || !editor.can().deleteRow()}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => editor.chain().focus().deleteRow().run()}
+                        className="h-6 px-2 rounded-md text-[11px] font-medium text-slate-700 bg-white border border-slate-200 hover:bg-red-50 hover:text-red-700 hover:border-red-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                        Hapus Baris
+                    </button>
+
+                    <div className="w-px h-4 bg-slate-200 mx-0.5" />
+
+                    <button
+                        type="button"
+                        disabled={disabled || !editor.can().addColumnBefore()}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() =>
+                            editor.chain().focus().addColumnBefore().run()
+                        }
+                        className="h-6 px-2 rounded-md text-[11px] font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                        + Kolom Kiri
+                    </button>
+                    <button
+                        type="button"
+                        disabled={disabled || !editor.can().addColumnAfter()}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() =>
+                            editor.chain().focus().addColumnAfter().run()
+                        }
+                        className="h-6 px-2 rounded-md text-[11px] font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                        + Kolom Kanan
+                    </button>
+                    <button
+                        type="button"
+                        disabled={disabled || !editor.can().deleteColumn()}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() =>
+                            editor.chain().focus().deleteColumn().run()
+                        }
+                        className="h-6 px-2 rounded-md text-[11px] font-medium text-slate-700 bg-white border border-slate-200 hover:bg-red-50 hover:text-red-700 hover:border-red-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                        Hapus Kolom
+                    </button>
+
+                    <div className="w-px h-4 bg-slate-200 mx-0.5" />
+
+                    <button
+                        type="button"
+                        disabled={disabled || !editor.can().deleteTable()}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() =>
+                            editor.chain().focus().deleteTable().run()
+                        }
+                        className="inline-flex items-center gap-1 h-6 px-2 rounded-md text-[11px] font-semibold text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                        <Trash2 size={11} aria-hidden="true" />
+                        Hapus Tabel
+                    </button>
+                </div>
+            )}
         </div>
     )
 }
@@ -223,6 +363,8 @@ export interface RichTextEditorProps {
     minHeight?: string
     minHeightClassName?: string
     disabled?: boolean
+    enableExtendedTools?: boolean
+    onUploadImage?: (file: File) => Promise<string>
 }
 
 export default function RichTextEditor({
@@ -232,18 +374,24 @@ export default function RichTextEditor({
     minHeight = '180px',
     minHeightClassName,
     disabled = false,
+    enableExtendedTools = false,
+    onUploadImage,
 }: RichTextEditorProps) {
     const containerRef = useRef<HTMLDivElement>(null)
+    const imageFileInputRef = useRef<HTMLInputElement>(null)
 
     const [isLinkModalOpen, setIsLinkModalOpen] = useState(false)
     const [linkUrl, setLinkUrl] = useState('')
     const [selectedText, setSelectedText] = useState('')
 
-    const editor = useEditor({
-        immediatelyRender: false,
-        shouldRerenderOnTransaction: true,
-        editable: !disabled,
-        extensions: [
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false)
+    const [imageUrl, setImageUrl] = useState('')
+    const [imageAlt, setImageAlt] = useState('')
+    const [isUploadingImage, setIsUploadingImage] = useState(false)
+    const [imageUploadError, setImageUploadError] = useState('')
+
+    const extensions = useMemo(() => {
+        const base: AnyExtension[] = [
             StarterKit.configure({
                 underline: false,
                 link: false,
@@ -264,7 +412,34 @@ export default function RichTextEditor({
             Placeholder.configure({
                 placeholder,
             }),
-        ],
+        ]
+
+        if (enableExtendedTools) {
+            base.push(
+                Image.configure({
+                    inline: false,
+                    allowBase64: false,
+                    HTMLAttributes: {
+                        class: 'max-w-full h-auto rounded-xl my-4 mx-auto block shadow-sm',
+                    },
+                }),
+                TableKit.configure({
+                    table: {
+                        resizable: true,
+                        renderWrapper: true,
+                    },
+                })
+            )
+        }
+
+        return base
+    }, [enableExtendedTools, placeholder])
+
+    const editor = useEditor({
+        immediatelyRender: false,
+        shouldRerenderOnTransaction: true,
+        editable: !disabled,
+        extensions,
         content: value || '',
         editorProps: {
             attributes: {
@@ -345,6 +520,79 @@ export default function RichTextEditor({
         setIsLinkModalOpen(false)
     }
 
+    const handleOpenImageModal = () => {
+        setImageUrl('')
+        setImageAlt('')
+        setImageUploadError('')
+        setIsImageModalOpen(true)
+    }
+
+    const handleCloseImageModal = () => {
+        if (isUploadingImage) return
+        setIsImageModalOpen(false)
+        editor?.commands.focus()
+    }
+
+    const handleImageFileSelect = async (
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        const file = event.target.files?.[0]
+        event.target.value = ''
+        if (!file || !onUploadImage || !editor) return
+
+        setImageUploadError('')
+        setIsUploadingImage(true)
+        try {
+            const uploadedUrl = await onUploadImage(file)
+            if (!uploadedUrl) {
+                throw new Error('URL gambar tidak diterima dari server.')
+            }
+            editor
+                .chain()
+                .focus()
+                .setImage({
+                    src: uploadedUrl,
+                    alt: imageAlt.trim() || file.name,
+                })
+                .run()
+            setIsImageModalOpen(false)
+        } catch (error) {
+            setImageUploadError(
+                error instanceof Error
+                    ? error.message
+                    : 'Gagal mengunggah gambar.'
+            )
+        } finally {
+            setIsUploadingImage(false)
+        }
+    }
+
+    const applyImageUrl = () => {
+        if (!editor) return
+        const trimmed = imageUrl.trim()
+        if (!trimmed) {
+            setImageUploadError('Masukkan URL gambar atau unggah berkas.')
+            return
+        }
+        const isSafeUrl =
+            /^https?:\/\//i.test(trimmed) || trimmed.startsWith('/')
+        if (!isSafeUrl) {
+            setImageUploadError(
+                'URL gambar harus diawali dengan https://, http://, atau /.'
+            )
+            return
+        }
+        editor
+            .chain()
+            .focus()
+            .setImage({
+                src: trimmed,
+                alt: imageAlt.trim() || 'Ilustrasi konten',
+            })
+            .run()
+        setIsImageModalOpen(false)
+    }
+
     const plainText = editor?.getText() || ''
     const wordCount = plainText
         .trim()
@@ -359,8 +607,12 @@ export default function RichTextEditor({
             <MenuBar
                 editor={editor}
                 disabled={disabled}
+                enableExtendedTools={enableExtendedTools}
                 onToggleFullscreen={handleToggleFullscreen}
                 onOpenLinkModal={handleOpenLinkModal}
+                onOpenImageModal={
+                    enableExtendedTools ? handleOpenImageModal : undefined
+                }
             />
 
             <div
@@ -378,7 +630,7 @@ export default function RichTextEditor({
                 </span>
             </div>
 
-            {/* Modal Hyperlink Sesuai Desain Gambar 2 */}
+            {/* Modal Hyperlink */}
             {isLinkModalOpen && (
                 <div
                     className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 backdrop-blur-xs p-4"
@@ -392,31 +644,29 @@ export default function RichTextEditor({
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex flex-col items-center text-center">
-                            {/* Icon Lingkaran di Atas (Identik Gambar 2) */}
                             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 border-2 border-emerald-100 text-[#159447]">
-                                <Link2 className="h-6 w-6 stroke-[2]" />
+                                <Link2
+                                    className="h-6 w-6 stroke-[2]"
+                                    aria-hidden="true"
+                                />
                             </div>
 
-                            {/* Judul Modal */}
                             <h3 className="mb-1 text-lg font-bold text-[#1b293c]">
                                 {editor?.isActive('link')
                                     ? 'Edit Tautan'
                                     : 'Atur Tautan'}
                             </h3>
 
-                            {/* Pesan Keterangan */}
                             <p className="mb-4 text-xs text-[#66758a] whitespace-normal">
                                 Masukkan alamat URL tautan (hyperlink)
                             </p>
 
-                            {/* Preview Teks Terpilih (jika ada) */}
                             {selectedText && (
                                 <p className="mb-3.5 text-xs text-slate-600 font-medium bg-slate-50 border border-slate-200/80 rounded-lg px-3 py-2 line-clamp-2 w-full text-center whitespace-normal">
                                     &ldquo;{selectedText}&rdquo;
                                 </p>
                             )}
 
-                            {/* Input URL */}
                             <div className="w-full mb-5">
                                 <input
                                     type="text"
@@ -438,7 +688,6 @@ export default function RichTextEditor({
                                 />
                             </div>
 
-                            {/* Tombol Aksi Batal & Simpan / Hapus */}
                             <div className="flex w-full gap-2.5">
                                 <button
                                     type="button"
@@ -468,6 +717,168 @@ export default function RichTextEditor({
                                     Simpan
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Sisip Gambar (Upload / URL) */}
+            {enableExtendedTools && isImageModalOpen && (
+                <div
+                    className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 backdrop-blur-xs p-4"
+                    onClick={handleCloseImageModal}
+                >
+                    <div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="rte-image-modal-title"
+                        className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-150"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex flex-col items-center text-center">
+                            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 border-2 border-emerald-100 text-[#159447]">
+                                <ImagePlus
+                                    className="h-5 w-5 stroke-[2]"
+                                    aria-hidden="true"
+                                />
+                            </div>
+                            <h3
+                                id="rte-image-modal-title"
+                                className="mb-1 text-lg font-bold text-[#1b293c]"
+                            >
+                                Sisip Gambar
+                            </h3>
+                            <p className="mb-4 text-xs text-[#66758a]">
+                                Unggah berkas gambar atau masukkan URL gambar
+                            </p>
+                        </div>
+
+                        <div className="space-y-3.5 text-left">
+                            {onUploadImage && (
+                                <div>
+                                    <input
+                                        ref={imageFileInputRef}
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                                        onChange={handleImageFileSelect}
+                                        className="hidden"
+                                    />
+                                    <button
+                                        type="button"
+                                        disabled={isUploadingImage}
+                                        onClick={() =>
+                                            imageFileInputRef.current?.click()
+                                        }
+                                        className="w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-[#159447]/50 bg-emerald-50/40 px-4 py-3 text-xs font-semibold text-[#159447] hover:bg-emerald-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isUploadingImage ? (
+                                            <>
+                                                <Loader2
+                                                    size={15}
+                                                    className="animate-spin"
+                                                    aria-hidden="true"
+                                                />
+                                                Mengunggah gambar...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Upload
+                                                    size={15}
+                                                    aria-hidden="true"
+                                                />
+                                                Unggah Gambar dari Perangkat
+                                            </>
+                                        )}
+                                    </button>
+                                    <p className="mt-1 text-[11px] text-slate-400 text-center">
+                                        Format JPG, PNG, WebP, atau SVG (maks. 5 MB)
+                                    </p>
+                                </div>
+                            )}
+
+                            <div>
+                                <label
+                                    htmlFor="rte-image-url"
+                                    className="block text-xs font-semibold text-slate-700 mb-1"
+                                >
+                                    Atau URL Gambar
+                                </label>
+                                <input
+                                    id="rte-image-url"
+                                    type="text"
+                                    value={imageUrl}
+                                    onChange={(e) => {
+                                        setImageUrl(e.target.value)
+                                        if (imageUploadError) {
+                                            setImageUploadError('')
+                                        }
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault()
+                                            applyImageUrl()
+                                        } else if (e.key === 'Escape') {
+                                            e.preventDefault()
+                                            handleCloseImageModal()
+                                        }
+                                    }}
+                                    placeholder="/images/contoh.jpg atau https://..."
+                                    className="w-full bg-[#f8fafc] border border-slate-200/90 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] focus:bg-white transition-all"
+                                />
+                            </div>
+
+                            <div>
+                                <label
+                                    htmlFor="rte-image-alt"
+                                    className="block text-xs font-semibold text-slate-700 mb-1"
+                                >
+                                    Teks Alternatif / Keterangan (Opsional)
+                                </label>
+                                <input
+                                    id="rte-image-alt"
+                                    type="text"
+                                    value={imageAlt}
+                                    onChange={(e) =>
+                                        setImageAlt(e.target.value)
+                                    }
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault()
+                                            applyImageUrl()
+                                        } else if (e.key === 'Escape') {
+                                            e.preventDefault()
+                                            handleCloseImageModal()
+                                        }
+                                    }}
+                                    placeholder="Deskripsi singkat gambar"
+                                    className="w-full bg-[#f8fafc] border border-slate-200/90 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] focus:bg-white transition-all"
+                                />
+                            </div>
+
+                            {imageUploadError && (
+                                <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                                    {imageUploadError}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="flex w-full gap-2.5 mt-5">
+                            <button
+                                type="button"
+                                disabled={isUploadingImage}
+                                onClick={handleCloseImageModal}
+                                className="flex-1 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                disabled={isUploadingImage}
+                                onClick={applyImageUrl}
+                                className="flex-1 rounded-xl bg-[#159447] hover:bg-[#12803d] px-4 py-2.5 text-xs font-semibold text-white transition-colors cursor-pointer shadow-sm disabled:opacity-50"
+                            >
+                                Sisipkan URL
+                            </button>
                         </div>
                     </div>
                 </div>

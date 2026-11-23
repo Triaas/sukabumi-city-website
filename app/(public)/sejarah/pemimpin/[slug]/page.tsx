@@ -1,62 +1,18 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Calendar, User } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { Metadata } from 'next'
-import { leadersList } from '@/data/leadersData'
+import { getLeaderBySlug } from '@/lib/profile-pages/queries'
+
+export const dynamic = 'force-dynamic'
 
 interface PageProps {
   params: Promise<{ slug: string }>
 }
 
-interface Profile {
-  name: string
-  role: string
-  period: string
-  image: string
-  bio: string
-  fullBio: string[]
-}
-
-// Cari profil berdasarkan slug: Wali Kota dulu, lalu Wakil Wali Kota
-function findProfile(slug: string): Profile | null {
-  const mayor = leadersList.find((l) => l.slug === slug)
-  if (mayor) {
-    return {
-      name: mayor.name,
-      role: mayor.role,
-      period: mayor.period,
-      image: mayor.image,
-      bio: mayor.bio,
-      fullBio: mayor.fullBio ?? [mayor.bio],
-    }
-  }
-  const host = leadersList.find((l) => l.deputy?.slug === slug)
-  if (host?.deputy) {
-    const d = host.deputy
-    return {
-      name: d.name,
-      role: d.role,
-      period: host.period,
-      image: d.image,
-      bio: d.bio,
-      fullBio: d.fullBio ?? [d.bio],
-    }
-  }
-  return null
-}
-
-export async function generateStaticParams() {
-  const slugs = new Set<string>()
-  leadersList.forEach((l) => {
-    slugs.add(l.slug)
-    if (l.deputy?.slug) slugs.add(l.deputy.slug)
-  })
-  return Array.from(slugs).map((slug) => ({ slug }))
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  const leader = findProfile(slug)
+  const leader = await getLeaderBySlug(slug)
 
   if (!leader) {
     return {
@@ -72,7 +28,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function LeaderDetailPage({ params }: PageProps) {
   const { slug } = await params
-  const leader = findProfile(slug)
+  const leader = await getLeaderBySlug(slug)
 
   if (!leader) {
     notFound()
@@ -93,11 +49,9 @@ export default async function LeaderDetailPage({ params }: PageProps) {
             >
               <ArrowLeft size={18} /> Kembali
             </Link>
-
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-
             {/* Kartu Profil / Foto */}
             <aside className="lg:col-span-4 bg-white rounded-2xl shadow-md border border-slate-100 p-6 text-center flex flex-col h-full">
               <div className="w-full aspect-[3/4] rounded-xl overflow-hidden shadow-inner bg-slate-100 mb-6 border border-slate-200">
@@ -114,8 +68,6 @@ export default async function LeaderDetailPage({ params }: PageProps) {
               <p className="text-lg font-bold text-[#172135] mb-4">
                 {leader.period}
               </p>
-
-
             </aside>
 
             {/* Biografi Lengkap */}
@@ -129,13 +81,10 @@ export default async function LeaderDetailPage({ params }: PageProps) {
               {/* Teks Bio Lengkap */}
               <div className="space-y-6 text-[#29364a] text-base md:text-lg leading-relaxed text-justify">
                 {leader.fullBio.map((paragraph, index) => (
-                  <p key={index}>
-                    {paragraph}
-                  </p>
+                  <p key={index}>{paragraph}</p>
                 ))}
               </div>
             </article>
-
           </div>
         </div>
       </section>
