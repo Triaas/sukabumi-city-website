@@ -1,8 +1,9 @@
 'use client'
 
 import { MapPin, Phone, Mail } from 'lucide-react'
+import type { HeaderFooterSettings } from '@/lib/site-settings/types'
+import { DEFAULT_HEADER_FOOTER_SETTINGS } from '@/lib/site-settings/defaults'
 
-// Social Media Logo Components
 function FacebookLogo() {
   return (
     <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -35,82 +36,81 @@ function YoutubeLogo() {
   )
 }
 
-export function Footer() {
+export function Footer({
+  settings = DEFAULT_HEADER_FOOTER_SETTINGS,
+}: {
+  settings?: HeaderFooterSettings
+}) {
   return (
     <footer id="footer" className="border-t-4 border-[#159447] bg-[#17253a] px-4 py-16 text-white md:px-8 lg:px-12 relative overflow-hidden">
-      {/* Dotted background pattern */}
       <div className="footer-dots absolute inset-0 pointer-events-none opacity-100" />
 
-      {/* Content wrapper with relative positioning */}
       <div className="relative z-10 mx-auto max-w-[1400px] px-6">
         <div className="grid gap-12 md:grid-cols-4">
           <div>
             <div className="flex items-center gap-4">
               <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/5 border border-white/10 p-2 shadow-sm">
                 <img
-                  src="/images/Lambang_Kota_Sukabumi.png"
-                  alt="Lambang Kota Sukabumi"
+                  src={settings.footerLogoUrl || '/images/Lambang_Kota_Sukabumi.png'}
+                  alt={settings.orgName || 'Lambang Kota Sukabumi'}
                   className="h-full w-full object-contain"
                 />
               </div>
               <div className="flex flex-col justify-center">
                 <p className="text-[11px] font-semibold tracking-[0.14em] text-white/75 leading-tight uppercase whitespace-nowrap">
-                  Website Resmi
+                  {settings.topLabel}
                 </p>
                 <h3 className="text-base sm:text-lg font-bold leading-snug whitespace-nowrap">
-                  Pemerintah Kota Sukabumi
+                  {settings.orgName}
                 </h3>
                 <p className="font-serif text-xs sm:text-sm italic text-[#f4ce4b] leading-tight whitespace-nowrap mt-0.5">
-                  Reugreug Pageuh Repeh Rapih
+                  {settings.mottoText}
                 </p>
               </div>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-white/70">
-              Website Pemerintah Kota Sukabumi merupakan layanan teknologi informasi untuk meningkatkan efisiensi, efektivitas, transparansi serta akuntabilitas dalam penyelenggaraan pemerintahan.
+              {settings.footerDescription}
             </p>
             <div className="mt-6 flex flex-col gap-5 text-sm leading-relaxed text-white/80">
               <a
-                href="https://maps.app.goo.gl/CmbbaNogyg1h8DBA7"
+                href={settings.mapsUrl || '#'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-start gap-3"
               >
                 <MapPin className="shrink-0 text-[#f04c71] group-hover:text-green-400 transition-colors mt-1" />
-                <span>Alamat : Jl. R. Syamsudin, SH No.25, Cikole, Kec. Cikole, Kota Sukabumi, Jawa Barat 43113</span>
+                <span>{settings.addressText}</span>
               </a>
               <a
-                href="tel:+6226620229715"
+                href={`tel:${settings.phoneTel || '+6226620229715'}`}
                 className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-center gap-3"
               >
                 <Phone className="shrink-0 text-[#e8468a] group-hover:text-green-400 transition-colors" />
-                <span>Telp : +62 (266) 20229715</span>
+                <span>{settings.phoneDisplay}</span>
               </a>
               <a
-                href="mailto:diskominfo@sukabumikota.go.id"
+                href={`mailto:${settings.email}`}
                 className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-center gap-3"
               >
                 <Mail className="shrink-0 text-[#e9c9eb] group-hover:text-green-400 transition-colors" />
-                <span>Email : diskominfo@sukabumikota.go.id</span>
+                <span>Email : {settings.email}</span>
               </a>
             </div>
           </div>
           <div className="md:pl-6 lg:pl-14 xl:pl-10">
             <h3 className="text-lg font-bold">TAUTAN TERKAIT</h3>
             <div className="mt-8 flex flex-col gap-5 text-white/80">
-              <a
-                href="https://lpse.jabarprov.go.id/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-center gap-3">Layanan Pengadaan LPSE</a>
-              <a href="https://ppid.sukabumikota.go.id/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-center gap-3"
-              >Layanan Informasi Publik (PPID)</a>
-              <a href="https://jdih.sukabumikota.go.id/beranda"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-center gap-3">Layanan Informasi Hukum (JDIH)</a>
+              {settings.relatedLinks.map((item, idx) => (
+                <a
+                  key={`${item.label}-${idx}`}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-center gap-3"
+                >
+                  {item.label}
+                </a>
+              ))}
             </div>
           </div>
           <div>
@@ -127,56 +127,64 @@ export function Footer() {
           <div>
             <h3 className="text-lg font-bold">MEDIA SOSIAL</h3>
             <div className="mt-8 flex gap-3.5">
-              <a
-                href="https://www.facebook.com/kotasukabumi.id?locale=id_ID"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Facebook"
-                className="flex items-center justify-center w-11 h-11 rounded-full bg-white/5 border border-white/15 text-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-[#1877F2] hover:border-[#1877F2] hover:text-white hover:-translate-y-1 hover:shadow-lg hover:shadow-[#1877F2]/30 active:scale-95"
-              >
-                <FacebookLogo />
-              </a>
-              <a
-                href="https://x.com/Pemkot_Sukabumi"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="X"
-                className="flex items-center justify-center w-11 h-11 rounded-full bg-white/5 border border-white/15 text-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-black hover:border-white/30 hover:text-white hover:-translate-y-1 hover:shadow-lg hover:shadow-black/40 active:scale-95"
-              >
-                <XLogo />
-              </a>
-              <a
-                href="https://www.instagram.com/pemkotsukabumi_/"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Instagram"
-                className="flex items-center justify-center w-11 h-11 rounded-full bg-white/5 border border-white/15 text-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-[#E4405F] hover:border-[#E4405F] hover:text-white hover:-translate-y-1 hover:shadow-lg hover:shadow-[#E4405F]/30 active:scale-95"
-              >
-                <InstagramLogo />
-              </a>
-              <a
-                href="https://www.youtube.com/@pemerintahkotasukabumi"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Youtube"
-                className="flex items-center justify-center w-11 h-11 rounded-full bg-white/5 border border-white/15 text-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-[#FF0000] hover:border-[#FF0000] hover:text-white hover:-translate-y-1 hover:shadow-lg hover:shadow-[#FF0000]/30 active:scale-95"
-              >
-                <YoutubeLogo />
-              </a>
+              {settings.socialLinks.facebook && (
+                <a
+                  href={settings.socialLinks.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Facebook"
+                  className="flex items-center justify-center w-11 h-11 rounded-full bg-white/5 border border-white/15 text-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-[#1877F2] hover:border-[#1877F2] hover:text-white hover:-translate-y-1 hover:shadow-lg hover:shadow-[#1877F2]/30 active:scale-95"
+                >
+                  <FacebookLogo />
+                </a>
+              )}
+              {settings.socialLinks.x && (
+                <a
+                  href={settings.socialLinks.x}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="X"
+                  className="flex items-center justify-center w-11 h-11 rounded-full bg-white/5 border border-white/15 text-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-black hover:border-white/30 hover:text-white hover:-translate-y-1 hover:shadow-lg hover:shadow-black/40 active:scale-95"
+                >
+                  <XLogo />
+                </a>
+              )}
+              {settings.socialLinks.instagram && (
+                <a
+                  href={settings.socialLinks.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                  className="flex items-center justify-center w-11 h-11 rounded-full bg-white/5 border border-white/15 text-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-[#E4405F] hover:border-[#E4405F] hover:text-white hover:-translate-y-1 hover:shadow-lg hover:shadow-[#E4405F]/30 active:scale-95"
+                >
+                  <InstagramLogo />
+                </a>
+              )}
+              {settings.socialLinks.youtube && (
+                <a
+                  href={settings.socialLinks.youtube}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Youtube"
+                  className="flex items-center justify-center w-11 h-11 rounded-full bg-white/5 border border-white/15 text-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-[#FF0000] hover:border-[#FF0000] hover:text-white hover:-translate-y-1 hover:shadow-lg hover:shadow-[#FF0000]/30 active:scale-95"
+                >
+                  <YoutubeLogo />
+                </a>
+              )}
             </div>
           </div>
         </div>
         <div className="mt-14 border-t border-white/15 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-white/70">
-          <div>Copyright © {new Date().getFullYear()} Website Resmi Pemerintah Kota Sukabumi</div>
+          <div>Copyright © {new Date().getFullYear()} {settings.copyrightText}</div>
           <div>
             Dikelola oleh{' '}
             <a
-              href="https://diskominfo.sukabumikota.go.id/"
+              href={settings.managedByUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-[#4ade80] hover:text-green-300 hover:underline transition-colors"
             >
-              Diskominfo Kota Sukabumi
+              {settings.managedByLabel}
             </a>
           </div>
         </div>

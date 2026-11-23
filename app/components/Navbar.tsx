@@ -4,8 +4,16 @@ import Link from 'next/link'
 import { Search } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
+import type { HeaderFooterSettings } from '@/lib/site-settings/types'
+import { DEFAULT_HEADER_FOOTER_SETTINGS } from '@/lib/site-settings/defaults'
 
-export function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
+export function Navbar({
+  isIframeOpen,
+  settings = DEFAULT_HEADER_FOOTER_SETTINGS,
+}: {
+  isIframeOpen?: boolean
+  settings?: HeaderFooterSettings
+}) {
   if (isIframeOpen) return null
 
   const pathname = usePathname()
@@ -15,7 +23,6 @@ export function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
   const itemRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({})
   const isScrollingRef = useRef(false)
 
-  // Navigation items that correspond to page sections (tracked for active state)
   const navItems = [
     { id: 'beranda', label: 'Beranda', href: '/#beranda' },
     { id: 'profil', label: 'Profil', href: '/#profil' },
@@ -56,7 +63,6 @@ export function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
     let lastActiveSection: string = 'beranda'
 
     const handleScroll = () => {
-      // Skip scroll-spy during programmatic navigation
       if (isScrollingRef.current) return
 
       const scrollPosition = window.scrollY + window.innerHeight * 0.4
@@ -66,7 +72,6 @@ export function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
         
         const sectionEl = document.getElementById(navItems[i].id)
         if (sectionEl) {
-          // Use getBoundingClientRect for accurate position
           const rect = sectionEl.getBoundingClientRect()
           const absoluteTop = rect.top + window.scrollY
           if (scrollPosition >= absoluteTop) {
@@ -78,8 +83,6 @@ export function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
       }
     }
 
-    // If no section matches, keep the last active section
-    // This prevents jumping back to beranda after scrolling past transparansi
     setActiveSection(lastActiveSection)
 
     window.addEventListener('scroll', handleScroll, { passive: true })
@@ -102,19 +105,19 @@ export function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
           className="flex items-center gap-3.5 md:gap-4 group cursor-pointer"
         >
           <img
-            src="/logo.png"
-            alt="Logo Kota Sukabumi"
+            src={settings.headerLogoUrl || '/logo.png'}
+            alt={settings.orgName || 'Logo Kota Sukabumi'}
             className="h-14 sm:h-16 md:h-[68px] w-auto object-contain shrink-0 group-hover:scale-105 transition-transform duration-200"
           />
           <div className="flex flex-col justify-between py-0.5">
-            <p className="text-[11px] sm:text-xs font-semibold tracking-[0.12em] text-white/75 leading-tight">
-              WEBSITE RESMI
+            <p className="text-[11px] sm:text-xs font-semibold tracking-[0.12em] text-white/75 leading-tight uppercase">
+              {settings.topLabel}
             </p>
             <p className="text-lg sm:text-xl md:text-2xl font-bold text-white leading-tight">
-              Pemerintah Kota Sukabumi
+              {settings.orgName}
             </p>
             <p className="font-serif text-xs sm:text-sm md:text-base italic text-[#f4ce4b] leading-tight">
-              Reugreug Pageuh Repeh Rapih
+              {settings.mottoText}
             </p>
           </div>
         </Link>
@@ -129,11 +132,9 @@ export function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
                 href={item.href}
                 onClick={(e) => {
                   if (item.href.startsWith('/#')) {
-                    // Check if we're already on the home page
                     if (window.location.pathname === '/') {
                       e.preventDefault()
 
-                      // Disable scroll-spy during programmatic navigation
                       isScrollingRef.current = true
                       setActiveSection(item.id)
 
@@ -143,14 +144,12 @@ export function Navbar({ isIframeOpen }: { isIframeOpen?: boolean }) {
                         const offsetTop = rect.top + window.scrollY - 100
                         window.scrollTo({ top: offsetTop, behavior: 'smooth' })
 
-                        // Re-enable scroll-spy after animation completes
                         setTimeout(() => {
                           isScrollingRef.current = false
-                        }, 1000) // 1 second to allow smooth scroll to complete
+                        }, 1000)
                       }
                     }
                   }
-                  // If not on home page, let the browser handle navigation
                 }}
                 className={`pb-1 transition-colors duration-200 ${isActive ? 'text-white font-bold' : 'text-slate-300 hover:text-white'
                   }`}

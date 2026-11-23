@@ -10,6 +10,7 @@ import {
     Megaphone,
     FileText,
     MonitorPlay,
+    SlidersHorizontal,
     ChevronUp,
     Settings,
     LogOut,
@@ -23,6 +24,7 @@ const menuItems = [
     { name: 'Pengumuman', href: '/admin/pengumuman', icon: Megaphone },
     { name: 'Transparansi Dokumen', href: '/admin/transparansi', icon: FileText },
     { name: 'Banner Beranda', href: '/admin/banner', icon: MonitorPlay },
+    { name: 'Pengaturan Beranda', href: '/admin/pengaturan', icon: SlidersHorizontal },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
