@@ -1,12 +1,15 @@
 'use client'
 
+import { BookOpen } from 'lucide-react'
 import type { FeaturedPublication } from '@/lib/profile-pages/types'
-import {
-  INPUT_CLASS,
-  LABEL_CLASS,
-  type NotifyFn,
-} from '@/app/(admin)/admin/pengaturan/tabs/shared'
+import type { NotifyFn } from '@/app/(admin)/admin/pengaturan/tabs/shared'
 import ProfileImageField from './ProfileImageField'
+import {
+  PROFILE_CARD_CLASS,
+  PROFILE_CARD_HEADER_CLASS,
+  PROFILE_INPUT_CLASS,
+  PROFILE_LABEL_CLASS,
+} from './profileEditorStyles'
 
 export default function FeaturedPublicationEditor({
   value,
@@ -33,18 +36,21 @@ export default function FeaturedPublicationEditor({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
-      <div>
-        <h2 className="text-lg font-bold text-[#172135]">
-          Publikasi Unggulan (BPS)
-        </h2>
-        <p className="text-xs text-[#566276] mt-0.5">
-          Gambar sampul publikasi Sukabumi Dalam Angka beserta tautan eksternal ke portal BPS.
-        </p>
+    <section className={PROFILE_CARD_CLASS}>
+      <div className={PROFILE_CARD_HEADER_CLASS}>
+        <div>
+          <h2 className="flex items-center gap-2 text-sm font-bold text-[#172135]">
+            <BookOpen size={16} className="text-[#159447]" aria-hidden="true" />
+            Publikasi Unggulan (BPS)
+          </h2>
+          <p className="text-xs text-[#566276] mt-0.5">
+            Gambar sampul publikasi Sukabumi Dalam Angka beserta tautan eksternal ke portal BPS.
+          </p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <div className="lg:col-span-4">
+      <div className="p-5 grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+        <div className="md:col-span-5">
           <ProfileImageField
             id="pub-cover-upload"
             label="Sampul Publikasi"
@@ -58,9 +64,9 @@ export default function FeaturedPublicationEditor({
           />
         </div>
 
-        <div className="lg:col-span-8 space-y-4">
+        <div className="md:col-span-7 space-y-4">
           <div>
-            <label htmlFor="pub-caption" className={LABEL_CLASS}>
+            <label htmlFor="pub-caption" className={PROFILE_LABEL_CLASS}>
               Keterangan / Sumber Publikasi
             </label>
             <input
@@ -69,12 +75,12 @@ export default function FeaturedPublicationEditor({
               value={pub.caption ?? ''}
               onChange={(e) => update({ caption: e.target.value })}
               placeholder="Sumber: BPS Kota Sukabumi 2026"
-              className={INPUT_CLASS}
+              className={PROFILE_INPUT_CLASS}
             />
           </div>
 
           <div>
-            <label htmlFor="pub-link" className={LABEL_CLASS}>
+            <label htmlFor="pub-link" className={PROFILE_LABEL_CLASS}>
               URL Tautan Publikasi BPS
             </label>
             <input
@@ -83,12 +89,12 @@ export default function FeaturedPublicationEditor({
               value={pub.link ?? ''}
               onChange={(e) => update({ link: e.target.value })}
               placeholder="https://sukabumikota.bps.go.id/..."
-              className={`${INPUT_CLASS} font-mono`}
+              className={`${PROFILE_INPUT_CLASS} font-mono text-xs`}
             />
           </div>
 
           <div>
-            <label htmlFor="pub-title" className={LABEL_CLASS}>
+            <label htmlFor="pub-title" className={PROFILE_LABEL_CLASS}>
               Judul Bingkai (Opsional)
             </label>
             <input
@@ -97,7 +103,7 @@ export default function FeaturedPublicationEditor({
               value={pub.title ?? ''}
               onChange={(e) => update({ title: e.target.value || undefined })}
               placeholder="Kosongkan untuk tampil tanpa judul bingkai"
-              className={INPUT_CLASS}
+              className={PROFILE_INPUT_CLASS}
             />
           </div>
         </div>

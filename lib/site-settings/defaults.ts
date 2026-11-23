@@ -554,8 +554,8 @@ export const DEFAULT_OPD_SETTINGS: OpdSettings = {
             },
             {
               id: '5',
-              image: '/images/dispopapar-logo.png',
-              title: 'Dispopapar',
+              image: '/images/disporapar-logo.png',
+              title: 'Disporapar',
               subtitle:
                 'Portal Dinas Olahraga dan Pariwisata Kota Sukabumi',
               href: 'https://disporapar.sukabumikota.go.id/',

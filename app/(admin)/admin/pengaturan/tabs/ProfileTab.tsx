@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Plus, FileEdit } from 'lucide-react'
+import { ArrowUp, ArrowDown, FileEdit } from 'lucide-react'
 import type { ProfileSettings } from '@/lib/site-settings/types'
 import {
   isValidProfilePageSlug,
@@ -13,9 +13,8 @@ import {
   resetSiteSectionAction,
 } from '@/lib/site-settings/actions'
 import {
-  ConfirmDeleteModal,
   ImageField,
-  ReorderDeleteButtons,
+  TooltipIconButton,
   SaveResetBar,
   moveItem,
   INPUT_CLASS,
@@ -43,7 +42,6 @@ export default function ProfileTab({
   const [formData, setFormData] = useState<ProfileSettings>(initialData)
   const [isSaving, setIsSaving] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
-  const [deleteIndex, setDeleteIndex] = useState<number | null>(null)
 
   const updateCard = (
     index: number,
@@ -55,26 +53,6 @@ export default function ProfileTab({
         i === index ? { ...card, ...patch } : card
       ),
     }))
-  }
-
-  const handleAddCard = () => {
-    setFormData((prev) => ({
-      ...prev,
-      cards: [...prev.cards, { title: '', description: '', image: '', href: '' }],
-    }))
-  }
-
-  const handleConfirmDelete = () => {
-    if (deleteIndex === null) return
-    setFormData((prev) => ({
-      ...prev,
-      cards: prev.cards.filter((_, i) => i !== deleteIndex),
-    }))
-    setDeleteIndex(null)
-    onNotify(
-      'success',
-      'Kartu dihapus dari daftar. Klik Simpan Perubahan untuk menerapkan.'
-    )
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -126,9 +104,6 @@ export default function ProfileTab({
     }
   }
 
-  const cardToDelete =
-    deleteIndex !== null ? formData.cards[deleteIndex] : undefined
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
@@ -173,23 +148,13 @@ export default function ProfileTab({
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-bold text-[#172135]">
-            Kartu Profil ({formData.cards.length})
-          </h2>
-          <p className="text-xs text-[#566276] mt-0.5">
-            Halaman beranda menampilkan 4 kartu di baris pertama, sisanya di baris kedua. Susunan paling rapi dengan 7 kartu.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={handleAddCard}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#159447] px-4 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-[#0f7a36] transition-colors cursor-pointer min-h-[44px]"
-        >
-          <Plus size={16} aria-hidden="true" />
-          Tambah Kartu
-        </button>
+      <div>
+        <h2 className="text-lg font-bold text-[#172135]">
+          Kartu Profil ({formData.cards.length})
+        </h2>
+        <p className="text-xs text-[#566276] mt-0.5">
+          Terkunci pada 7 kartu baku agar susunan bento grid 4+3 di beranda tetap simetris. Gunakan tombol panah untuk mengatur urutan tampilan.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -204,18 +169,39 @@ export default function ProfileTab({
                 <span className="inline-block rounded-md bg-green-50 px-2.5 py-1 text-[11px] font-bold text-[#159447]">
                   Kartu #{index + 1}
                 </span>
-                <ReorderDeleteButtons
-                  index={index}
-                  total={formData.cards.length}
-                  noun="kartu"
-                  onMove={(direction) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      cards: moveItem(prev.cards, index, direction),
-                    }))
-                  }
-                  onDelete={() => setDeleteIndex(index)}
-                />
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <TooltipIconButton
+                    label={index === 0 ? 'Sudah paling atas' : 'Geser ke atas'}
+                    ariaLabel={`Geser kartu ${index + 1} ke atas`}
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        cards: moveItem(prev.cards, index, -1),
+                      }))
+                    }
+                    disabled={index === 0}
+                  >
+                    <ArrowUp size={16} />
+                  </TooltipIconButton>
+                  <TooltipIconButton
+                    label={
+                      index === formData.cards.length - 1
+                        ? 'Sudah paling bawah'
+                        : 'Geser ke bawah'
+                    }
+                    ariaLabel={`Geser kartu ${index + 1} ke bawah`}
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        cards: moveItem(prev.cards, index, 1),
+                      }))
+                    }
+                    disabled={index === formData.cards.length - 1}
+                    align="right"
+                  >
+                    <ArrowDown size={16} />
+                  </TooltipIconButton>
+                </div>
               </div>
 
               <ImageField
@@ -228,7 +214,10 @@ export default function ProfileTab({
               />
 
               <div>
-                <label htmlFor={`profile-card-${index}-title`} className={LABEL_CLASS}>
+                <label
+                  htmlFor={`profile-card-${index}-title`}
+                  className={LABEL_CLASS}
+                >
                   Judul Kartu
                 </label>
                 <input
@@ -242,7 +231,10 @@ export default function ProfileTab({
               </div>
 
               <div>
-                <label htmlFor={`profile-card-${index}-desc`} className={LABEL_CLASS}>
+                <label
+                  htmlFor={`profile-card-${index}-desc`}
+                  className={LABEL_CLASS}
+                >
                   Deskripsi Singkat
                 </label>
                 <textarea
@@ -257,7 +249,10 @@ export default function ProfileTab({
               </div>
 
               <div>
-                <label htmlFor={`profile-card-${index}-href`} className={LABEL_CLASS}>
+                <label
+                  htmlFor={`profile-card-${index}-href`}
+                  className={LABEL_CLASS}
+                >
                   Tautan Tujuan
                 </label>
                 <input
@@ -291,17 +286,6 @@ export default function ProfileTab({
         isResetting={isResetting}
         resetQuestion="Kembalikan Profil Kota ke bawaan?"
         onConfirmReset={handleConfirmReset}
-      />
-
-      <ConfirmDeleteModal
-        open={deleteIndex !== null}
-        title={`Hapus Kartu #${(deleteIndex ?? 0) + 1}?`}
-        description={`Kartu "${
-          cardToDelete?.title || 'tanpa judul'
-        }" akan dihapus dari daftar Profil Kota.`}
-        previewSrc={cardToDelete?.image || undefined}
-        onCancel={() => setDeleteIndex(null)}
-        onConfirm={handleConfirmDelete}
       />
     </form>
   )

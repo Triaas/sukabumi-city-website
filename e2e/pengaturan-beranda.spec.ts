@@ -134,17 +134,26 @@ test.describe('Pengaturan Beranda Super Admin (/admin/pengaturan)', () => {
     await expect(subModal).toBeVisible()
   })
 
-  test('4. Validasi Form Kosong: tambah kartu profil kosong lalu klik Simpan menampilkan Toast error', async ({
+  test('4. Validasi Form Kosong: kosongkan judul kartu profil lalu klik Simpan menampilkan Toast error', async ({
     page,
   }) => {
     await page.getByRole('tab', { name: /Profil Kota/i }).click()
 
-    await page.getByRole('button', { name: 'Tambah Kartu' }).click()
+    const firstCardTitle = page.locator('#profile-card-0-title')
+    await expect(firstCardTitle).toBeVisible()
+    const originalTitle = await firstCardTitle.inputValue()
+
+    await firstCardTitle.fill('')
     await page.getByRole('button', { name: 'Simpan Perubahan' }).click()
 
-    const errorToast = page.getByRole('alert').filter({ hasText: /wajib memiliki judul dan gambar/i })
+    const errorToast = page
+      .getByRole('alert')
+      .filter({ hasText: /wajib memiliki judul dan gambar/i })
     await expect(errorToast).toBeVisible()
     await expect(errorToast).toContainText(/wajib memiliki judul dan gambar/i)
+
+    // Kembalikan nilai input seperti semula
+    await firstCardTitle.fill(originalTitle)
   })
 
   test('5. Mutasi & Simpan Data OPD + Sinkronisasi Beranda: edit OPD, verifikasi di /, lalu reset', async ({
