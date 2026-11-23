@@ -20,3 +20,8 @@ public/wp-content/uploads/
 # Abaikan file upload lokal
 /public/uploads/*
 !/public/uploads/.gitkeep
+
+# Playwright E2E artifacts
+/playwright-report/
+/test-results/
+/playwright/.cache/
