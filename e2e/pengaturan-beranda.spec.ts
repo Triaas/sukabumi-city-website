@@ -1,4 +1,12 @@
+import fs from 'fs'
+import path from 'path'
 import { test, expect } from '@playwright/test'
+
+// Valid 1x1 transparent PNG in memory for upload testing
+const ONE_BY_ONE_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=',
+  'base64'
+)
 
 test.describe('Pengaturan Beranda Super Admin (/admin/pengaturan)', () => {
   test.beforeEach(async ({ page }) => {
@@ -137,5 +145,167 @@ test.describe('Pengaturan Beranda Super Admin (/admin/pengaturan)', () => {
     const errorToast = page.getByRole('alert').filter({ hasText: /wajib memiliki judul dan gambar/i })
     await expect(errorToast).toBeVisible()
     await expect(errorToast).toContainText(/wajib memiliki judul dan gambar/i)
+  })
+
+  test('5. Mutasi & Simpan Data OPD + Sinkronisasi Beranda: edit OPD, verifikasi di /, lalu reset', async ({
+    page,
+  }) => {
+    await page.getByRole('tab', { name: /Daftar OPD/i }).click()
+
+    const categoryButtons = page.locator('[role="tabpanel"] button[aria-pressed]')
+    await categoryButtons.filter({ hasText: 'Dinas' }).first().click()
+
+    const disnakerRow = page
+      .locator('[role="tabpanel"] li', { hasText: 'Disnaker' })
+      .first()
+    await expect(disnakerRow).toBeVisible()
+
+    try {
+      await disnakerRow.getByRole('button', { name: /Edit Disnaker/i }).click()
+
+      const editModal = page.locator('[role="dialog"]').filter({
+        hasText: 'Edit Layanan',
+      })
+      await expect(editModal).toBeVisible()
+
+      await editModal.getByLabel('Nama Instansi / Layanan').fill('Disnaker E2E Test')
+      await editModal.getByRole('button', { name: 'Terapkan' }).click()
+      await expect(editModal).toBeHidden()
+
+      await page.getByRole('button', { name: 'Simpan Perubahan' }).click()
+      await expect(
+        page.getByRole('status').filter({ hasText: /Daftar OPD berhasil disimpan/i })
+      ).toBeVisible()
+
+      // Verifikasi perubahan tampil di beranda (/) pada kategori Dinas
+      await page.goto('/')
+      const opdSection = page.locator('#opd')
+      await opdSection.getByRole('button', { name: 'Dinas', exact: true }).click()
+      await expect(opdSection).toContainText('Disnaker E2E Test')
+    } finally {
+      await page.goto('/admin/pengaturan')
+      await page.getByRole('tab', { name: /Daftar OPD/i }).click()
+      await page.getByRole('button', { name: 'Reset ke Default' }).click()
+      await page.getByRole('button', { name: 'Ya, Reset' }).click()
+
+      await expect(
+        page
+          .getByRole('status')
+          .filter({ hasText: /Daftar OPD berhasil dikembalikan ke pengaturan awal/i })
+      ).toBeVisible()
+    }
+
+    // Pastikan data di beranda kembali normal
+    await page.goto('/')
+    const opdSection = page.locator('#opd')
+    await opdSection.getByRole('button', { name: 'Dinas', exact: true }).click()
+    await expect(opdSection).toContainText('Disnaker')
+    await expect(opdSection).not.toContainText('Disnaker E2E Test')
+  })
+
+  test('6. Upload File Gambar Fisik & Pembersihan Aset: upload di Welcome, verifikasi di /, reset & hapus file', async ({
+    page,
+  }) => {
+    await page.getByRole('tab', { name: /Welcome \(Foto\)/i }).click()
+
+    let uploadedSrc: string | null = null
+
+    try {
+      await page.locator('#upload-left-container').setInputFiles({
+        name: 'e2e-test-upload.png',
+        mimeType: 'image/png',
+        buffer: ONE_BY_ONE_PNG,
+      })
+
+      await expect(
+        page.getByRole('status').filter({ hasText: /Foto berhasil diunggah/i })
+      ).toBeVisible()
+
+      const uploadedPreviewImg = page
+        .locator('[role="tabpanel"] img[src^="/uploads/site/"]')
+        .first()
+      await expect(uploadedPreviewImg).toBeVisible()
+      uploadedSrc = await uploadedPreviewImg.getAttribute('src')
+      expect(uploadedSrc).toMatch(/^\/uploads\/site\/.+\.png$/)
+
+      await page.getByRole('button', { name: 'Simpan Perubahan' }).click()
+      await expect(
+        page
+          .getByRole('status')
+          .filter({ hasText: /Foto pada bagian Welcome berhasil diperbarui/i })
+      ).toBeVisible()
+
+      // Verifikasi gambar tampil di beranda (/) dan termuat valid (naturalWidth > 0)
+      await page.goto('/')
+      const publicWelcomeImg = page.locator(`img[src="${uploadedSrc}"]`).first()
+      await expect(publicWelcomeImg).toBeVisible()
+      const naturalWidth = await publicWelcomeImg.evaluate(
+        (img: HTMLImageElement) => img.naturalWidth
+      )
+      expect(naturalWidth).toBeGreaterThan(0)
+    } finally {
+      await page.goto('/admin/pengaturan')
+      await page.getByRole('tab', { name: /Welcome \(Foto\)/i }).click()
+      await page.getByRole('button', { name: 'Reset ke Default' }).click()
+      await page.getByRole('button', { name: 'Ya, Reset' }).click()
+
+      await expect(
+        page
+          .getByRole('status')
+          .filter({ hasText: /Bagian Welcome berhasil dikembalikan ke pengaturan awal/i })
+      ).toBeVisible()
+
+      // Hapus file fisik hasil upload tes agar repositori tetap bersih
+      if (uploadedSrc && uploadedSrc.startsWith('/uploads/site/')) {
+        const filePath = path.join(
+          process.cwd(),
+          'public',
+          uploadedSrc.replace(/^\//, '')
+        )
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath)
+        }
+      }
+    }
+  })
+
+  test('7. Cakupan Header & Footer Lintas Halaman: ubah telepon, verifikasi di /berita, lalu reset', async ({
+    page,
+  }) => {
+    await page.getByRole('tab', { name: /Header & Footer/i }).click()
+
+    const phoneInput = page.locator('#hf-phone-display')
+    await expect(phoneInput).toBeVisible()
+
+    try {
+      await phoneInput.fill('Telp : (0266) 999-E2E')
+      await page.getByRole('button', { name: 'Simpan Perubahan' }).click()
+
+      await expect(
+        page
+          .getByRole('status')
+          .filter({ hasText: /Header & Footer berhasil disimpan/i })
+      ).toBeVisible()
+
+      // Verifikasi perubahan Footer langsung ter-update di halaman publik lain (/berita)
+      await page.goto('/berita')
+      await expect(page.locator('#footer')).toContainText('(0266) 999-E2E')
+    } finally {
+      await page.goto('/admin/pengaturan')
+      await page.getByRole('tab', { name: /Header & Footer/i }).click()
+      await page.getByRole('button', { name: 'Reset ke Default' }).click()
+      await page.getByRole('button', { name: 'Ya, Reset' }).click()
+
+      await expect(
+        page
+          .getByRole('status')
+          .filter({ hasText: /Header & Footer berhasil dikembalikan ke pengaturan awal/i })
+      ).toBeVisible()
+    }
+
+    // Verifikasi Footer di /berita sudah kembali ke default
+    await page.goto('/berita')
+    await expect(page.locator('#footer')).toContainText('+62 (266) 20229715')
+    await expect(page.locator('#footer')).not.toContainText('(0266) 999-E2E')
   })
 })
