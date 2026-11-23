@@ -6,16 +6,28 @@ import {
   Image as ImageIcon,
   PlaySquare,
   LayoutTemplate,
-  Lock,
+  Landmark,
+  Building2,
+  Handshake,
 } from 'lucide-react'
 import type { SiteSettingsMap } from '@/lib/site-settings/types'
 import ToastNotification from '@/components/ToastNotification'
 import HeroTab from './tabs/HeroTab'
 import WelcomeTab from './tabs/WelcomeTab'
+import ProfileTab from './tabs/ProfileTab'
 import MediaTab from './tabs/MediaTab'
+import OpdTab from './tabs/OpdTab'
+import PartnersTab from './tabs/PartnersTab'
 import HeaderFooterTab from './tabs/HeaderFooterTab'
 
-type ActiveTabId = 'hero' | 'welcome' | 'media' | 'headerFooter'
+type ActiveTabId =
+  | 'hero'
+  | 'welcome'
+  | 'profile'
+  | 'media'
+  | 'opd'
+  | 'partners'
+  | 'headerFooter'
 
 interface TabDefinition {
   id: ActiveTabId
@@ -24,7 +36,7 @@ interface TabDefinition {
   icon: React.ComponentType<{ size?: number; className?: string }>
 }
 
-const PHASE1_TABS: TabDefinition[] = [
+const TABS: TabDefinition[] = [
   {
     id: 'hero',
     label: 'Hero Section',
@@ -38,10 +50,28 @@ const PHASE1_TABS: TabDefinition[] = [
     icon: ImageIcon,
   },
   {
+    id: 'profile',
+    label: 'Profil Kota',
+    description: 'Judul section dan kartu profil Kota Sukabumi',
+    icon: Landmark,
+  },
+  {
     id: 'media',
     label: 'Media & GPR',
     description: 'Video profil YouTube & widget GPR Komdigi',
     icon: PlaySquare,
+  },
+  {
+    id: 'opd',
+    label: 'Daftar OPD',
+    description: 'Kategori, instansi, dan sub-layanan situs OPD',
+    icon: Building2,
+  },
+  {
+    id: 'partners',
+    label: 'Mitra / Partner',
+    description: 'Logo mitra berjalan di bagian bawah beranda',
+    icon: Handshake,
   },
   {
     id: 'headerFooter',
@@ -49,12 +79,6 @@ const PHASE1_TABS: TabDefinition[] = [
     description: 'Logo instansi, alamat, kontak resmi, & media sosial',
     icon: LayoutTemplate,
   },
-]
-
-const UPCOMING_TABS = [
-  'Profil Kota (Fase 2)',
-  'Daftar OPD (Fase 2)',
-  'Mitra / Partner (Fase 2)',
 ]
 
 export default function PengaturanClient({
@@ -104,7 +128,7 @@ export default function PengaturanClient({
           aria-label="Kategori Pengaturan Beranda"
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2"
         >
-          {PHASE1_TABS.map((tab) => {
+          {TABS.map((tab) => {
             const Icon = tab.icon
             const isSelected = activeTab === tab.id
             return (
@@ -145,26 +169,40 @@ export default function PengaturanClient({
             )
           })}
         </div>
-
-        {/* Indikator Tab Fase 2 */}
-        <div className="mt-2.5 pt-2.5 border-t border-slate-100 flex flex-wrap items-center gap-2 px-2">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-            Segera Hadir:
-          </span>
-          {UPCOMING_TABS.map((label) => (
-            <span
-              key={label}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500"
-            >
-              <Lock size={12} aria-hidden="true" />
-              {label}
-            </span>
-          ))}
-        </div>
       </div>
 
       {/* Konten Tab Aktif */}
       <div role="tabpanel">
+        {activeTab === 'profile' && (
+          <ProfileTab
+            initialData={settings.profile}
+            onSaved={(newProfile) =>
+              setSettings((prev) => ({ ...prev, profile: newProfile }))
+            }
+            onNotify={showToast}
+          />
+        )}
+
+        {activeTab === 'opd' && (
+          <OpdTab
+            initialData={settings.opd}
+            onSaved={(newOpd) =>
+              setSettings((prev) => ({ ...prev, opd: newOpd }))
+            }
+            onNotify={showToast}
+          />
+        )}
+
+        {activeTab === 'partners' && (
+          <PartnersTab
+            initialData={settings.partners}
+            onSaved={(newPartners) =>
+              setSettings((prev) => ({ ...prev, partners: newPartners }))
+            }
+            onNotify={showToast}
+          />
+        )}
+
         {activeTab === 'hero' && (
           <HeroTab
             initialData={settings.hero}

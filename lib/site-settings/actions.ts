@@ -6,6 +6,7 @@ import { saveSiteAssetImage } from '@/lib/upload';
 import {
   DEFAULT_SITE_SETTINGS,
   normalizeYoutubeEmbedUrl,
+  orderOpdCategories,
 } from './defaults';
 import type { SiteSectionKey, SiteSettingsMap } from './types';
 
@@ -122,7 +123,7 @@ export async function getSiteSettings(): Promise<SiteSettingsMap> {
               opdData.categories &&
               typeof opdData.categories === 'object' &&
               Object.keys(opdData.categories).length > 0
-                ? opdData.categories
+                ? orderOpdCategories(opdData.categories)
                 : DEFAULT_SITE_SETTINGS.opd.categories,
           };
           break;

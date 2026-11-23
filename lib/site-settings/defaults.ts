@@ -4,6 +4,7 @@ import type {
   ProfileSettings,
   MediaSettings,
   OpdSettings,
+  OpdCategory,
   PartnersSettings,
   HeaderFooterSettings,
   SiteSettingsMap,
@@ -997,3 +998,17 @@ export const DEFAULT_SITE_SETTINGS: SiteSettingsMap = {
   partners: DEFAULT_PARTNERS_SETTINGS,
   headerFooter: DEFAULT_HEADER_FOOTER_SETTINGS,
 };
+
+// JSONB does not keep key order, so categories are re-sorted to the canonical order.
+export function orderOpdCategories(
+  categories: Record<string, OpdCategory>
+): Record<string, OpdCategory> {
+  const ordered: Record<string, OpdCategory> = {};
+  for (const key of Object.keys(DEFAULT_OPD_SETTINGS.categories)) {
+    if (categories[key]) ordered[key] = categories[key];
+  }
+  for (const key of Object.keys(categories)) {
+    if (!(key in ordered)) ordered[key] = categories[key];
+  }
+  return ordered;
+}
