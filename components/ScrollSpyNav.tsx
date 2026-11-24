@@ -37,16 +37,18 @@ export default function ScrollSpyNav({ links }: { links: Array<{ label: string, 
   return (
     <>
       {/* Tampilan Mobile: Swipeable Pills */}
-      <div className="xl:hidden sticky top-[80px] md:top-[90px] z-40 bg-white/90 backdrop-blur-md -mx-4 px-4 py-3 border-b border-slate-200/80 mb-6 shadow-sm overflow-x-auto hide-scrollbar">
-        <div className="flex flex-nowrap gap-2 w-max">
+      <div className="xl:hidden sticky top-[74px] sm:top-[102px] z-40 bg-white/95 backdrop-blur-md -mx-4 px-4 py-2.5 border-b border-slate-200/80 mb-6 shadow-sm overflow-x-auto hide-scrollbar">
+        <div className="flex flex-nowrap justify-center gap-2 mx-auto w-max">
           {links.map((link) => (
             <button
               key={link.targetId}
+              type="button"
               onClick={() => handleClick(link.targetId)}
-              className={`whitespace-nowrap px-4 py-2 text-sm font-bold rounded-full transition-all shadow-sm ${activeId === link.targetId
-                  ? 'bg-[#159447] text-white'
-                  : 'bg-[#f0fdf4] text-[#159447] border border-[#159447]/20 hover:bg-green-100'
-                }`}
+              className={`whitespace-nowrap px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-xl border border-[#159447] transition-all cursor-pointer ${
+                activeId === link.targetId
+                  ? 'bg-[#159447] text-white shadow-sm'
+                  : 'bg-white text-[#159447] hover:bg-[#f0fdf4]'
+              }`}
             >
               {link.label}
             </button>

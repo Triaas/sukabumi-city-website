@@ -1,7 +1,8 @@
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ExternalLink } from 'lucide-react'
 import LeadersGallery from '@/components/LeadersGallery'
 import MeaningCarousel from '@/components/MeaningCarousel'
+import NomenklaturTimeline from '@/components/NomenklaturTimeline'
 import ScrollSpyNav from '@/components/ScrollSpyNav'
 import { getProfilePageBySlug } from '@/lib/profile-pages/queries'
 
@@ -194,6 +195,20 @@ export default async function DetailPage({
                       {featuredPublication.caption}
                     </figcaption>
                   )}
+
+                  {featuredPublication.link && (
+                    <div className="mt-4 flex justify-center">
+                      <a
+                        href={featuredPublication.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex min-h-[40px] items-center justify-center gap-2 rounded-xl border border-[#159447] px-4 py-2 text-xs sm:text-sm font-medium text-[#159447] hover:bg-[#159447] hover:text-white transition-colors duration-200"
+                      >
+                        <span>Info Selengkapnya di BPS</span>
+                        <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                      </a>
+                    </div>
+                  )}
                 </figure>
               )}
 
@@ -213,61 +228,11 @@ export default async function DetailPage({
 
               {/* Vertical Timeline */}
               {timelineData && timelineData.items.length > 0 && (
-                <div
-                  id="nomenklatur"
-                  className="mt-16 pt-8 border-t border-gray-100 scroll-mt-36"
-                >
-                  <div className="text-center mb-8">
-                    <h3 className="text-2xl md:text-3xl font-bold text-[#172135]">
-                      {timelineData.title}
-                    </h3>
-                    <div className="h-1 w-20 bg-[#159447] rounded-full mx-auto mt-4 mb-8" />
-
-                    {/* Daftar Isi Mini (Quick Jump) */}
-                    <div className="flex flex-wrap justify-center gap-2 max-w-3xl mx-auto px-4">
-                      {timelineData.items.map((item, idx) => (
-                        <a
-                          key={`nav-${idx}`}
-                          href={`#nomenklatur-${idx}`}
-                          className="px-3 py-1.5 bg-slate-100 hover:bg-[#159447] hover:text-white text-slate-600 text-xs font-semibold rounded-full border border-slate-200 transition-colors"
-                        >
-                          {item.period.split(' ')[0]}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="max-w-2xl mx-auto relative border-l-2 border-[#159447]/30 ml-3 md:mx-auto md:border-l-2 md:border-[#159447]/30">
-                    <div className="space-y-4">
-                      {timelineData.items.map((item, idx) => (
-                        <div
-                          key={idx}
-                          id={`nomenklatur-${idx}`}
-                          className="relative pl-5 md:pl-6 group scroll-mt-32"
-                        >
-                          <div className="absolute -left-[6px] top-3 h-3.5 w-3.5 rounded-full bg-[#159447] border-2 border-white shadow-sm group-hover:scale-125 transition-transform duration-300" />
-
-                          <div className="bg-slate-50/80 border border-slate-100 rounded-xl px-4 py-3 md:px-5 md:py-3.5 shadow-sm hover:shadow-md hover:bg-white transition-all duration-300">
-                            <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1">
-                              <span className="text-xs font-bold text-[#159447] tracking-wider uppercase">
-                                {item.period}
-                              </span>
-                              <div className="inline-block px-2 py-0.5 bg-slate-200/70 text-slate-700 text-[11px] font-semibold rounded-md border border-slate-300/50">
-                                {item.badge}
-                              </div>
-                            </div>
-                            <h4 className="text-base md:text-lg font-bold text-[#172135] mb-1">
-                              {item.title}
-                            </h4>
-                            <p className="text-[#566276] text-xs md:text-sm leading-relaxed">
-                              {item.description}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                <NomenklaturTimeline
+                  title={timelineData.title}
+                  items={timelineData.items}
+                  hasQuickLinks={Boolean(quickLinks && quickLinks.length > 0)}
+                />
               )}
 
               {/* Leaders Hall of Fame Gallery */}

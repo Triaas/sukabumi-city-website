@@ -336,3 +336,18 @@ body.hide-navbar #main-navbar {
   max-width: 100%;
   height: auto;
 }
+
+@keyframes traceCardOutline {
+  0% {
+    stroke-dashoffset: 100;
+    opacity: 1;
+  }
+  75% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}

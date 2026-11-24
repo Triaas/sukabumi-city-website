@@ -92,19 +92,20 @@ export default function MeaningCarousel({ items }: { items: MeaningItem[] }) {
         </button>
       </div>
 
-      {/* Kolom Kanan: Navigasi Thumbnail - Mengikuti tinggi kolom kiri */}
-      <div className="hidden lg:flex w-[200px] shrink-0 bg-white rounded-3xl border border-slate-200 shadow-sm flex-col overflow-hidden max-h-[500px] self-start h-fit">
-        <div className="p-3 border-b border-slate-100 bg-white z-10 shrink-0">
+      {/* Kolom Kanan / Bawah: Navigasi Thumbnail Elemen */}
+      <div className="flex w-full lg:w-[200px] shrink-0 bg-white rounded-2xl lg:rounded-3xl border border-slate-200 shadow-sm flex-col overflow-hidden lg:max-h-[500px] lg:self-start h-fit">
+        <div className="p-2.5 lg:p-3 border-b border-slate-100 bg-white z-10 shrink-0">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Elemen</p>
         </div>
-        {/* Kontainer ber-scroll agar pas dengan batas tinggi kotak di sebelahnya */}
-        <div className="overflow-y-auto p-3 hide-scrollbar">
-          <div className="grid grid-cols-2 gap-2 pb-2">
+        {/* Horizontal swipe di mobile, grid 2 kolom ber-scroll di desktop */}
+        <div className="overflow-x-auto lg:overflow-x-hidden lg:overflow-y-auto p-3 hide-scrollbar snap-x snap-mandatory lg:snap-none">
+          <div className="flex lg:grid lg:grid-cols-2 gap-2.5 lg:gap-2 lg:pb-2 w-max lg:w-full">
             {items.map((item, idx) => (
               <button
+                type="button"
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
-                className={`relative w-full aspect-square rounded-xl border-2 overflow-hidden transition-all duration-300 ${idx === currentIndex
+                className={`relative shrink-0 w-16 h-16 sm:w-20 sm:h-20 lg:w-full lg:h-auto lg:aspect-square snap-start rounded-xl border-2 overflow-hidden transition-all duration-300 cursor-pointer ${idx === currentIndex
                     ? 'border-[#1b2b4e] shadow-md ring-2 ring-[#1b2b4e]/20'
                     : 'border-slate-100 hover:border-slate-300 bg-slate-50/50'
                   }`}
