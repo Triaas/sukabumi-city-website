@@ -99,7 +99,7 @@ function Hero({ settings }: { settings: HeroSettings }) {
       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/40 to-slate-950/30 z-10" />
       <div className="relative z-20 w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
         <div className="max-w-xl">
-          <p className="mb-3 text-xs sm:text-sm font-bold uppercase tracking-[0.24em] text-[#f3c338]">
+          <p className="mb-3 text-xs sm:text-sm font-bold tracking-[0.24em] text-[#f3c338]">
             {settings.eyebrow}
           </p>
           <h1 className="text-4xl font-bold leading-tight text-white sm:text-5xl md:text-7xl">

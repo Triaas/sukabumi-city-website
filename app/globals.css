@@ -79,6 +79,10 @@ button {
   cursor: pointer;
 }
 
+textarea {
+  resize: none;
+}
+
 
 /* Custom animation for OPD content */
 @keyframes fade-in-up {

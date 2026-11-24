@@ -191,9 +191,8 @@ export default function HeaderFooterTab({
                 />
                 <label
                   htmlFor="upload-brand-logo"
-                  className={`w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#159447] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#0f7a36] cursor-pointer min-h-[44px] ${
-                    uploadingLogo ? 'opacity-60 pointer-events-none' : ''
-                  }`}
+                  className={`w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#159447] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#0f7a36] cursor-pointer min-h-[44px] ${uploadingLogo ? 'opacity-60 pointer-events-none' : ''
+                    }`}
                 >
                   <Upload size={14} aria-hidden="true" />
                   {uploadingLogo ? 'Mengunggah...' : 'Ganti Logo'}
@@ -356,9 +355,9 @@ export default function HeaderFooterTab({
               >
                 Teks Alamat Lengkap
               </label>
-              <input
+              <textarea
                 id="hf-address"
-                type="text"
+                rows={3}
                 value={formData.addressText}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -366,7 +365,7 @@ export default function HeaderFooterTab({
                     addressText: e.target.value,
                   }))
                 }
-                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-[#172135] focus:border-[#159447] focus:outline-none"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm leading-relaxed text-[#172135] focus:border-[#159447] focus:outline-none focus:ring-2 focus:ring-[#159447]/20"
               />
             </div>
 

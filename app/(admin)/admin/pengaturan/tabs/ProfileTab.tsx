@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowUp, ArrowDown, FileEdit } from 'lucide-react'
+import { ArrowUp, ArrowDown, FileEdit, Upload } from 'lucide-react'
 import type { ProfileSettings } from '@/lib/site-settings/types'
 import {
   isValidProfilePageSlug,
@@ -11,9 +11,9 @@ import {
 import {
   updateSiteSectionAction,
   resetSiteSectionAction,
+  uploadSiteImageAction,
 } from '@/lib/site-settings/actions'
 import {
-  ImageField,
   TooltipIconButton,
   SaveResetBar,
   moveItem,
@@ -40,8 +40,38 @@ export default function ProfileTab({
   onNotify: NotifyFn
 }) {
   const [formData, setFormData] = useState<ProfileSettings>(initialData)
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
+
+  const handleCardImageUpload = async (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingIndex(index)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await uploadSiteImageAction(fd)
+      if (!res.success || !res.imageUrl) {
+        onNotify('error', res.error || 'Gagal mengunggah gambar.')
+      } else {
+        updateCard(index, { image: res.imageUrl })
+        onNotify(
+          'success',
+          'Gambar berhasil diunggah. Klik Simpan Perubahan untuk menerapkan.'
+        )
+      }
+    } catch {
+      onNotify('error', 'Terjadi kesalahan saat mengunggah gambar.')
+    } finally {
+      setUploadingIndex(null)
+      e.target.value = ''
+    }
+  }
 
   const updateCard = (
     index: number,
@@ -150,10 +180,10 @@ export default function ProfileTab({
 
       <div>
         <h2 className="text-lg font-bold text-[#172135]">
-          Kartu Profil ({formData.cards.length})
+          Kartu Profil
         </h2>
         <p className="text-xs text-[#566276] mt-0.5">
-          Terkunci pada 7 kartu baku agar susunan bento grid 4+3 di beranda tetap simetris. Gunakan tombol panah untuk mengatur urutan tampilan.
+          Atur judul, deskripsi, gambar, dan urutan tampilan kartu profil yang muncul di beranda. Gunakan tombol panah untuk menggeser posisi kartu.
         </p>
       </div>
 
@@ -204,14 +234,55 @@ export default function ProfileTab({
                 </div>
               </div>
 
-              <ImageField
-                id={`profile-card-${index}-image`}
-                label="Gambar Latar Kartu"
-                value={card.image}
-                onChange={(url) => updateCard(index, { image: url })}
-                onNotify={onNotify}
-                aspectClass="aspect-[16/7]"
-              />
+              <div>
+                <p className={LABEL_CLASS}>Gambar Latar Kartu</p>
+                <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 flex flex-col sm:flex-row sm:items-center gap-3.5">
+                  <div className="w-full sm:w-40 aspect-[16/10] shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100 flex items-center justify-center">
+                    {card.image ? (
+                      <img
+                        src={card.image}
+                        alt={`Pratinjau ${card.title || `Kartu ${index + 1}`}`}
+                        width={160}
+                        height={100}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="px-2 text-center text-[11px] font-medium text-slate-500">
+                        Belum ada gambar
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0 flex flex-col gap-2">
+                    <p className="text-xs text-[#566276] leading-relaxed">
+                      Ditampilkan sebagai latar kartu profil di beranda.
+                    </p>
+                    <div>
+                      <input
+                        id={`profile-card-${index}-image`}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                        onChange={(e) => handleCardImageUpload(index, e)}
+                        className="sr-only"
+                      />
+                      <label
+                        htmlFor={`profile-card-${index}-image`}
+                        className={`inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-lg bg-[#159447] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#0f7a36] transition-colors cursor-pointer min-h-[44px] ${
+                          uploadingIndex === index
+                            ? 'opacity-60 pointer-events-none'
+                            : ''
+                        }`}
+                      >
+                        <Upload size={14} aria-hidden="true" />
+                        {uploadingIndex === index
+                          ? 'Mengunggah...'
+                          : card.image
+                            ? 'Ganti Gambar'
+                            : 'Unggah Gambar'}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <div>
                 <label
@@ -245,23 +316,6 @@ export default function ProfileTab({
                     updateCard(index, { description: e.target.value })
                   }
                   className={INPUT_CLASS}
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor={`profile-card-${index}-href`}
-                  className={LABEL_CLASS}
-                >
-                  Tautan Tujuan
-                </label>
-                <input
-                  id={`profile-card-${index}-href`}
-                  type="text"
-                  value={card.href}
-                  onChange={(e) => updateCard(index, { href: e.target.value })}
-                  placeholder="/sejarah"
-                  className={`${INPUT_CLASS} font-mono`}
                 />
               </div>
 
