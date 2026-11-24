@@ -19,7 +19,9 @@ import {
   moveItem,
   INPUT_CLASS,
   LABEL_CLASS,
+  useTabUnsavedGuard,
   type NotifyFn,
+  type TabUnsavedProps,
 } from './shared'
 
 function extractProfileSlug(href: string): ProfilePageSlug | null {
@@ -34,11 +36,13 @@ export default function ProfileTab({
   initialData,
   onSaved,
   onNotify,
+  onDirtyChange,
+  registerSaveHandler,
 }: {
   initialData: ProfileSettings
   onSaved: (data: ProfileSettings) => void
   onNotify: NotifyFn
-}) {
+} & TabUnsavedProps) {
   const [formData, setFormData] = useState<ProfileSettings>(initialData)
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -85,16 +89,14 @@ export default function ProfileTab({
     }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
+  const saveChanges = async (): Promise<boolean> => {
     if (!formData.heading.trim()) {
       onNotify('error', 'Judul section Profil tidak boleh kosong.')
-      return
+      return false
     }
     if (formData.cards.length === 0) {
       onNotify('error', 'Minimal harus terdapat 1 kartu profil.')
-      return
+      return false
     }
     const invalidIndex = formData.cards.findIndex(
       (card) => !card.title.trim() || !card.image.trim()
@@ -104,7 +106,7 @@ export default function ProfileTab({
         'error',
         `Kartu #${invalidIndex + 1} wajib memiliki judul dan gambar.`
       )
-      return
+      return false
     }
 
     setIsSaving(true)
@@ -115,9 +117,24 @@ export default function ProfileTab({
       setFormData(res.data)
       onSaved(res.data)
       onNotify('success', 'Pengaturan Profil Kota berhasil disimpan.')
+      return true
     } else {
       onNotify('error', res.error || 'Gagal menyimpan pengaturan Profil Kota.')
+      return false
     }
+  }
+
+  useTabUnsavedGuard(
+    formData,
+    initialData,
+    saveChanges,
+    onDirtyChange,
+    registerSaveHandler
+  )
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await saveChanges()
   }
 
   const handleConfirmReset = async () => {

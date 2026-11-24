@@ -15,16 +15,19 @@ import {
   resetSiteSectionAction,
   uploadSiteImageAction,
 } from '@/lib/site-settings/actions'
+import { useTabUnsavedGuard, type TabUnsavedProps } from './shared'
 
 export default function HeroTab({
   initialData,
   onSaved,
   onNotify,
+  onDirtyChange,
+  registerSaveHandler,
 }: {
   initialData: HeroSettings
   onSaved: (data: HeroSettings) => void
   onNotify: (type: 'success' | 'error', message: string) => void
-}) {
+} & TabUnsavedProps) {
   const [formData, setFormData] = useState<HeroSettings>(initialData)
   const [isSaving, setIsSaving] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
@@ -112,11 +115,10 @@ export default function HeroTab({
     )
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const saveChanges = async (): Promise<boolean> => {
     if (!formData.title.trim()) {
       onNotify('error', 'Judul Utama (H1) tidak boleh kosong.')
-      return
+      return false
     }
 
     setIsSaving(true)
@@ -131,9 +133,24 @@ export default function HeroTab({
         'success',
         'Pengaturan Hero Section berhasil disimpan dan diterapkan di halaman beranda.'
       )
+      return true
     } else {
       onNotify('error', res.error || 'Gagal menyimpan pengaturan Hero Section.')
+      return false
     }
+  }
+
+  useTabUnsavedGuard(
+    formData,
+    initialData,
+    saveChanges,
+    onDirtyChange,
+    registerSaveHandler
+  )
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await saveChanges()
   }
 
   const handleConfirmReset = async () => {

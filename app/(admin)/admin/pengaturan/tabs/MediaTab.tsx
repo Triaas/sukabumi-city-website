@@ -8,16 +8,19 @@ import {
   updateSiteSectionAction,
   resetSiteSectionAction,
 } from '@/lib/site-settings/actions'
+import { useTabUnsavedGuard, type TabUnsavedProps } from './shared'
 
 export default function MediaTab({
   initialData,
   onSaved,
   onNotify,
+  onDirtyChange,
+  registerSaveHandler,
 }: {
   initialData: MediaSettings
   onSaved: (data: MediaSettings) => void
   onNotify: (type: 'success' | 'error', message: string) => void
-}) {
+} & TabUnsavedProps) {
   const [formData, setFormData] = useState<MediaSettings>(initialData)
   const [isSaving, setIsSaving] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
@@ -25,8 +28,7 @@ export default function MediaTab({
 
   const previewEmbedUrl = normalizeYoutubeEmbedUrl(formData.youtubeEmbedUrl)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const saveChanges = async (): Promise<boolean> => {
     setIsSaving(true)
 
     const normalizedPayload: MediaSettings = {
@@ -41,9 +43,24 @@ export default function MediaTab({
       setFormData(res.data)
       onSaved(res.data)
       onNotify('success', 'Pengaturan Media & GPR Komdigi berhasil disimpan.')
+      return true
     } else {
       onNotify('error', res.error || 'Gagal menyimpan pengaturan Media Section.')
+      return false
     }
+  }
+
+  useTabUnsavedGuard(
+    formData,
+    initialData,
+    saveChanges,
+    onDirtyChange,
+    registerSaveHandler
+  )
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await saveChanges()
   }
 
   const handleConfirmReset = async () => {

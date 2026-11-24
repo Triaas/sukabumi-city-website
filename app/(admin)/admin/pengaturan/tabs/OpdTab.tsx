@@ -16,9 +16,11 @@ import {
   SaveResetBar,
   TooltipIconButton,
   useEscapeClose,
+  useTabUnsavedGuard,
   INPUT_CLASS,
   LABEL_CLASS,
   type NotifyFn,
+  type TabUnsavedProps,
 } from './shared'
 import OpdItemsEditor, { countDescendants } from './opd/OpdItemsEditor'
 
@@ -77,11 +79,13 @@ export default function OpdTab({
   initialData,
   onSaved,
   onNotify,
+  onDirtyChange,
+  registerSaveHandler,
 }: {
   initialData: OpdSettings
   onSaved: (data: OpdSettings) => void
   onNotify: NotifyFn
-}) {
+} & TabUnsavedProps) {
   const [formData, setFormData] = useState<OpdSettings>(initialData)
   const categoryKeys = Object.keys(formData.categories)
   const [activeCategory, setActiveCategory] = useState(categoryKeys[0] ?? '')
@@ -138,12 +142,10 @@ export default function OpdTab({
     )
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
+  const saveChanges = async (): Promise<boolean> => {
     if (!formData.heading.trim()) {
       onNotify('error', 'Judul section OPD tidak boleh kosong.')
-      return
+      return false
     }
 
     for (const [category, data] of Object.entries(formData.categories)) {
@@ -151,13 +153,13 @@ export default function OpdTab({
         if (!group.title.trim()) {
           onNotify('error', `Kategori ${category}: judul grup wajib diisi.`)
           setActiveCategory(category)
-          return
+          return false
         }
         const invalid = findInvalidItem(group.items, `${category} / ${group.title}`)
         if (invalid) {
           onNotify('error', invalid)
           setActiveCategory(category)
-          return
+          return false
         }
       }
     }
@@ -170,9 +172,24 @@ export default function OpdTab({
       setFormData(res.data)
       onSaved(res.data)
       onNotify('success', 'Pengaturan Daftar OPD berhasil disimpan.')
+      return true
     } else {
       onNotify('error', res.error || 'Gagal menyimpan pengaturan Daftar OPD.')
+      return false
     }
+  }
+
+  useTabUnsavedGuard(
+    formData,
+    initialData,
+    saveChanges,
+    onDirtyChange,
+    registerSaveHandler
+  )
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await saveChanges()
   }
 
   const handleConfirmReset = async () => {

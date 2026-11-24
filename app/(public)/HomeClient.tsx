@@ -1736,7 +1736,7 @@ function MediaSection({ settings }: { settings: MediaSettings }) {
             <div className="flex flex-col flex-1 h-full rounded-2xl bg-white border border-slate-200/90 p-3.5 sm:p-5 shadow-sm transition-all duration-300 group-hover:border-[#159447]/40">
               <div className="flex items-center justify-between gap-3 pb-3.5 mb-3.5 sm:pb-4 sm:mb-4 border-b border-slate-100 shrink-0">
                 <div className="min-w-0">
-                  <h3 className="text-sm font-bold tracking-wide text-[#172135] uppercase">
+                  <h3 className="text-sm font-bold tracking-wide text-[#172135]">
                     {settings.gprTitle}
                   </h3>
                   <p className="text-xs text-slate-400">

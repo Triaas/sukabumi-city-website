@@ -13,6 +13,36 @@ import { uploadSiteImageAction } from '@/lib/site-settings/actions'
 
 export type NotifyFn = (type: 'success' | 'error', message: string) => void
 
+export interface TabUnsavedProps {
+  onDirtyChange?: (dirty: boolean) => void
+  registerSaveHandler?: (fn: (() => Promise<boolean>) | null) => void
+}
+
+export function useTabUnsavedGuard<T>(
+  formData: T,
+  initialData: T,
+  saveFn: () => Promise<boolean>,
+  onDirtyChange?: (dirty: boolean) => void,
+  registerSaveHandler?: (fn: (() => Promise<boolean>) | null) => void
+): void {
+  const saveRef = useRef(saveFn)
+  saveRef.current = saveFn
+
+  const isDirty = JSON.stringify(formData) !== JSON.stringify(initialData)
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty)
+  }, [isDirty, onDirtyChange])
+
+  useEffect(() => {
+    registerSaveHandler?.(() => saveRef.current())
+    return () => {
+      registerSaveHandler?.(null)
+      onDirtyChange?.(false)
+    }
+  }, [registerSaveHandler, onDirtyChange])
+}
+
 export const INPUT_CLASS =
   'w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-[#172135] focus:border-[#159447] focus:outline-none focus:ring-2 focus:ring-[#159447]/20'
 

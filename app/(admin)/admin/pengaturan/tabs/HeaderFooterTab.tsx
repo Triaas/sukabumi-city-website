@@ -14,16 +14,19 @@ import {
   resetSiteSectionAction,
   uploadSiteImageAction,
 } from '@/lib/site-settings/actions'
+import { useTabUnsavedGuard, type TabUnsavedProps } from './shared'
 
 export default function HeaderFooterTab({
   initialData,
   onSaved,
   onNotify,
+  onDirtyChange,
+  registerSaveHandler,
 }: {
   initialData: HeaderFooterSettings
   onSaved: (data: HeaderFooterSettings) => void
   onNotify: (type: 'success' | 'error', message: string) => void
-}) {
+} & TabUnsavedProps) {
   const [formData, setFormData] = useState<HeaderFooterSettings>(initialData)
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -90,8 +93,7 @@ export default function HeaderFooterTab({
     }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const saveChanges = async (): Promise<boolean> => {
     setIsSaving(true)
 
     const res = await updateSiteSectionAction('headerFooter', formData)
@@ -104,12 +106,27 @@ export default function HeaderFooterTab({
         'success',
         'Pengaturan Header & Footer berhasil disimpan dan langsung diperbarui di seluruh halaman publik.'
       )
+      return true
     } else {
       onNotify(
         'error',
         res.error || 'Gagal menyimpan pengaturan Header & Footer.'
       )
+      return false
     }
+  }
+
+  useTabUnsavedGuard(
+    formData,
+    initialData,
+    saveChanges,
+    onDirtyChange,
+    registerSaveHandler
+  )
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await saveChanges()
   }
 
   const handleConfirmReset = async () => {

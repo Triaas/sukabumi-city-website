@@ -13,6 +13,7 @@ import {
   resetSiteSectionAction,
   uploadSiteImageAction,
 } from '@/lib/site-settings/actions'
+import { useTabUnsavedGuard, type TabUnsavedProps } from './shared'
 
 type PhotoSlotKey = 'leftContainerImage' | 'leaderImage' | 'sloganImage'
 
@@ -20,11 +21,13 @@ export default function WelcomeTab({
   initialData,
   onSaved,
   onNotify,
+  onDirtyChange,
+  registerSaveHandler,
 }: {
   initialData: WelcomeSettings
   onSaved: (data: WelcomeSettings) => void
   onNotify: (type: 'success' | 'error', message: string) => void
-}) {
+} & TabUnsavedProps) {
   const [formData, setFormData] = useState<WelcomeSettings>(initialData)
   const [uploadingSlot, setUploadingSlot] = useState<PhotoSlotKey | null>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -64,8 +67,7 @@ export default function WelcomeTab({
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const saveChanges = async (): Promise<boolean> => {
     setIsSaving(true)
 
     const res = await updateSiteSectionAction('welcome', formData)
@@ -75,9 +77,24 @@ export default function WelcomeTab({
       setFormData(res.data)
       onSaved(res.data)
       onNotify('success', 'Foto pada bagian Welcome berhasil diperbarui.')
+      return true
     } else {
       onNotify('error', res.error || 'Gagal menyimpan pengaturan foto Welcome.')
+      return false
     }
+  }
+
+  useTabUnsavedGuard(
+    formData,
+    initialData,
+    saveChanges,
+    onDirtyChange,
+    registerSaveHandler
+  )
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await saveChanges()
   }
 
   const handleConfirmReset = async () => {

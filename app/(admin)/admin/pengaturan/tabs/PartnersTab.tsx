@@ -13,20 +13,24 @@ import {
   ReorderDeleteButtons,
   SaveResetBar,
   moveItem,
+  useTabUnsavedGuard,
   INPUT_CLASS,
   LABEL_CLASS,
   type NotifyFn,
+  type TabUnsavedProps,
 } from './shared'
 
 export default function PartnersTab({
   initialData,
   onSaved,
   onNotify,
+  onDirtyChange,
+  registerSaveHandler,
 }: {
   initialData: PartnersSettings
   onSaved: (data: PartnersSettings) => void
   onNotify: NotifyFn
-}) {
+} & TabUnsavedProps) {
   const [formData, setFormData] = useState<PartnersSettings>(initialData)
   const [isSaving, setIsSaving] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
@@ -72,12 +76,10 @@ export default function PartnersTab({
     )
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
+  const saveChanges = async (): Promise<boolean> => {
     if (formData.items.length === 0) {
       onNotify('error', 'Minimal harus terdapat 1 logo mitra.')
-      return
+      return false
     }
     const invalidIndex = formData.items.findIndex(
       (item) => !item.image.trim() || !item.href.trim()
@@ -87,7 +89,7 @@ export default function PartnersTab({
         'error',
         `Mitra #${invalidIndex + 1} wajib memiliki logo dan URL tujuan.`
       )
-      return
+      return false
     }
 
     setIsSaving(true)
@@ -98,9 +100,24 @@ export default function PartnersTab({
       setFormData(res.data)
       onSaved(res.data)
       onNotify('success', 'Pengaturan Mitra / Partner berhasil disimpan.')
+      return true
     } else {
       onNotify('error', res.error || 'Gagal menyimpan pengaturan Mitra / Partner.')
+      return false
     }
+  }
+
+  useTabUnsavedGuard(
+    formData,
+    initialData,
+    saveChanges,
+    onDirtyChange,
+    registerSaveHandler
+  )
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await saveChanges()
   }
 
   const handleConfirmReset = async () => {
