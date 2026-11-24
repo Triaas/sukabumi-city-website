@@ -143,21 +143,21 @@ export function Navbar({
               setActiveSection('beranda')
             }
           }}
-          className="flex items-center gap-2.5 sm:gap-3.5 md:gap-4 group cursor-pointer min-w-0"
+          className="flex items-center gap-2 sm:gap-3.5 md:gap-4 group cursor-pointer min-w-0"
         >
           <img
             src={settings.headerLogoUrl || '/logo.png'}
             alt={settings.orgName || 'Logo Kota Sukabumi'}
-            className="h-10 sm:h-14 md:h-[68px] w-auto object-contain shrink-0 group-hover:scale-105 transition-transform duration-200"
+            className="h-9 sm:h-14 md:h-[68px] w-auto object-contain shrink-0 group-hover:scale-105 transition-transform duration-200"
           />
-          <div className="flex flex-col justify-between py-0.5 min-w-0">
-            <p className="text-[10px] sm:text-xs font-semibold tracking-[0.12em] text-white/75 leading-tight uppercase truncate">
+          <div className="flex flex-col justify-between gap-0.5 sm:gap-1 py-0.5 min-w-0">
+            <p className="text-[9px] sm:text-xs font-semibold tracking-[0.12em] text-white/75 leading-tight uppercase truncate">
               {settings.topLabel}
             </p>
-            <p className="text-base sm:text-xl md:text-2xl font-bold text-white leading-tight truncate">
+            <p className="text-sm sm:text-xl md:text-2xl font-bold text-white leading-tight truncate">
               {settings.orgName}
             </p>
-            <p className="font-serif text-[11px] sm:text-sm md:text-base italic text-[#f4ce4b] leading-tight truncate">
+            <p className="font-serif text-[10px] sm:text-sm md:text-base italic text-[#f4ce4b] leading-tight truncate">
               {settings.mottoText}
             </p>
           </div>
@@ -192,7 +192,7 @@ export function Navbar({
         <button
           type="button"
           onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/10 px-3 min-h-[44px] text-xs font-semibold text-white transition-colors hover:bg-white/20 lg:hidden shrink-0"
+          className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/10 min-h-[44px] min-w-[44px] text-white transition-colors hover:bg-white/20 lg:hidden shrink-0"
           aria-label={isMobileMenuOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
           aria-expanded={isMobileMenuOpen}
           aria-controls="mobile-nav-menu"
@@ -202,7 +202,6 @@ export function Navbar({
           ) : (
             <Menu className="h-5 w-5" aria-hidden="true" />
           )}
-          <span>Menu</span>
         </button>
       </div>
 

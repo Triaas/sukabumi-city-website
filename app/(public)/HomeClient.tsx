@@ -43,13 +43,13 @@ function SectionHeading({
   subtitle?: string
 }) {
   return (
-    <div className="mb-6">
-      <h2 className="flex items-center gap-3 text-3xl font-bold tracking-tight text-[#172135] md:text-4xl">
-        <span className="h-10 w-1.5 rounded-full bg-[#159447]" />
+    <div className="mb-4 md:mb-6">
+      <h2 className="flex items-center gap-2.5 md:gap-3 text-xl sm:text-2xl md:text-4xl font-bold tracking-tight text-[#172135]">
+        <span className="h-6 sm:h-7 md:h-10 w-1 md:w-1.5 rounded-full bg-[#159447] shrink-0" />
         {children}
       </h2>
       {subtitle && (
-        <p className="mt-3 max-w-5xl text-lg leading-relaxed text-[#566276]">
+        <p className="mt-2 md:mt-3 max-w-5xl text-sm sm:text-base md:text-lg leading-relaxed text-[#566276]">
           {subtitle}
         </p>
       )}
@@ -116,9 +116,9 @@ function Hero({ settings }: { settings: HeroSettings }) {
 
 function Welcome({ settings }: { settings: WelcomeSettings }) {
   return (
-    <section className="bg-white px-4 py-10 md:px-8 lg:px-12 md:py-16">
-      <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-10 lg:flex-row lg:gap-8">
-        <div className="w-full max-w-[440px] aspect-[4/3] rounded-3xl bg-[#eff4f8] shadow-sm overflow-hidden flex items-center justify-center">
+    <section className="bg-white px-4 py-8 md:px-8 lg:px-12 md:py-16">
+      <div className="mx-auto max-w-[1400px] grid grid-cols-12 items-center gap-4 md:gap-6 lg:flex lg:flex-row lg:justify-between lg:gap-8">
+        <div className="col-span-7 sm:col-span-8 order-2 lg:order-1 w-full lg:w-[360px] xl:w-[440px] lg:shrink-0 aspect-[4/3] rounded-2xl sm:rounded-3xl bg-[#eff4f8] shadow-sm overflow-hidden flex items-center justify-center">
           {settings.leftContainerImage ? (
             <img
               src={settings.leftContainerImage}
@@ -130,24 +130,23 @@ function Welcome({ settings }: { settings: WelcomeSettings }) {
           )}
         </div>
 
-        <div className="flex flex-1 min-w-0 w-full items-center justify-center gap-4 lg:gap-6">
-          <div className="relative z-10 flex-1 min-w-0 max-w-[500px] lg:max-w-[560px] self-end">
-            <img
-              src={settings.leaderImage || '/images/walikota dan wakil.png'}
-              className="w-full h-auto"
-              alt={settings.leaderAlt || 'Walikota dan Wakil Walikota Sukabumi'}
-            />
-          </div>
-          <div className="hidden max-w-[200px] lg:max-w-[240px] xl:max-w-[300px] flex-1 min-w-0 md:block self-center">
-            <img
-              src={settings.sloganImage || '/images/Iman.png'}
-              alt={
-                settings.sloganAlt ||
-                'IMAN - Inovatif, Mandiri, Agamis, Nasionalis'
-              }
-              className="w-full h-auto object-contain"
-            />
-          </div>
+        <div className="col-span-12 order-1 lg:order-2 lg:flex-1 lg:min-w-0 w-full max-w-[360px] md:max-w-[460px] lg:max-w-[560px] mx-auto relative z-10 lg:self-end">
+          <img
+            src={settings.leaderImage || '/images/walikota dan wakil.png'}
+            className="w-full h-auto"
+            alt={settings.leaderAlt || 'Walikota dan Wakil Walikota Sukabumi'}
+          />
+        </div>
+
+        <div className="col-span-5 sm:col-span-4 order-3 lg:order-3 lg:flex-1 lg:min-w-0 w-full max-w-[140px] sm:max-w-[180px] lg:max-w-[240px] xl:max-w-[300px] mx-auto self-center">
+          <img
+            src={settings.sloganImage || '/images/Iman.png'}
+            alt={
+              settings.sloganAlt ||
+              'IMAN - Inovatif, Mandiri, Agamis, Nasionalis'
+            }
+            className="w-full h-auto object-contain"
+          />
         </div>
       </div>
     </section>
@@ -165,42 +164,50 @@ function Profile({ settings }: { settings: ProfileSettings }) {
         <SectionHeading subtitle={settings.subtitle}>
           {settings.heading}
         </SectionHeading>
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-5">
+        <div className="grid grid-cols-2 md:grid-cols-12 gap-2.5 sm:gap-3 md:gap-5">
           {profileCards.slice(0, 4).map((card) => (
             <Link
               key={card.title}
               href={card.href || '#'}
-              className="group relative h-[160px] md:h-[180px] overflow-hidden rounded-2xl bg-[#172033] shadow-md md:col-span-3 cursor-pointer grayscale transition-all duration-500 ease-in-out hover:grayscale-0 hover:scale-[1.02] hover:shadow-xl"
+              className="group relative h-[112px] sm:h-[130px] md:h-[180px] overflow-hidden rounded-xl md:rounded-2xl bg-[#172033] shadow-md md:col-span-3 cursor-pointer grayscale-0 md:grayscale transition-all duration-500 ease-in-out md:hover:grayscale-0 md:hover:scale-[1.02] hover:shadow-xl"
             >
               <img
                 src={card.image}
                 alt={card.title}
-                className="absolute inset-0 size-full object-cover object-center opacity-60 transition-transform duration-500 group-hover:scale-105 group-hover:opacity-80"
+                className="absolute inset-0 size-full object-cover object-center opacity-50 md:opacity-60 transition-transform duration-500 md:group-hover:scale-105 md:group-hover:opacity-80"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-              <div className="relative flex h-full flex-col justify-end p-4 md:p-5 text-white z-10">
-                <h3 className="text-base md:text-lg font-bold">{card.title}</h3>
-                <p className="mt-1 text-xs md:text-sm leading-snug text-white/85">
+              <div className="relative flex h-full flex-col justify-end p-3 md:p-5 text-white z-10">
+                <h3 className="text-sm md:text-lg font-bold leading-tight">
+                  {card.title}
+                </h3>
+                <p className="mt-1 text-[11px] md:text-sm leading-tight md:leading-snug text-white/85 line-clamp-2 md:line-clamp-none">
                   {card.description}
                 </p>
               </div>
             </Link>
           ))}
-          {profileCards.slice(4).map((card) => (
+          {profileCards.slice(4).map((card, idx, rest) => (
             <Link
               key={card.title}
               href={card.href || '#'}
-              className="group relative h-[160px] md:h-[180px] overflow-hidden rounded-2xl bg-[#172033] shadow-md md:col-span-4 cursor-pointer grayscale transition-all duration-500 ease-in-out hover:grayscale-0 hover:scale-[1.02] hover:shadow-xl"
+              className={`group relative h-[112px] sm:h-[130px] md:h-[180px] overflow-hidden rounded-xl md:rounded-2xl bg-[#172033] shadow-md md:col-span-4 cursor-pointer grayscale-0 md:grayscale transition-all duration-500 ease-in-out md:hover:grayscale-0 md:hover:scale-[1.02] hover:shadow-xl ${
+                profileCards.length % 2 === 1 && idx === rest.length - 1
+                  ? 'col-span-2'
+                  : ''
+              }`}
             >
               <img
                 src={card.image}
                 alt={card.title}
-                className="absolute inset-0 size-full object-cover object-center opacity-60 transition-transform duration-500 group-hover:scale-105 group-hover:opacity-60"
+                className="absolute inset-0 size-full object-cover object-center opacity-80 md:opacity-60 transition-transform duration-500 md:group-hover:scale-105 md:group-hover:opacity-80"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-              <div className="relative flex h-full flex-col justify-end p-4 md:p-5 text-white z-10">
-                <h3 className="text-base md:text-lg font-bold">{card.title}</h3>
-                <p className="mt-1 text-xs md:text-sm leading-snug text-white/85">
+              <div className="relative flex h-full flex-col justify-end p-3 md:p-5 text-white z-10">
+                <h3 className="text-sm md:text-lg font-bold leading-tight">
+                  {card.title}
+                </h3>
+                <p className="mt-1 text-[11px] md:text-sm leading-tight md:leading-snug text-white/85 line-clamp-2 md:line-clamp-none">
                   {card.description}
                 </p>
               </div>
@@ -343,15 +350,15 @@ interface NewsItem {
 
 function AnnouncementList({ items }: { items: NewsItem[] }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4">
       {items.map((item) => (
         <Link
           key={item.slug}
           href={`/pengumuman/${item.slug}`}
-          className="group p-1.5 rounded-[22px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex flex-col"
+          className="group p-1 sm:p-1.5 rounded-2xl sm:rounded-[22px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex flex-col"
         >
-          <div className="flex flex-col flex-1 rounded-2xl bg-white border border-slate-200/90 overflow-hidden shadow-sm transition-all duration-300 group-hover:border-[#159447]/40">
-            <div className="h-36 bg-[#fffbeb] flex items-center justify-center overflow-hidden">
+          <div className="flex flex-row sm:flex-col flex-1 rounded-xl sm:rounded-2xl bg-white border border-slate-200/90 overflow-hidden shadow-sm transition-all duration-300 group-hover:border-[#159447]/40">
+            <div className="w-24 h-24 sm:w-full sm:h-36 shrink-0 bg-[#fffbeb] flex items-center justify-center overflow-hidden">
               {item.image ? (
                 <img
                   src={item.image}
@@ -370,14 +377,14 @@ function AnnouncementList({ items }: { items: NewsItem[] }) {
                 />
               )}
             </div>
-            <div className="p-4 flex flex-col flex-1">
-              <div className="text-xs font-bold text-[#159447] mb-2 uppercase tracking-wider">
+            <div className="p-2.5 sm:p-4 flex flex-col flex-1 min-w-0">
+              <div className="text-[10px] sm:text-xs font-bold text-[#159447] mb-1 sm:mb-2 uppercase tracking-wider truncate">
                 Pengumuman
               </div>
-              <h3 className="text-sm font-semibold text-[#1d293d] leading-snug group-hover:text-[#159447] transition-colors line-clamp-3 flex-1">
+              <h3 className="text-xs sm:text-sm font-semibold text-[#1d293d] leading-snug group-hover:text-[#159447] transition-colors line-clamp-2 sm:line-clamp-3 flex-1">
                 {item.title}
               </h3>
-              <div className="mt-3 text-xs font-medium text-slate-400">
+              <div className="mt-1.5 sm:mt-3 text-[11px] sm:text-xs font-medium text-slate-400">
                 {item.date}
               </div>
             </div>
@@ -390,15 +397,15 @@ function AnnouncementList({ items }: { items: NewsItem[] }) {
 
 function NewsCardList({ items }: { items: NewsItem[] }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4">
       {items.map((item) => (
         <Link
           key={item.slug}
           href={`/berita/${item.slug}`}
-          className="group p-1.5 rounded-[22px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex flex-col"
+          className="group p-1 sm:p-1.5 rounded-2xl sm:rounded-[22px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex flex-col"
         >
-          <div className="flex flex-col flex-1 rounded-2xl bg-white border border-slate-200/90 overflow-hidden shadow-sm transition-all duration-300 group-hover:border-[#159447]/40">
-            <div className="h-36 bg-slate-100 flex items-center justify-center overflow-hidden">
+          <div className="flex flex-row sm:flex-col flex-1 rounded-xl sm:rounded-2xl bg-white border border-slate-200/90 overflow-hidden shadow-sm transition-all duration-300 group-hover:border-[#159447]/40">
+            <div className="w-24 h-24 sm:w-full sm:h-36 shrink-0 bg-slate-100 flex items-center justify-center overflow-hidden">
               {item.image ? (
                 <img
                   src={item.image}
@@ -410,17 +417,17 @@ function NewsCardList({ items }: { items: NewsItem[] }) {
                   }}
                 />
               ) : (
-                <ImageIcon size={32} className="text-slate-300" />
+                <ImageIcon size={28} className="text-slate-300" />
               )}
             </div>
-            <div className="p-4 flex flex-col flex-1">
-              <div className="text-xs font-bold text-[#159447] mb-2 uppercase tracking-wider">
+            <div className="p-2.5 sm:p-4 flex flex-col flex-1 min-w-0">
+              <div className="text-[10px] sm:text-xs font-bold text-[#159447] mb-1 sm:mb-2 uppercase tracking-wider truncate">
                 {item.category}
               </div>
-              <h3 className="text-sm font-semibold text-[#1d293d] leading-snug group-hover:text-[#159447] transition-colors line-clamp-3 flex-1">
+              <h3 className="text-xs sm:text-sm font-semibold text-[#1d293d] leading-snug group-hover:text-[#159447] transition-colors line-clamp-2 sm:line-clamp-3 flex-1">
                 {item.title}
               </h3>
-              <div className="mt-3 text-xs font-medium text-slate-400">
+              <div className="mt-1.5 sm:mt-3 text-[11px] sm:text-xs font-medium text-slate-400">
                 {item.date}
               </div>
             </div>
@@ -433,13 +440,13 @@ function NewsCardList({ items }: { items: NewsItem[] }) {
 
 function CardSkeleton() {
   return (
-    <div className="p-1.5 rounded-[22px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm flex flex-col">
-      <div className="flex flex-col flex-1 rounded-2xl bg-white border border-slate-200/90 overflow-hidden shadow-sm animate-pulse">
-        <div className="h-36 bg-slate-200" />
-        <div className="p-4 flex flex-col flex-1">
-          <div className="h-3 w-20 bg-slate-200 rounded mb-2" />
-          <div className="h-4 w-full bg-slate-200 rounded mb-2" />
-          <div className="h-4 w-3/4 bg-slate-200 rounded mb-4" />
+    <div className="p-1 sm:p-1.5 rounded-2xl sm:rounded-[22px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm flex flex-col">
+      <div className="flex flex-row sm:flex-col flex-1 rounded-xl sm:rounded-2xl bg-white border border-slate-200/90 overflow-hidden shadow-sm animate-pulse">
+        <div className="w-24 h-24 sm:w-full sm:h-36 shrink-0 bg-slate-200" />
+        <div className="p-2.5 sm:p-4 flex flex-col flex-1">
+          <div className="h-3 w-20 bg-slate-200 rounded mb-1.5 sm:mb-2" />
+          <div className="h-3.5 sm:h-4 w-full bg-slate-200 rounded mb-1.5 sm:mb-2" />
+          <div className="h-3.5 sm:h-4 w-3/4 bg-slate-200 rounded mb-2 sm:mb-4" />
           <div className="h-3 w-24 bg-slate-200 rounded mt-auto" />
         </div>
       </div>
@@ -469,14 +476,14 @@ function News() {
         <SectionHeading subtitle="Pengumuman dan berita terbaru dari Kota Sukabumi.">
           Pengumuman {'&'} Berita
         </SectionHeading>
-        <div className="grid gap-14 lg:grid-cols-2 items-start">
+        <div className="grid gap-10 lg:gap-14 lg:grid-cols-2 items-start">
           <div className="flex flex-col">
-            <h3 className="mb-6 text-2xl font-bold text-[#263349]">
+            <h3 className="mb-3 sm:mb-6 text-xl sm:text-2xl font-bold text-[#263349]">
               Pengumuman
             </h3>
-            <div className="mb-7 h-1 w-14 rounded-full bg-[#f4c13b]" />
+            <div className="mb-5 sm:mb-7 h-1 w-14 rounded-full bg-[#f4c13b]" />
             {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4">
                 <CardSkeleton />
                 <CardSkeleton />
                 <CardSkeleton />
@@ -484,20 +491,22 @@ function News() {
             ) : (
               <AnnouncementList items={dbAnnouncements} />
             )}
-            <div className="mt-8 flex justify-end">
+            <div className="mt-5 sm:mt-8 flex justify-end">
               <Link
                 href="/pengumuman"
-                className="inline-flex items-center gap-2 rounded-xl border-2 border-[#159447] bg-white px-6 py-2 text-sm font-bold text-[#159447] transition-all hover:bg-[#f0fdf4] hover:shadow-sm"
+                className="inline-flex items-center gap-2 rounded-xl border-2 border-[#159447] bg-white px-5 py-1.5 sm:px-6 sm:py-2 text-sm font-bold text-[#159447] transition-all hover:bg-[#f0fdf4] hover:shadow-sm"
               >
                 Lainnya <ArrowRight size={16} />
               </Link>
             </div>
           </div>
           <div className="flex flex-col">
-            <h3 className="mb-6 text-2xl font-bold text-[#263349]">Berita</h3>
-            <div className="mb-7 h-1 w-14 rounded-full bg-[#f4c13b]" />
+            <h3 className="mb-3 sm:mb-6 text-xl sm:text-2xl font-bold text-[#263349]">
+              Berita
+            </h3>
+            <div className="mb-5 sm:mb-7 h-1 w-14 rounded-full bg-[#f4c13b]" />
             {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4">
                 <CardSkeleton />
                 <CardSkeleton />
                 <CardSkeleton />
@@ -505,10 +514,10 @@ function News() {
             ) : (
               <NewsCardList items={dbNews} />
             )}
-            <div className="mt-8 flex justify-end">
+            <div className="mt-5 sm:mt-8 flex justify-end">
               <Link
                 href="/berita"
-                className="inline-flex items-center gap-2 rounded-xl border-2 border-[#159447] bg-white px-6 py-2 text-sm font-bold text-[#159447] transition-all hover:bg-[#f0fdf4] hover:shadow-sm"
+                className="inline-flex items-center gap-2 rounded-xl border-2 border-[#159447] bg-white px-5 py-1.5 sm:px-6 sm:py-2 text-sm font-bold text-[#159447] transition-all hover:bg-[#f0fdf4] hover:shadow-sm"
               >
                 Lainnya <ArrowRight size={16} />
               </Link>
@@ -616,16 +625,22 @@ function Opd({
   }> = []
 
   if (categoryData?.groups) {
-    categoryData.groups.forEach((group, groupIndex) => {
-      const groupItems = group.items || []
+    const nonEmptyGroups = categoryData.groups.filter(
+      (g) => (g.items || []).length > 0
+    )
 
-      if (groupItems.length === 0) {
+    if (nonEmptyGroups.length === 0) {
+      const firstGroup = categoryData.groups[0]
+      if (firstGroup) {
         processedPages.push({
-          title: group.title,
+          title: firstGroup.title,
           items: [],
-          groupIndex,
+          groupIndex: 0,
         })
-      } else {
+      }
+    } else {
+      nonEmptyGroups.forEach((group, groupIndex) => {
+        const groupItems = group.items || []
         for (let i = 0; i < groupItems.length; i += cardsPerPage) {
           const chunk = groupItems.slice(i, i + cardsPerPage)
           processedPages.push({
@@ -634,8 +649,8 @@ function Opd({
             groupIndex,
           })
         }
-      }
-    })
+      })
+    }
   }
 
   const currentPage = processedPages[cardPage] || { title: '', items: [] }
@@ -710,12 +725,12 @@ function Opd({
             {settings.heading}
           </SectionHeading>
           <div className="flex flex-col md:flex-row md:min-h-[560px] overflow-hidden rounded-xl border border-[#e2e8ed] bg-white shadow-[0_24px_40px_-28px_rgba(15,23,42,0.5)]">
-            <div className="flex w-full flex-row overflow-x-auto hide-scrollbar gap-2 p-3.5 border-b border-[#e5e7eb] md:w-[28%] md:flex-col md:gap-4 md:p-8 md:border-b-0 md:border-r">
+            <div className="flex w-full flex-row overflow-x-auto hide-scrollbar gap-1.5 p-2.5 border-b border-[#e5e7eb] md:w-[28%] md:flex-col md:gap-4 md:p-8 md:border-b-0 md:border-r">
               {categoryKeys.map((category) => (
                 <button
                   key={category}
                   onClick={() => handleCategoryChange(category)}
-                  className={`shrink-0 whitespace-nowrap md:whitespace-normal min-h-[44px] px-4 py-2.5 md:px-6 md:py-4 text-sm md:text-base text-left font-medium transition-all duration-200 rounded-lg border-2 ${
+                  className={`shrink-0 whitespace-nowrap md:whitespace-normal min-h-[36px] md:min-h-[44px] px-3 py-1.5 md:px-6 md:py-4 text-xs md:text-base text-left font-medium transition-all duration-200 rounded-lg border md:border-2 ${
                     activeCategory === category
                       ? 'border-[#159447] bg-[#159447] text-white'
                       : 'border-[#e5e7eb] bg-white text-[#4b5563] hover:bg-slate-50 hover:shadow-md'
@@ -732,8 +747,8 @@ function Opd({
                 key={`page-${activeCategory}-${cardPage}`}
                 className="flex flex-1 flex-col animate-[fadeInUp_0.5s_ease-out]"
               >
-                <div className="mb-4">
-                  <h3 className="text-xl md:text-2xl font-bold text-[#1b293c]">
+                <div className="mb-3 sm:mb-4">
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-[#1b293c]">
                     {currentPage.title}
                   </h3>
                 </div>
@@ -752,15 +767,15 @@ function Opd({
                       </p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 gap-3.5 md:gap-4 md:grid-cols-2 content-start md:min-h-[350px]">
+                    <div className="grid grid-cols-1 gap-2.5 sm:gap-3.5 md:gap-4 md:grid-cols-2 content-start md:min-h-[350px]">
                       {currentPage.items.map(
                         (service: OpdServiceCard, index: number) => {
                           const outerClasses =
-                            'group p-1.5 rounded-[20px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex w-full text-left cursor-pointer'
+                            'group p-1 sm:p-1.5 rounded-2xl sm:rounded-[20px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex w-full text-left cursor-pointer'
                           const inner = (
-                            <div className="flex items-center gap-4 flex-1 rounded-2xl bg-white border border-slate-200/90 p-4 shadow-sm transition-all duration-300 group-hover:border-[#159447]/40 w-full min-w-0">
+                            <div className="flex items-center gap-2.5 sm:gap-4 flex-1 rounded-xl sm:rounded-2xl bg-white border border-slate-200/90 p-2.5 sm:p-4 shadow-sm transition-all duration-300 group-hover:border-[#159447]/40 w-full min-w-0">
                               <div
-                                className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl p-1 transition-transform duration-300 group-hover:scale-105 ${
+                                className={`flex h-10 w-10 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-lg sm:rounded-xl p-0.5 sm:p-1 transition-transform duration-300 group-hover:scale-105 ${
                                   service.image
                                     ? ''
                                     : 'bg-[#f0fdf4] text-[#16a34a]'
@@ -773,20 +788,19 @@ function Opd({
                                     className="h-full w-full object-contain"
                                   />
                                 ) : (
-                                  <Building size={22} />
+                                  <Building size={20} />
                                 )}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <h4 className="font-bold text-[#1b293c] group-hover:text-[#159447] transition-colors">
+                                <h4 className="text-sm sm:text-base font-bold text-[#1b293c] group-hover:text-[#159447] transition-colors leading-snug">
                                   {service.title}
                                 </h4>
-                                <p className="text-sm text-[#66758a] mt-0.5 truncate">
+                                <p className="text-xs sm:text-sm text-[#66758a] mt-0.5 truncate">
                                   {service.subtitle}
                                 </p>
                               </div>
                               <ChevronRight
-                                size={20}
-                                className="shrink-0 text-[#cbd5e1] group-hover:text-[#159447] group-hover:translate-x-0.5 transition-all"
+                                className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-[#cbd5e1] group-hover:text-[#159447] group-hover:translate-x-0.5 transition-all"
                               />
                             </div>
                           )
@@ -1164,12 +1178,27 @@ function TransparansiDokumen() {
   const [documents, setDocuments] = useState<TransparansiDoc[]>([])
   const [isLoadingDocs, setIsLoadingDocs] = useState(true)
   const [currentPage, setCurrentPage] = useState(0)
+  const [itemsPerPage, setItemsPerPage] = useState(6)
   const [selectedDocument, setSelectedDocument] =
     useState<TransparansiDoc | null>(null)
   const [downloadConfirm, setDownloadConfirm] =
     useState<TransparansiDoc | null>(null)
-  const itemsPerPage = 6
   const totalPages = Math.ceil(documents.length / itemsPerPage)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    const updateItemsPerPage = () => {
+      const next = mq.matches ? 2 : 6
+      setItemsPerPage(next)
+      setCurrentPage((prev) => {
+        const maxPage = Math.max(0, Math.ceil(documents.length / next) - 1)
+        return Math.min(prev, maxPage)
+      })
+    }
+    updateItemsPerPage()
+    mq.addEventListener('change', updateItemsPerPage)
+    return () => mq.removeEventListener('change', updateItemsPerPage)
+  }, [documents.length])
 
   useEffect(() => {
     fetch('/api/transparansi-dokumen', { cache: 'no-store' })
@@ -1251,14 +1280,14 @@ function TransparansiDokumen() {
       className="bg-white px-4 py-10 md:px-8 lg:px-12 md:py-16"
     >
       <div className="mx-auto max-w-[1400px]">
-        <div className="mb-12 flex items-start justify-between">
+        <div className="mb-6 sm:mb-12 flex items-start justify-between">
           <SectionHeading subtitle="Akses mudah ke dokumen resmi sebagai wujud transparansi dan akuntabilitas pemerintahan.">
             Transparansi Dokumen Daerah
           </SectionHeading>
         </div>
 
         <div className="flex flex-col">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {isLoadingDocs ? (
               <div className="col-span-full flex items-center justify-center py-16 text-slate-400 text-sm">
                 Memuat dokumen...
@@ -1271,43 +1300,43 @@ function TransparansiDokumen() {
               currentDocuments.map((doc) => (
                 <div
                   key={doc.id}
-                  className="group p-1.5 rounded-[22px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex flex-col min-w-0 w-full"
+                  className="group p-1 sm:p-1.5 rounded-2xl sm:rounded-[22px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex flex-col min-w-0 w-full"
                 >
-                  <div className="flex flex-col flex-1 rounded-2xl bg-white border border-slate-200/90 p-4 shadow-sm transition-all duration-300 group-hover:border-[#159447]/40 min-w-0 overflow-hidden">
-                    <div className="mb-3 flex justify-center">
-                      <div className="flex h-12 w-12 flex-col items-center justify-center rounded-xl bg-[#f0fdf4] border border-[#159447] transition-transform duration-300 group-hover:scale-105">
-                        <FileText className="h-5 w-5 text-[#159447]" />
-                        <span className="text-[10px] font-bold text-[#159447] leading-none mt-0.5">
+                  <div className="flex flex-col flex-1 rounded-xl sm:rounded-2xl bg-white border border-slate-200/90 p-2.5 sm:p-4 shadow-sm transition-all duration-300 group-hover:border-[#159447]/40 min-w-0 overflow-hidden">
+                    <div className="mb-2 sm:mb-3 flex justify-center">
+                      <div className="flex h-9 w-9 sm:h-12 sm:w-12 flex-col items-center justify-center rounded-lg sm:rounded-xl bg-[#f0fdf4] border border-[#159447] transition-transform duration-300 group-hover:scale-105">
+                        <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-[#159447]" />
+                        <span className="text-[9px] sm:text-[10px] font-bold text-[#159447] leading-none mt-0.5">
                           {doc.type}
                         </span>
                       </div>
                     </div>
 
-                    <div className="text-[11px] font-bold text-[#159447] mb-1.5 uppercase tracking-wider">
+                    <div className="text-[9px] sm:text-[11px] font-bold text-[#159447] mb-1 sm:mb-1.5 uppercase tracking-wider truncate">
                       Transparansi Dokumen
                     </div>
 
                     <h3
                       title={doc.title}
-                      className="text-sm font-semibold leading-snug text-[#1d293d] line-clamp-3 group-hover:text-[#159447] transition-colors break-words [overflow-wrap:anywhere]"
+                      className="text-xs sm:text-sm font-semibold leading-snug text-[#1d293d] line-clamp-2 sm:line-clamp-3 group-hover:text-[#159447] transition-colors break-words [overflow-wrap:anywhere]"
                     >
                       {doc.title}
                     </h3>
 
-                    <div className="mt-1.5 mb-3 text-xs font-medium text-slate-400">
+                    <div className="mt-1 mb-2 sm:mt-1.5 sm:mb-3 text-[11px] sm:text-xs font-medium text-slate-400">
                       {doc.date}
                     </div>
 
-                    <div className="flex gap-2 mt-auto">
+                    <div className="flex gap-1.5 sm:gap-2 mt-auto">
                       <button
                         onClick={() => handleViewClick(doc)}
-                        className="flex-1 rounded-lg bg-[#f8f9fa] border border-slate-200/80 px-2.5 py-1.5 text-center text-xs font-semibold text-[#6b7280] hover:bg-[#e5e7eb] hover:text-[#1f2937] transition-colors cursor-pointer"
+                        className="flex-1 rounded-lg bg-[#f8f9fa] border border-slate-200/80 px-2 py-1.5 text-center text-[11px] sm:text-xs font-semibold text-[#6b7280] hover:bg-[#e5e7eb] hover:text-[#1f2937] transition-colors cursor-pointer"
                       >
                         Lihat
                       </button>
                       <button
                         onClick={() => setDownloadConfirm(doc)}
-                        className="flex-1 rounded-lg bg-[#159447] px-2.5 py-1.5 text-center text-xs font-semibold text-white hover:bg-[#0f7a36] transition-colors cursor-pointer"
+                        className="flex-1 rounded-lg bg-[#159447] px-2 py-1.5 text-center text-[11px] sm:text-xs font-semibold text-white hover:bg-[#0f7a36] transition-colors cursor-pointer"
                       >
                         Unduh
                       </button>
