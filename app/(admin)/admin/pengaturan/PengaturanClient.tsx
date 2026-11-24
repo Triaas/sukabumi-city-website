@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import {
   Sparkles,
   Image as ImageIcon,
@@ -34,6 +34,7 @@ interface TabDefinition {
   label: string
   description: string
   icon: React.ComponentType<{ size?: number; className?: string }>
+  row: 'primary' | 'secondary'
 }
 
 const TABS: TabDefinition[] = [
@@ -42,42 +43,49 @@ const TABS: TabDefinition[] = [
     label: 'Hero Section',
     description: 'Teks sambutan utama & foto slider latar belakang',
     icon: Sparkles,
+    row: 'primary',
   },
   {
     id: 'welcome',
     label: 'Welcome (Foto)',
     description: 'Foto kontainer kiri, Wali Kota & Wakil, serta logo IMAN',
     icon: ImageIcon,
+    row: 'primary',
   },
   {
     id: 'profile',
     label: 'Profil Kota',
     description: 'Judul section dan kartu profil Kota Sukabumi',
     icon: Landmark,
+    row: 'primary',
   },
   {
     id: 'media',
     label: 'Media & GPR',
     description: 'Video profil YouTube & widget GPR Komdigi',
     icon: PlaySquare,
+    row: 'primary',
   },
   {
     id: 'opd',
     label: 'Daftar OPD',
     description: 'Kategori, instansi, dan sub-layanan situs OPD',
     icon: Building2,
+    row: 'secondary',
   },
   {
     id: 'partners',
     label: 'Mitra / Partner',
     description: 'Logo mitra berjalan di bagian bawah beranda',
     icon: Handshake,
+    row: 'secondary',
   },
   {
     id: 'headerFooter',
     label: 'Header & Footer',
     description: 'Logo instansi, alamat, kontak resmi, & media sosial',
     icon: LayoutTemplate,
+    row: 'secondary',
   },
 ]
 
@@ -109,6 +117,7 @@ export default function PengaturanClient({
     type: 'success' | 'error'
     message: string
   } | null>(null)
+  const tabRefs = useRef<Partial<Record<ActiveTabId, HTMLButtonElement | null>>>({})
 
   const showToast = useCallback(
     (type: 'success' | 'error', message: string) => {
@@ -116,6 +125,89 @@ export default function PengaturanClient({
     },
     []
   )
+
+  const handleTabKeyDown = (
+    e: React.KeyboardEvent<HTMLButtonElement>,
+    currentIndex: number
+  ) => {
+    let nextIndex: number | null = null
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      nextIndex = (currentIndex + 1) % TABS.length
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      nextIndex = (currentIndex - 1 + TABS.length) % TABS.length
+    } else if (e.key === 'Home') {
+      nextIndex = 0
+    } else if (e.key === 'End') {
+      nextIndex = TABS.length - 1
+    }
+
+    if (nextIndex !== null) {
+      e.preventDefault()
+      const nextTab = TABS[nextIndex]
+      setActiveTab(nextTab.id)
+      tabRefs.current[nextTab.id]?.focus()
+    }
+  }
+
+  const primaryTabs = TABS.filter((tab) => tab.row === 'primary')
+  const secondaryTabs = TABS.filter((tab) => tab.row === 'secondary')
+
+  const renderTabButton = (tab: TabDefinition, orderIndex: number) => {
+    const Icon = tab.icon
+    const isSelected = activeTab === tab.id
+    return (
+      <button
+        key={tab.id}
+        ref={(el) => {
+          tabRefs.current[tab.id] = el
+        }}
+        id={`tab-${tab.id}`}
+        type="button"
+        role="tab"
+        aria-selected={isSelected}
+        aria-controls={`panel-${tab.id}`}
+        tabIndex={isSelected ? 0 : -1}
+        onClick={() => setActiveTab(tab.id)}
+        onKeyDown={(e) => handleTabKeyDown(e, orderIndex)}
+        className={`flex items-start gap-3 rounded-xl border p-3.5 text-left transition-all cursor-pointer min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#159447] focus-visible:ring-offset-2 ${
+          isSelected
+            ? 'border-[#159447] bg-[#159447] text-white shadow-sm'
+            : 'border-slate-200 bg-slate-50/70 text-[#172135] hover:border-[#159447]/45 hover:bg-white'
+        }`}
+      >
+        <span
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+            isSelected
+              ? 'bg-white/15 text-white'
+              : 'bg-white text-[#159447] border border-slate-200/90'
+          }`}
+        >
+          <Icon size={18} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center justify-between gap-2">
+            <span className="text-sm font-bold leading-snug truncate">
+              {tab.label}
+            </span>
+            <span
+              className={`text-[11px] font-semibold tabular-nums shrink-0 ${
+                isSelected ? 'text-white/90' : 'text-[#566276]'
+              }`}
+            >
+              {String(orderIndex + 1).padStart(2, '0')}
+            </span>
+          </span>
+          <span
+            className={`mt-0.5 block text-xs leading-snug line-clamp-2 ${
+              isSelected ? 'text-white/85' : 'text-[#566276]'
+            }`}
+          >
+            {tab.description}
+          </span>
+        </span>
+      </button>
+    )
+  }
 
   return (
     <div className="space-y-6 pb-10">
@@ -139,57 +231,32 @@ export default function PengaturanClient({
       </div>
 
       {/* Navigasi Tab */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-white p-3 sm:p-3.5 shadow-sm">
         <div
           role="tablist"
           aria-label="Kategori Pengaturan Beranda"
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2"
+          className="space-y-3"
         >
-          {TABS.map((tab) => {
-            const Icon = tab.icon
-            const isSelected = activeTab === tab.id
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={isSelected}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-start gap-3 rounded-xl p-3.5 text-left transition-all cursor-pointer min-h-[44px] ${
-                  isSelected
-                    ? 'bg-[#159447] text-white shadow-sm'
-                    : 'bg-slate-50/70 text-[#172135] hover:bg-slate-100'
-                }`}
-              >
-                <span
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-                    isSelected
-                      ? 'bg-white/15 text-white'
-                      : 'bg-white text-[#159447] border border-slate-200/80'
-                  }`}
-                >
-                  <Icon size={18} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-bold leading-snug">
-                    {tab.label}
-                  </span>
-                  <span
-                    className={`mt-0.5 block text-xs leading-snug line-clamp-2 ${
-                      isSelected ? 'text-white/85' : 'text-[#566276]'
-                    }`}
-                  >
-                    {tab.description}
-                  </span>
-                </span>
-              </button>
-            )
-          })}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+            {primaryTabs.map((tab, idx) => renderTabButton(tab, idx))}
+          </div>
+
+          <div className="border-t border-slate-200 pt-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+              {secondaryTabs.map((tab, idx) =>
+                renderTabButton(tab, primaryTabs.length + idx)
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Konten Tab Aktif */}
-      <div role="tabpanel">
+      <div
+        role="tabpanel"
+        id={`panel-${activeTab}`}
+        aria-labelledby={`tab-${activeTab}`}
+      >
         {activeTab === 'profile' && (
           <ProfileTab
             initialData={settings.profile}

@@ -25,21 +25,16 @@ export default function HeaderFooterTab({
   onNotify: (type: 'success' | 'error', message: string) => void
 }) {
   const [formData, setFormData] = useState<HeaderFooterSettings>(initialData)
-  const [uploadingLogo, setUploadingLogo] = useState<
-    'headerLogoUrl' | 'footerLogoUrl' | null
-  >(null)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
 
-  const handleLogoUpload = async (
-    targetField: 'headerLogoUrl' | 'footerLogoUrl',
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    setUploadingLogo(targetField)
+    setUploadingLogo(true)
 
     try {
       const fd = new FormData()
@@ -50,17 +45,18 @@ export default function HeaderFooterTab({
       } else {
         setFormData((prev) => ({
           ...prev,
-          [targetField]: res.imageUrl!,
+          headerLogoUrl: res.imageUrl!,
+          footerLogoUrl: res.imageUrl!,
         }))
         onNotify(
           'success',
-          'Logo berhasil diunggah. Klik Simpan Perubahan untuk memperbarui Header & Footer.'
+          'Logo berhasil diunggah. Klik Simpan Perubahan untuk memperbarui Navbar & Footer.'
         )
       }
     } catch {
       onNotify('error', 'Terjadi kesalahan saat mengunggah logo.')
     } finally {
-      setUploadingLogo(null)
+      setUploadingLogo(false)
       e.target.value = ''
     }
   }
@@ -138,221 +134,209 @@ export default function HeaderFooterTab({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Kolom Kiri: Identitas Brand & Logo */}
-        <div className="lg:col-span-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
+        {/* Kolom Kiri: Identitas Brand (Navbar di atas, Footer di bawah) */}
+        <div className="lg:col-span-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
           <div>
             <h2 className="text-lg font-bold text-[#172135]">
-              Identitas Brand (Navbar & Footer)
+              Identitas Brand (Navbar &amp; Footer)
             </h2>
             <p className="text-xs text-[#566276] mt-0.5">
-              Mengatur logo lambang kota, nama instansi, motto, dan deskripsi singkat pada footer.
+              Dipisah menjadi bagian Navbar di atas dan bagian Footer di bawah agar lebih fokus.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Logo Navbar */}
-            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 flex flex-col justify-between gap-3">
-              <div>
-                <p className="text-xs font-bold text-[#172135]">Logo Navbar</p>
-                <div className="mt-2 h-20 rounded-lg bg-slate-900/85 flex items-center justify-center p-2">
-                  <img
-                    src={formData.headerLogoUrl || '/logo.png'}
-                    alt="Logo Navbar"
-                    width={68}
-                    height={68}
-                    className="max-h-full w-auto object-contain"
-                  />
-                </div>
-              </div>
-              <div>
-                <input
-                  id="upload-header-logo"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/svg+xml"
-                  onChange={(e) => handleLogoUpload('headerLogoUrl', e)}
-                  className="sr-only"
-                />
-                <label
-                  htmlFor="upload-header-logo"
-                  className={`w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#159447] px-3 py-2 text-xs font-semibold text-white hover:bg-[#0f7a36] cursor-pointer min-h-[40px] ${
-                    uploadingLogo === 'headerLogoUrl'
-                      ? 'opacity-60 pointer-events-none'
-                      : ''
-                  }`}
-                >
-                  <Upload size={14} aria-hidden="true" />
-                  {uploadingLogo === 'headerLogoUrl'
-                    ? 'Mengunggah...'
-                    : 'Ganti Logo Navbar'}
-                </label>
-              </div>
+          {/* Bagian Atas: Navbar */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-200">
+              <h3 className="text-sm font-bold text-[#172135]">
+                Pengaturan Navbar
+              </h3>
+              <span className="text-[11px] font-medium text-[#566276]">
+                Teks identitas juga tampil di footer
+              </span>
             </div>
 
-            {/* Logo Footer */}
-            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 flex flex-col justify-between gap-3">
-              <div>
-                <p className="text-xs font-bold text-[#172135]">Logo Footer</p>
-                <div className="mt-2 h-20 rounded-lg bg-[#17253a] flex items-center justify-center p-2">
+            {/* Logo Instansi (Navbar & Footer) */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="h-16 w-24 shrink-0 rounded-lg bg-slate-900/85 flex items-center justify-center p-2">
                   <img
                     src={
+                      formData.headerLogoUrl ||
                       formData.footerLogoUrl ||
-                      '/images/Lambang_Kota_Sukabumi.png'
+                      '/logo.png'
                     }
-                    alt="Logo Footer"
+                    alt="Logo Instansi"
                     width={64}
                     height={64}
                     className="max-h-full w-auto object-contain"
                   />
                 </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-[#172135]">
+                    Logo Instansi
+                  </p>
+                  <p className="text-[11px] text-[#566276] mt-0.5">
+                    Digunakan bersama di Navbar dan Footer.
+                  </p>
+                </div>
               </div>
-              <div>
+              <div className="shrink-0">
                 <input
-                  id="upload-footer-logo"
+                  id="upload-brand-logo"
                   type="file"
                   accept="image/jpeg,image/png,image/webp,image/svg+xml"
-                  onChange={(e) => handleLogoUpload('footerLogoUrl', e)}
+                  onChange={handleLogoUpload}
                   className="sr-only"
                 />
                 <label
-                  htmlFor="upload-footer-logo"
-                  className={`w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#159447] px-3 py-2 text-xs font-semibold text-white hover:bg-[#0f7a36] cursor-pointer min-h-[40px] ${
-                    uploadingLogo === 'footerLogoUrl'
-                      ? 'opacity-60 pointer-events-none'
-                      : ''
+                  htmlFor="upload-brand-logo"
+                  className={`w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#159447] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#0f7a36] cursor-pointer min-h-[44px] ${
+                    uploadingLogo ? 'opacity-60 pointer-events-none' : ''
                   }`}
                 >
                   <Upload size={14} aria-hidden="true" />
-                  {uploadingLogo === 'footerLogoUrl'
-                    ? 'Mengunggah...'
-                    : 'Ganti Logo Footer'}
+                  {uploadingLogo ? 'Mengunggah...' : 'Ganti Logo'}
                 </label>
               </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label
-                htmlFor="hf-top-label"
-                className="block text-xs font-bold uppercase tracking-wider text-[#172135] mb-1.5"
-              >
-                Label Atas
-              </label>
-              <input
-                id="hf-top-label"
-                type="text"
-                value={formData.topLabel}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, topLabel: e.target.value }))
-                }
-                placeholder="WEBSITE RESMI"
-                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-[#172135] focus:border-[#159447] focus:outline-none"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label
+                  htmlFor="hf-top-label"
+                  className="block text-xs font-bold uppercase tracking-wider text-[#172135] mb-1.5"
+                >
+                  Label Atas
+                </label>
+                <input
+                  id="hf-top-label"
+                  type="text"
+                  value={formData.topLabel}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, topLabel: e.target.value }))
+                  }
+                  placeholder="WEBSITE RESMI"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-[#172135] focus:border-[#159447] focus:outline-none focus:ring-2 focus:ring-[#159447]/20"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="hf-motto"
+                  className="block text-xs font-bold uppercase tracking-wider text-[#172135] mb-1.5"
+                >
+                  Teks Motto
+                </label>
+                <input
+                  id="hf-motto"
+                  type="text"
+                  value={formData.mottoText}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      mottoText: e.target.value,
+                    }))
+                  }
+                  placeholder="Reugreug Pageuh Repeh Rapih"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-[#172135] focus:border-[#159447] focus:outline-none focus:ring-2 focus:ring-[#159447]/20"
+                />
+              </div>
             </div>
 
             <div>
               <label
-                htmlFor="hf-motto"
+                htmlFor="hf-org-name"
                 className="block text-xs font-bold uppercase tracking-wider text-[#172135] mb-1.5"
               >
-                Teks Motto
+                Nama Instansi
               </label>
               <input
-                id="hf-motto"
+                id="hf-org-name"
                 type="text"
-                value={formData.mottoText}
+                value={formData.orgName}
                 onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    mottoText: e.target.value,
-                  }))
+                  setFormData((prev) => ({ ...prev, orgName: e.target.value }))
                 }
-                placeholder="Reugreug Pageuh Repeh Rapih"
-                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-[#172135] focus:border-[#159447] focus:outline-none"
+                placeholder="Pemerintah Kota Sukabumi"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-semibold text-[#172135] focus:border-[#159447] focus:outline-none focus:ring-2 focus:ring-[#159447]/20"
               />
             </div>
           </div>
 
-          <div>
-            <label
-              htmlFor="hf-org-name"
-              className="block text-xs font-bold uppercase tracking-wider text-[#172135] mb-1.5"
-            >
-              Nama Instansi
-            </label>
-            <input
-              id="hf-org-name"
-              type="text"
-              value={formData.orgName}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, orgName: e.target.value }))
-              }
-              placeholder="Pemerintah Kota Sukabumi"
-              className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-semibold text-[#172135] focus:border-[#159447] focus:outline-none"
-            />
-          </div>
+          {/* Pemisah Tegas Navbar & Footer */}
+          <div className="border-t-2 border-slate-200 pt-5 space-y-4">
+            <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-200">
+              <h3 className="text-sm font-bold text-[#172135]">
+                Pengaturan Footer
+              </h3>
+              <span className="text-[11px] font-medium text-[#566276]">
+                Khusus bagian bawah halaman
+              </span>
+            </div>
 
-          <div>
-            <label
-              htmlFor="hf-footer-desc"
-              className="block text-xs font-bold uppercase tracking-wider text-[#172135] mb-1.5"
-            >
-              Deskripsi Singkat Footer
-            </label>
-            <textarea
-              id="hf-footer-desc"
-              rows={3}
-              value={formData.footerDescription}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  footerDescription: e.target.value,
-                }))
-              }
-              className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-[#172135] focus:border-[#159447] focus:outline-none"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
             <div>
               <label
-                htmlFor="hf-managed-label"
+                htmlFor="hf-footer-desc"
                 className="block text-xs font-bold uppercase tracking-wider text-[#172135] mb-1.5"
               >
-                Dikelola Oleh (Nama)
+                Deskripsi Singkat Footer
               </label>
-              <input
-                id="hf-managed-label"
-                type="text"
-                value={formData.managedByLabel}
+              <textarea
+                id="hf-footer-desc"
+                rows={3}
+                value={formData.footerDescription}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    managedByLabel: e.target.value,
+                    footerDescription: e.target.value,
                   }))
                 }
-                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-[#172135] focus:border-[#159447] focus:outline-none"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-[#172135] focus:border-[#159447] focus:outline-none focus:ring-2 focus:ring-[#159447]/20"
               />
             </div>
-            <div>
-              <label
-                htmlFor="hf-managed-url"
-                className="block text-xs font-bold uppercase tracking-wider text-[#172135] mb-1.5"
-              >
-                Dikelola Oleh (URL)
-              </label>
-              <input
-                id="hf-managed-url"
-                type="url"
-                value={formData.managedByUrl}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    managedByUrl: e.target.value,
-                  }))
-                }
-                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-[#172135] focus:border-[#159447] focus:outline-none"
-              />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label
+                  htmlFor="hf-managed-label"
+                  className="block text-xs font-bold uppercase tracking-wider text-[#172135] mb-1.5"
+                >
+                  Dikelola Oleh (Nama)
+                </label>
+                <input
+                  id="hf-managed-label"
+                  type="text"
+                  value={formData.managedByLabel}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      managedByLabel: e.target.value,
+                    }))
+                  }
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-[#172135] focus:border-[#159447] focus:outline-none focus:ring-2 focus:ring-[#159447]/20"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="hf-managed-url"
+                  className="block text-xs font-bold uppercase tracking-wider text-[#172135] mb-1.5"
+                >
+                  Dikelola Oleh (URL)
+                </label>
+                <input
+                  id="hf-managed-url"
+                  type="url"
+                  value={formData.managedByUrl}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      managedByUrl: e.target.value,
+                    }))
+                  }
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-[#172135] focus:border-[#159447] focus:outline-none focus:ring-2 focus:ring-[#159447]/20"
+                />
+              </div>
             </div>
           </div>
         </div>

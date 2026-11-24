@@ -61,15 +61,19 @@ export function Footer({
         <div className="grid gap-12 md:grid-cols-4">
           <div>
             <div className="flex items-center gap-4">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/5 border border-white/10 p-2 shadow-sm">
-                <img
-                  src={settings.footerLogoUrl || '/images/Lambang_Kota_Sukabumi.png'}
-                  alt={settings.orgName || 'Lambang Kota Sukabumi'}
-                  className="h-full w-full object-contain"
-                />
-              </div>
+              <img
+                src={
+                  settings.headerLogoUrl ||
+                  settings.footerLogoUrl ||
+                  '/images/Lambang_Kota_Sukabumi.png'
+                }
+                alt={settings.orgName || 'Lambang Kota Sukabumi'}
+                width={64}
+                height={64}
+                className="h-16 w-16 shrink-0 object-contain"
+              />
               <div className="flex flex-col justify-center">
-                <p className="text-[11px] font-semibold tracking-[0.14em] text-white/75 leading-tight uppercase whitespace-nowrap">
+                <p className="text-[11px] font-semibold tracking-[0.14em] text-white/75 leading-tight whitespace-nowrap">
                   {settings.topLabel}
                 </p>
                 <h3 className="text-base sm:text-lg font-bold leading-snug whitespace-nowrap">

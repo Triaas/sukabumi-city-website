@@ -151,7 +151,7 @@ export function Navbar({
             className="h-9 sm:h-14 md:h-[68px] w-auto object-contain shrink-0 group-hover:scale-105 transition-transform duration-200"
           />
           <div className="flex flex-col justify-between gap-0.5 sm:gap-1 py-0.5 min-w-0">
-            <p className="text-[9px] sm:text-xs font-semibold tracking-[0.12em] text-white/75 leading-tight uppercase truncate">
+            <p className="text-[9px] sm:text-xs font-semibold tracking-[0.12em] text-white/75 leading-tight truncate">
               {settings.topLabel}
             </p>
             <p className="text-sm sm:text-xl md:text-2xl font-bold text-white leading-tight truncate">
