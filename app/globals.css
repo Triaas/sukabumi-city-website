@@ -337,7 +337,10 @@ body.hide-navbar #main-navbar {
   color: #172135;
 }
 .profile-content img {
-  max-width: 100%;
+  width: 100%;
+  max-width: 28rem;
+  margin-left: auto;
+  margin-right: auto;
   height: auto;
 }
 

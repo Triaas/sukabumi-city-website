@@ -172,9 +172,6 @@ export default function ProfilePageEditorClient({
             <h1 className="text-2xl font-bold text-[#172135] tracking-tight">
               Edit Halaman: {formData.title}
             </h1>
-            <span className="rounded-full bg-slate-100 border border-slate-200 px-2.5 py-0.5 text-[11px] font-mono font-semibold text-slate-600">
-              /{formData.slug}
-            </span>
           </div>
           <p className="text-sm text-[#566276] max-w-2xl leading-relaxed mt-1">
             Kelola informasi utama, konten artikel, banner hero, serta data khusus halaman detail profil kota.

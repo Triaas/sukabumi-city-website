@@ -340,15 +340,6 @@ export default function OpdTab({
             />
           </section>
         ))}
-
-        <button
-          type="button"
-          onClick={() => setGroups([...groups, { title: '', items: [] }])}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-[#172135] hover:bg-slate-50 cursor-pointer min-h-[44px]"
-        >
-          <Plus size={16} aria-hidden="true" />
-          Tambah Grup pada Kategori {activeCategory}
-        </button>
       </div>
 
       <SaveResetBar

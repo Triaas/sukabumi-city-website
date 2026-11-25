@@ -105,7 +105,6 @@ export default function LeadersGallery({ title, leaders }: { title: string, lead
             <div className="inline-block px-3 py-1 bg-slate-200/70 text-[#29364a] text-xs md:text-sm font-semibold rounded-md border border-slate-300/50 mb-3">
               {currentProfile.role}
             </div>
-            <div className="w-10 h-1 bg-[#f3c338] mx-auto md:mx-0 mb-3" />
           </div>
           
           <div className="flex-1 overflow-hidden flex flex-col">

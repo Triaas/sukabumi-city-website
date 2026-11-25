@@ -123,7 +123,7 @@ export default async function DetailPage({
               {/* Konten HTML Utama */}
               <div
                 id="sejarah-content"
-                className="profile-content prose prose-lg max-w-none scroll-mt-36 text-[#29364a] leading-relaxed text-base md:text-lg text-justify"
+                className="profile-content prose prose-lg max-w-none scroll-mt-36 text-[#29364a] leading-relaxed text-base md:text-lg text-justify [&_img]:w-full [&_img]:max-w-md [&_img]:mx-auto [&_img]:h-auto [&_img]:rounded-xl [&_img]:shadow-sm"
                 dangerouslySetInnerHTML={{ __html: page.contentHtml }}
               />
 
