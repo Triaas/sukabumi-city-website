@@ -22,6 +22,7 @@ export interface ManagedUserItem {
   mustChangePassword: boolean;
   createdAt: string;
   isPasswordExpired: boolean;
+  articleCount: number;
 }
 
 export interface UserActionResult<T = undefined> {
@@ -39,6 +40,7 @@ interface UserRow {
   password_changed_at: Date | string;
   must_change_password: boolean;
   created_at: Date | string;
+  article_count?: number | string;
 }
 
 const VALID_ROLES: UserRole[] = ['SUPER_ADMIN', 'ADMIN_BERITA', 'REPORTER'];
@@ -67,6 +69,7 @@ function mapUserRow(row: UserRow): ManagedUserItem {
     mustChangePassword: Boolean(row.must_change_password),
     createdAt: toIsoTimestamp(row.created_at),
     isPasswordExpired: isPasswordExpired(changedAt),
+    articleCount: Number(row.article_count ?? 0),
   };
 }
 
@@ -131,16 +134,19 @@ export async function getUsersList(): Promise<ManagedUserItem[]> {
 
   const { rows } = await pool.query<UserRow>(
     `SELECT
-       id,
-       name,
-       email,
-       role,
-       is_active,
-       password_changed_at,
-       must_change_password,
-       created_at
-     FROM public.users
-     ORDER BY created_at ASC, id ASC`
+       u.id,
+       u.name,
+       u.email,
+       u.role,
+       u.is_active,
+       u.password_changed_at,
+       u.must_change_password,
+       u.created_at,
+       COUNT(b.id)::int AS article_count
+     FROM public.users u
+     LEFT JOIN public.berita b ON b.author_id = u.id
+     GROUP BY u.id
+     ORDER BY u.created_at ASC, u.id ASC`
   );
 
   return rows.map(mapUserRow);
@@ -314,7 +320,8 @@ export async function updateUserAction(input: {
          is_active,
          password_changed_at,
          must_change_password,
-         created_at`,
+         created_at,
+         (SELECT COUNT(*)::int FROM public.berita b WHERE b.author_id = public.users.id) AS article_count`,
       [validated.name, validated.email, input.role, userId]
     );
 
@@ -386,7 +393,8 @@ export async function toggleUserStatusAction(input: {
          is_active,
          password_changed_at,
          must_change_password,
-         created_at`,
+         created_at,
+         (SELECT COUNT(*)::int FROM public.berita b WHERE b.author_id = public.users.id) AS article_count`,
       [input.isActive, userId]
     );
 
@@ -489,6 +497,47 @@ export async function resetUserPasswordAction(input: {
     return {
       success: false,
       error: 'Gagal mereset kata sandi pengguna. Silakan coba kembali.',
+    };
+  }
+}
+
+export async function deleteUserAction(input: {
+  userId: number;
+}): Promise<UserActionResult> {
+  const currentUser = await requireRole(['SUPER_ADMIN']);
+
+  const userId = Number(input.userId);
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return { success: false, error: 'ID pengguna tidak valid.' };
+  }
+
+  if (userId === currentUser.id) {
+    return {
+      success: false,
+      error: 'Anda tidak dapat menghapus akun yang sedang Anda gunakan.',
+    };
+  }
+
+  try {
+    const deletedRes = await pool.query<{ id: number }>(
+      `DELETE FROM public.users
+       WHERE id = $1
+       RETURNING id`,
+      [userId]
+    );
+
+    if (deletedRes.rows.length === 0) {
+      return { success: false, error: 'Akun pengguna tidak ditemukan.' };
+    }
+
+    revalidatePath('/admin/users');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error in deleteUserAction:', error);
+    return {
+      success: false,
+      error: 'Gagal menghapus akun pengguna. Silakan coba kembali.',
     };
   }
 }

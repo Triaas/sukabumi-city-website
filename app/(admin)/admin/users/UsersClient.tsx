@@ -18,6 +18,7 @@ import {
   PlusCircle,
   RefreshCw,
   Search,
+  Trash2,
   UserCheck,
   UserX,
   Users,
@@ -27,6 +28,7 @@ import ToastNotification from '@/components/ToastNotification';
 import type { UserRole } from '@/lib/auth/types';
 import {
   createUserAction,
+  deleteUserAction,
   resetUserPasswordAction,
   toggleUserStatusAction,
   updateUserAction,
@@ -172,6 +174,11 @@ export default function UsersClient({
   } | null>(null);
   const [toggleError, setToggleError] = useState<string | null>(null);
 
+  const [deletingUser, setDeletingUser] = useState<ManagedUserItem | null>(
+    null
+  );
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   const closeAddModal = () => {
     if (isPending) return;
     setIsAddOpen(false);
@@ -200,10 +207,18 @@ export default function UsersClient({
     setToggleError(null);
   };
 
+  const closeDeleteModal = () => {
+    if (isPending) return;
+    setDeletingUser(null);
+    setDeleteError(null);
+  };
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape' || isPending) return;
-      if (togglingTarget) {
+      if (deletingUser) {
+        closeDeleteModal();
+      } else if (togglingTarget) {
         closeToggleModal();
       } else if (resettingUser) {
         closeResetModal();
@@ -216,7 +231,14 @@ export default function UsersClient({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPending, togglingTarget, resettingUser, editingUser, isAddOpen]);
+  }, [
+    isPending,
+    deletingUser,
+    togglingTarget,
+    resettingUser,
+    editingUser,
+    isAddOpen,
+  ]);
 
   const summaryCounts = useMemo(() => {
     let activeCount = 0;
@@ -514,6 +536,36 @@ export default function UsersClient({
         message: result.data.isActive
           ? `Akun ${result.data.name} berhasil diaktifkan kembali.`
           : `Akun ${result.data.name} dinonaktifkan dan seluruh sesinya telah dihentikan.`,
+      });
+      router.refresh();
+    });
+  };
+
+  const openDeleteModal = (user: ManagedUserItem) => {
+    if (user.id === currentUserId) return;
+    setDeleteError(null);
+    setDeletingUser(user);
+  };
+
+  const handleConfirmDeleteUser = () => {
+    if (!deletingUser) return;
+    setDeleteError(null);
+
+    const target = deletingUser;
+
+    startTransition(async () => {
+      const result = await deleteUserAction({ userId: target.id });
+
+      if (!result.success) {
+        setDeleteError(result.error || 'Gagal menghapus akun pengguna.');
+        return;
+      }
+
+      setUsers((prev) => prev.filter((item) => item.id !== target.id));
+      setDeletingUser(null);
+      setToast({
+        type: 'success',
+        message: `Akun ${target.name} berhasil dihapus secara permanen.`,
       });
       router.refresh();
     });
@@ -920,6 +972,26 @@ export default function UsersClient({
                                 <span>Aktifkan</span>
                               </>
                             )}
+                          </button>
+
+                          <button
+                            type="button"
+                            disabled={isSelf}
+                            onClick={() => openDeleteModal(user)}
+                            title={
+                              isSelf
+                                ? 'Akun yang sedang digunakan tidak dapat dihapus'
+                                : `Hapus akun ${user.name}`
+                            }
+                            aria-label={`Hapus akun ${user.name}`}
+                            className={`inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3 py-2 rounded-xl border text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#159447] motion-reduce:transition-none ${
+                              isSelf
+                                ? 'border-slate-200 bg-slate-100 text-[#566276] opacity-60 cursor-not-allowed'
+                                : 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 active:bg-red-200/70 cursor-pointer'
+                            }`}
+                          >
+                            <Trash2 size={14} aria-hidden="true" />
+                            <span>Hapus</span>
                           </button>
                         </div>
                       </td>
@@ -1748,6 +1820,105 @@ export default function UsersClient({
                   <span>Ya, Aktifkan Akun</span>
                 ) : (
                   <span>Ya, Nonaktifkan Akun</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deletingUser && (
+        <div
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) closeDeleteModal();
+          }}
+          className="fixed inset-0 z-50 bg-slate-900/45 flex items-center justify-center p-4"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-delete-user-title"
+            className="bg-white rounded-2xl border border-slate-200 max-w-md w-full p-6 shadow-xl space-y-4"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2
+                  id="modal-delete-user-title"
+                  className="text-base sm:text-lg font-bold text-[#172135] tracking-tight"
+                >
+                  Hapus Akun Secara Permanen?
+                </h2>
+                <p className="text-xs text-[#566276] mt-0.5 break-all">
+                  {deletingUser.name} ({deletingUser.email})
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={closeDeleteModal}
+                aria-label="Tutup dialog konfirmasi hapus akun"
+                className="w-11 h-11 rounded-xl flex items-center justify-center text-[#566276] hover:text-[#172135] hover:bg-slate-100 active:bg-slate-200/70 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#159447] motion-reduce:transition-none"
+              >
+                <X size={18} aria-hidden="true" />
+              </button>
+            </div>
+
+            {deleteError && (
+              <div
+                role="alert"
+                aria-live="polite"
+                className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs sm:text-sm font-medium text-red-800 flex items-start gap-2"
+              >
+                <AlertCircle
+                  size={16}
+                  aria-hidden="true"
+                  className="shrink-0 mt-0.5"
+                />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            <p className="text-xs sm:text-sm text-[#566276] leading-relaxed">
+              Tindakan ini bersifat permanen dan tidak dapat dibatalkan. Akun,
+              riwayat kata sandi, serta seluruh sesi login aktif pengguna ini
+              akan langsung dihapus dan dihentikan.
+            </p>
+
+            {deletingUser.articleCount > 0 && (
+              <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-950 leading-relaxed">
+                Akun ini memiliki{' '}
+                <strong>{deletingUser.articleCount} arsip berita</strong>.
+                Seluruh berita tersebut tetap aman tersimpan di portal dengan
+                nama penulis yang sudah tercatat.
+              </div>
+            )}
+
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={closeDeleteModal}
+                className="inline-flex items-center justify-center min-h-[44px] px-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 active:bg-slate-200/70 text-xs sm:text-sm font-semibold text-[#172135] transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#159447] motion-reduce:transition-none"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={handleConfirmDeleteUser}
+                className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#159447] focus-visible:ring-offset-2 motion-reduce:transition-none"
+              >
+                {isPending ? (
+                  <>
+                    <Loader2
+                      size={16}
+                      aria-hidden="true"
+                      className="animate-spin motion-reduce:animate-none"
+                    />
+                    <span>Menghapus...</span>
+                  </>
+                ) : (
+                  <span>Ya, Hapus Permanen</span>
                 )}
               </button>
             </div>
