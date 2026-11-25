@@ -270,36 +270,6 @@ export default function HeroTab({
               3000 milidetik = 3 detik per gambar.
             </p>
           </div>
-
-          {/* Live Preview Box */}
-          <div className="pt-2">
-            <p className="text-xs font-bold uppercase tracking-wider text-[#566276] mb-2">
-              Pratinjau Teks Hero
-            </p>
-            <div className="relative overflow-hidden rounded-2xl bg-[#0c1d26] p-6 text-white min-h-[190px] flex items-center">
-              {formData.images[0] && (
-                <img
-                  src={formData.images[0]}
-                  alt="Preview Hero"
-                  width={600}
-                  height={320}
-                  className="absolute inset-0 size-full object-cover opacity-45"
-                />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/45 to-slate-950/35" />
-              <div className="relative z-10 max-w-md">
-                <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#f3c338]">
-                  {formData.eyebrow}
-                </p>
-                <p className="mt-1 text-2xl sm:text-3xl font-bold leading-tight text-white">
-                  {formData.title}
-                </p>
-                <p className="mt-2 text-xs sm:text-sm leading-relaxed text-white/85">
-                  {formData.subtitle}
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Daftar Foto Slider Background */}

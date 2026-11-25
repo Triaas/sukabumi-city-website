@@ -193,20 +193,6 @@ export default function PartnersTab({
             />
 
             <div>
-              <label htmlFor={`partner-${item.id}-alt`} className={LABEL_CLASS}>
-                Teks Alternatif (Nama Mitra)
-              </label>
-              <input
-                id={`partner-${item.id}-alt`}
-                type="text"
-                value={item.alt ?? ''}
-                onChange={(e) => updateItem(index, { alt: e.target.value })}
-                placeholder="Nama instansi mitra"
-                className={INPUT_CLASS}
-              />
-            </div>
-
-            <div>
               <label htmlFor={`partner-${item.id}-href`} className={LABEL_CLASS}>
                 URL Tujuan
               </label>

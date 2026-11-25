@@ -149,28 +149,6 @@ export default function WelcomeTab({
                 </span>
               )}
             </div>
-
-            <div>
-              <label
-                htmlFor="welcome-left-alt"
-                className="block text-xs font-bold uppercase tracking-wider text-[#172135] mb-1"
-              >
-                Teks Alternatif (Alt Text)
-              </label>
-              <input
-                id="welcome-left-alt"
-                type="text"
-                value={formData.leftContainerAlt}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    leftContainerAlt: e.target.value,
-                  }))
-                }
-                placeholder="Banner Sambutan Kota Sukabumi"
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-[#172135] focus:border-[#159447] focus:outline-none"
-              />
-            </div>
           </div>
 
           <div className="flex items-center gap-2 pt-2">
@@ -234,28 +212,6 @@ export default function WelcomeTab({
                 className="max-h-full w-auto object-contain"
               />
             </div>
-
-            <div>
-              <label
-                htmlFor="welcome-leader-alt"
-                className="block text-xs font-bold uppercase tracking-wider text-[#172135] mb-1"
-              >
-                Teks Alternatif (Alt Text)
-              </label>
-              <input
-                id="welcome-leader-alt"
-                type="text"
-                value={formData.leaderAlt}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    leaderAlt: e.target.value,
-                  }))
-                }
-                placeholder="Walikota dan Wakil Walikota Sukabumi"
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-[#172135] focus:border-[#159447] focus:outline-none"
-              />
-            </div>
           </div>
 
           <div className="pt-2">
@@ -304,28 +260,6 @@ export default function WelcomeTab({
                 width={320}
                 height={240}
                 className="max-h-full w-auto object-contain"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="welcome-slogan-alt"
-                className="block text-xs font-bold uppercase tracking-wider text-[#172135] mb-1"
-              >
-                Teks Alternatif (Alt Text)
-              </label>
-              <input
-                id="welcome-slogan-alt"
-                type="text"
-                value={formData.sloganAlt}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    sloganAlt: e.target.value,
-                  }))
-                }
-                placeholder="IMAN - Inovatif, Mandiri, Agamis, Nasionalis"
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-[#172135] focus:border-[#159447] focus:outline-none"
               />
             </div>
           </div>
