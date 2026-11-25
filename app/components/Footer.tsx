@@ -3,6 +3,7 @@
 import { MapPin, Phone, Mail } from 'lucide-react'
 import type { HeaderFooterSettings } from '@/lib/site-settings/types'
 import { DEFAULT_HEADER_FOOTER_SETTINGS } from '@/lib/site-settings/defaults'
+import { sanitizeSafeUrl } from '@/lib/security/sanitize'
 
 function FacebookLogo() {
   return (
@@ -53,6 +54,39 @@ export function Footer({
 }: {
   settings?: HeaderFooterSettings
 }) {
+  const safeMapsUrl = sanitizeSafeUrl(settings.mapsUrl, {
+    allowRelative: true,
+    allowHttp: true,
+    allowHash: true,
+    fallback: '#',
+  })
+  const safeFacebookUrl = sanitizeSafeUrl(settings.socialLinks.facebook, {
+    allowRelative: false,
+    allowHttp: true,
+    fallback: '',
+  })
+  const safeXUrl = sanitizeSafeUrl(settings.socialLinks.x, {
+    allowRelative: false,
+    allowHttp: true,
+    fallback: '',
+  })
+  const safeInstagramUrl = sanitizeSafeUrl(settings.socialLinks.instagram, {
+    allowRelative: false,
+    allowHttp: true,
+    fallback: '',
+  })
+  const safeYoutubeUrl = sanitizeSafeUrl(settings.socialLinks.youtube, {
+    allowRelative: false,
+    allowHttp: true,
+    fallback: '',
+  })
+  const safeManagedByUrl = sanitizeSafeUrl(settings.managedByUrl, {
+    allowRelative: true,
+    allowHttp: true,
+    allowHash: true,
+    fallback: '#',
+  })
+
   return (
     <footer id="footer" className="border-t-4 border-[#159447] bg-[#17253a] px-4 py-16 text-white md:px-8 lg:px-12 relative overflow-hidden">
       <div className="footer-dots absolute inset-0 pointer-events-none opacity-100" />
@@ -89,7 +123,7 @@ export function Footer({
             </p>
             <div className="mt-6 flex flex-col gap-5 text-sm leading-relaxed text-white/80">
               <a
-                href={settings.mapsUrl || '#'}
+                href={safeMapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-start gap-3"
@@ -98,14 +132,14 @@ export function Footer({
                 <span>{settings.addressText}</span>
               </a>
               <a
-                href={`tel:${settings.phoneTel || '+6226620229715'}`}
+                href={`tel:${(settings.phoneTel || '+6226620229715').replace(/[^0-9+()-]/g, '')}`}
                 className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-center gap-3"
               >
                 <Phone className="shrink-0 text-[#e8468a] group-hover:text-green-400 transition-colors" />
                 <span>{settings.phoneDisplay}</span>
               </a>
               <a
-                href={`mailto:${settings.email}`}
+                href={`mailto:${encodeURIComponent((settings.email || '').trim())}`}
                 className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-center gap-3"
               >
                 <Mail className="shrink-0 text-[#e9c9eb] group-hover:text-green-400 transition-colors" />
@@ -116,17 +150,25 @@ export function Footer({
           <div className="md:pl-6 lg:pl-14 xl:pl-10">
             <h3 className="text-lg font-bold">TAUTAN TERKAIT</h3>
             <div className="mt-8 flex flex-col gap-5 text-white/80">
-              {settings.relatedLinks.map((item, idx) => (
+              {settings.relatedLinks.map((item, idx) => {
+                const safeItemHref = sanitizeSafeUrl(item.href, {
+                  allowRelative: true,
+                  allowHttp: true,
+                  allowHash: true,
+                  fallback: '#',
+                })
+                return (
                 <a
                   key={`${item.label}-${idx}`}
-                  href={item.href}
+                  href={safeItemHref}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group cursor-pointer hover:text-green-400 transition-colors inline-flex items-center gap-3"
                 >
                   {item.label}
                 </a>
-              ))}
+                )
+              })}
             </div>
           </div>
           <div>
@@ -143,9 +185,9 @@ export function Footer({
           <div>
             <h3 className="text-lg font-bold">MEDIA SOSIAL</h3>
             <div className="mt-8 flex gap-3.5">
-              {settings.socialLinks.facebook && (
+              {safeFacebookUrl && (
                 <a
-                  href={settings.socialLinks.facebook}
+                  href={safeFacebookUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Facebook"
@@ -154,9 +196,9 @@ export function Footer({
                   <FacebookLogo />
                 </a>
               )}
-              {settings.socialLinks.x && (
+              {safeXUrl && (
                 <a
-                  href={settings.socialLinks.x}
+                  href={safeXUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="X"
@@ -165,9 +207,9 @@ export function Footer({
                   <XLogo />
                 </a>
               )}
-              {settings.socialLinks.instagram && (
+              {safeInstagramUrl && (
                 <a
-                  href={settings.socialLinks.instagram}
+                  href={safeInstagramUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Instagram"
@@ -176,9 +218,9 @@ export function Footer({
                   <InstagramLogo />
                 </a>
               )}
-              {settings.socialLinks.youtube && (
+              {safeYoutubeUrl && (
                 <a
-                  href={settings.socialLinks.youtube}
+                  href={safeYoutubeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Youtube"
@@ -195,7 +237,7 @@ export function Footer({
           <div>
             Dikelola oleh{' '}
             <a
-              href={settings.managedByUrl}
+              href={safeManagedByUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-[#4ade80] hover:text-green-300 hover:underline transition-colors"

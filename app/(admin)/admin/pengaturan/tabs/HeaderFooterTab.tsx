@@ -202,7 +202,7 @@ export default function HeaderFooterTab({
                 <input
                   id="upload-brand-logo"
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                  accept="image/jpeg,image/png,image/webp"
                   onChange={handleLogoUpload}
                   className="sr-only"
                 />

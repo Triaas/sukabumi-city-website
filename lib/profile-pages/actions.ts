@@ -3,7 +3,14 @@
 import { revalidatePath } from 'next/cache';
 import pool from '@/lib/db/pool';
 import { requireRole } from '@/lib/auth';
-import { saveProfileAssetImage } from '@/lib/upload';
+import {
+  sanitizeRichTextHtml,
+  sanitizeSafeUrl,
+} from '@/lib/security/sanitize';
+import {
+  isUploadValidationError,
+  saveProfileAssetImage,
+} from '@/lib/upload';
 import { DEFAULT_PROFILE_PAGES } from './defaults';
 import {
   isValidProfilePageSlug,
@@ -35,7 +42,49 @@ export async function updateProfilePageAction(
 
     const heroImageFit =
       payload.heroImageFit === 'contain' ? 'contain' : 'cover';
-    const extraData = payload.extraData ?? {};
+    const safeHeroImage = payload.heroImage
+      ? sanitizeSafeUrl(payload.heroImage, {
+          allowRelative: true,
+          allowHttp: true,
+          allowHash: false,
+          fallback: '',
+        })
+      : '';
+    const safeContentImage = payload.contentImage
+      ? sanitizeSafeUrl(payload.contentImage, {
+          allowRelative: true,
+          allowHttp: true,
+          allowHash: false,
+          fallback: '',
+        }) || null
+      : null;
+    const safeContentHtml = sanitizeRichTextHtml(payload.contentHtml ?? '');
+
+    const rawExtraData = payload.extraData ?? {};
+    const extraData = {
+      ...rawExtraData,
+      ...(rawExtraData.featuredPublication
+        ? {
+            featuredPublication: {
+              ...rawExtraData.featuredPublication,
+              src: sanitizeSafeUrl(rawExtraData.featuredPublication.src, {
+                allowRelative: true,
+                allowHttp: true,
+                allowHash: false,
+                fallback: '',
+              }),
+              link: rawExtraData.featuredPublication.link
+                ? sanitizeSafeUrl(rawExtraData.featuredPublication.link, {
+                    allowRelative: true,
+                    allowHttp: true,
+                    allowHash: false,
+                    fallback: '',
+                  })
+                : rawExtraData.featuredPublication.link,
+            },
+          }
+        : {}),
+    };
 
     await pool.query(
       `INSERT INTO public.profile_pages (
@@ -67,12 +116,12 @@ export async function updateProfilePageAction(
         slug,
         title,
         payload.description ?? '',
-        payload.heroImage ?? '',
+        safeHeroImage,
         heroImageFit,
-        payload.contentImage ?? null,
+        safeContentImage,
         payload.contentImageTitle ?? null,
         payload.contentImageCaption ?? null,
-        payload.contentHtml ?? '',
+        safeContentHtml,
         JSON.stringify(extraData),
       ]
     );
@@ -83,12 +132,12 @@ export async function updateProfilePageAction(
       slug,
       title,
       description: payload.description ?? '',
-      heroImage: payload.heroImage ?? '',
+      heroImage: safeHeroImage,
       heroImageFit,
-      contentImage: payload.contentImage ?? null,
+      contentImage: safeContentImage,
       contentImageTitle: payload.contentImageTitle ?? null,
       contentImageCaption: payload.contentImageCaption ?? null,
-      contentHtml: payload.contentHtml ?? '',
+      contentHtml: safeContentHtml,
       extraData,
       updatedAt: new Date().toISOString(),
     };
@@ -98,10 +147,7 @@ export async function updateProfilePageAction(
     console.error(`Error in updateProfilePageAction (${slug}):`, error);
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal menyimpan halaman profil.',
+      error: 'Gagal menyimpan halaman profil.',
     };
   }
 }
@@ -167,10 +213,7 @@ export async function resetProfilePageAction(
     console.error(`Error in resetProfilePageAction (${slug}):`, error);
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal mereset halaman profil ke bawaan.',
+      error: 'Gagal mereset halaman profil ke bawaan.',
     };
   }
 }
@@ -194,13 +237,16 @@ export async function uploadProfileImageAction(
       imageUrl,
     };
   } catch (error) {
+    if (isUploadValidationError(error)) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
     console.error('Error in uploadProfileImageAction:', error);
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal mengunggah berkas gambar.',
+      error: 'Gagal mengunggah berkas gambar.',
     };
   }
 }

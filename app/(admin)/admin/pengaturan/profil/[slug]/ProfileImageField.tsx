@@ -120,7 +120,7 @@ export default function ProfileImageField({
         ref={fileInputRef}
         id={id}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/svg+xml"
+        accept="image/jpeg,image/png,image/webp"
         onChange={handleChange}
         className="sr-only"
       />

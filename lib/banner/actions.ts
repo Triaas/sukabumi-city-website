@@ -3,7 +3,12 @@
 import { revalidatePath } from 'next/cache';
 import pool from '@/lib/db/pool';
 import { requireRole } from '@/lib/auth';
-import { saveBannerImage } from '@/lib/upload';
+import { sanitizeSafeUrl } from '@/lib/security/sanitize';
+import {
+  deleteUploadedFileSafely,
+  isUploadValidationError,
+  saveBannerImage,
+} from '@/lib/upload';
 
 export interface BannerRow {
   id: number;
@@ -157,15 +162,31 @@ export async function createBannerAction(
     const title = rawTitle || (!isActive ? '(Draf Banner Tanpa Judul)' : '');
 
     const imageFileEntry = formData.get('image_file');
-    const existingImageUrl = (
-      (formData.get('existing_image_url') as string) || ''
-    ).trim();
+    const existingImageUrl = sanitizeSafeUrl(
+      (formData.get('existing_image_url') as string) || '',
+      { allowRelative: true, allowHttp: true, allowHash: false, fallback: '' }
+    );
 
     if (!title) {
       return {
         success: false,
         error: 'Judul / deskripsi banner wajib diisi.',
       };
+    }
+
+    if (rawTargetUrl && rawTargetUrl !== '#') {
+      const checkedTarget = sanitizeSafeUrl(rawTargetUrl, {
+        allowRelative: true,
+        allowHttp: true,
+        allowHash: true,
+        fallback: '',
+      });
+      if (!checkedTarget) {
+        return {
+          success: false,
+          error: 'Format URL tautan tujuan banner tidak valid.',
+        };
+      }
     }
 
     const hasImageFile =
@@ -185,7 +206,13 @@ export async function createBannerAction(
     const parsedSort = parseInt(rawSortOrder, 10);
     const sortOrder =
       Number.isFinite(parsedSort) && parsedSort >= 0 ? parsedSort : 1;
-    const targetUrl = rawTargetUrl || '#';
+    const targetUrl =
+      sanitizeSafeUrl(rawTargetUrl, {
+        allowRelative: true,
+        allowHttp: true,
+        allowHash: true,
+        fallback: '#',
+      }) || '#';
 
     const insertResult = await pool.query<{ id: number }>(
       `INSERT INTO public.event_banners (
@@ -212,13 +239,13 @@ export async function createBannerAction(
       imageUrl: finalImageUrl,
     };
   } catch (error: unknown) {
+    if (isUploadValidationError(error)) {
+      return { success: false, error: error.message };
+    }
     console.error('Error in createBannerAction:', error);
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Terjadi kesalahan saat menyimpan banner baru.',
+      error: 'Terjadi kesalahan saat menyimpan banner baru.',
     };
   }
 }
@@ -273,15 +300,38 @@ export async function updateBannerAction(
     const title = rawTitle || (!isActive ? '(Draf Banner Tanpa Judul)' : '');
 
     const imageFileEntry = formData.get('image_file');
-    const existingImageUrl =
-      ((formData.get('existing_image_url') as string) || '').trim() ||
-      currentRow.image_url;
+    const rawExistingImageUrl = (
+      (formData.get('existing_image_url') as string) || ''
+    ).trim();
+    const existingImageUrl = rawExistingImageUrl
+      ? sanitizeSafeUrl(rawExistingImageUrl, {
+          allowRelative: true,
+          allowHttp: true,
+          allowHash: false,
+          fallback: '',
+        })
+      : currentRow.image_url;
 
     if (!title) {
       return {
         success: false,
         error: 'Judul / deskripsi banner wajib diisi.',
       };
+    }
+
+    if (rawTargetUrl && rawTargetUrl !== '#') {
+      const checkedTarget = sanitizeSafeUrl(rawTargetUrl, {
+        allowRelative: true,
+        allowHttp: true,
+        allowHash: true,
+        fallback: '',
+      });
+      if (!checkedTarget) {
+        return {
+          success: false,
+          error: 'Format URL tautan tujuan banner tidak valid.',
+        };
+      }
     }
 
     const hasImageFile =
@@ -303,7 +353,13 @@ export async function updateBannerAction(
       Number.isFinite(parsedSort) && parsedSort >= 0
         ? parsedSort
         : currentRow.sort_order ?? 1;
-    const targetUrl = rawTargetUrl || '#';
+    const targetUrl =
+      sanitizeSafeUrl(rawTargetUrl, {
+        allowRelative: true,
+        allowHttp: true,
+        allowHash: true,
+        fallback: '#',
+      }) || '#';
 
     await pool.query(
       `UPDATE public.event_banners
@@ -326,13 +382,13 @@ export async function updateBannerAction(
       imageUrl: finalImageUrl,
     };
   } catch (error: unknown) {
+    if (isUploadValidationError(error)) {
+      return { success: false, error: error.message };
+    }
     console.error('Error in updateBannerAction:', error);
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Terjadi kesalahan saat memperbarui banner.',
+      error: 'Terjadi kesalahan saat memperbarui banner.',
     };
   }
 }
@@ -352,8 +408,8 @@ export async function deleteBannerAction(
       };
     }
 
-    const deleteRes = await pool.query(
-      `DELETE FROM public.event_banners WHERE id = $1 RETURNING id`,
+    const deleteRes = await pool.query<{ id: number; image_url: string | null }>(
+      `DELETE FROM public.event_banners WHERE id = $1 RETURNING id, image_url`,
       [numericId]
     );
 
@@ -364,6 +420,7 @@ export async function deleteBannerAction(
       };
     }
 
+    await deleteUploadedFileSafely(deleteRes.rows[0]?.image_url);
     await normalizeBannerOrder();
 
     revalidateBannerPaths();
@@ -376,10 +433,7 @@ export async function deleteBannerAction(
     console.error('Error in deleteBannerAction:', error);
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal menghapus banner.',
+      error: 'Gagal menghapus banner.',
     };
   }
 }
@@ -425,10 +479,7 @@ export async function toggleBannerStatusAction(
     console.error('Error in toggleBannerStatusAction:', error);
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal memperbarui status banner.',
+      error: 'Gagal memperbarui status banner.',
     };
   }
 }

@@ -3,13 +3,64 @@
 import { revalidatePath } from 'next/cache';
 import pool from '@/lib/db/pool';
 import { requireRole } from '@/lib/auth';
-import { saveSiteAssetImage } from '@/lib/upload';
+import { sanitizeSafeUrl } from '@/lib/security/sanitize';
+import { isUploadValidationError, saveSiteAssetImage } from '@/lib/upload';
 import {
   DEFAULT_SITE_SETTINGS,
   normalizeYoutubeEmbedUrl,
   orderOpdCategories,
 } from './defaults';
-import type { SiteSectionKey, SiteSettingsMap } from './types';
+import type {
+  OpdServiceCard,
+  OpdSubItem,
+  SiteSectionKey,
+  SiteSettingsMap,
+} from './types';
+
+function sanitizeOptionalAssetUrl(raw: string | null | undefined): string {
+  if (!raw || !raw.trim()) return '';
+  return sanitizeSafeUrl(raw, {
+    allowRelative: true,
+    allowHttp: true,
+    allowHash: false,
+    fallback: '',
+  });
+}
+
+function sanitizeOptionalLinkUrl(
+  raw: string | null | undefined,
+  fallback = ''
+): string {
+  if (!raw || !raw.trim()) return fallback;
+  return sanitizeSafeUrl(raw, {
+    allowRelative: true,
+    allowHttp: true,
+    allowHash: true,
+    fallback,
+  });
+}
+
+function sanitizeOpdSubItems(items: OpdSubItem[] | undefined): OpdSubItem[] {
+  if (!Array.isArray(items)) return [];
+  return items.map((sub) => ({
+    ...sub,
+    image: sub.image ? sanitizeOptionalAssetUrl(sub.image) : sub.image,
+    href: sub.href ? sanitizeOptionalLinkUrl(sub.href, '#') : sub.href,
+    subItems: sub.subItems ? sanitizeOpdSubItems(sub.subItems) : undefined,
+  }));
+}
+
+function sanitizeOpdServiceCards(
+  cards: OpdServiceCard[] | undefined
+): OpdServiceCard[] {
+  if (!Array.isArray(cards)) return [];
+  return cards.map((card) => ({
+    ...card,
+    image: card.image ? sanitizeOptionalAssetUrl(card.image) : card.image,
+    href: card.href ? sanitizeOptionalLinkUrl(card.href, '#') : card.href,
+    subItems: card.subItems ? sanitizeOpdSubItems(card.subItems) : undefined,
+  }));
+}
 
 interface SiteSettingRow {
   section_key: string;
@@ -178,12 +229,122 @@ export async function updateSiteSectionAction<K extends SiteSectionKey>(
 
     let normalizedPayload = payload;
 
-    if (sectionKey === 'media') {
-      const mediaPayload = payload as SiteSettingsMap['media'];
-      normalizedPayload = {
-        ...mediaPayload,
-        youtubeEmbedUrl: normalizeYoutubeEmbedUrl(mediaPayload.youtubeEmbedUrl),
-      } as SiteSettingsMap[K];
+    switch (sectionKey) {
+      case 'hero': {
+        const heroPayload = payload as SiteSettingsMap['hero'];
+        normalizedPayload = {
+          ...heroPayload,
+          images: Array.isArray(heroPayload.images)
+            ? heroPayload.images
+                .map((img) => sanitizeOptionalAssetUrl(img))
+                .filter(Boolean)
+            : [],
+        } as SiteSettingsMap[K];
+        break;
+      }
+      case 'welcome': {
+        const welcomePayload = payload as SiteSettingsMap['welcome'];
+        normalizedPayload = {
+          ...welcomePayload,
+          leftContainerImage: sanitizeOptionalAssetUrl(
+            welcomePayload.leftContainerImage
+          ),
+          leaderImage: sanitizeOptionalAssetUrl(welcomePayload.leaderImage),
+          sloganImage: sanitizeOptionalAssetUrl(welcomePayload.sloganImage),
+        } as SiteSettingsMap[K];
+        break;
+      }
+      case 'profile': {
+        const profilePayload = payload as SiteSettingsMap['profile'];
+        normalizedPayload = {
+          ...profilePayload,
+          cards: Array.isArray(profilePayload.cards)
+            ? profilePayload.cards.map((card) => ({
+                ...card,
+                image: sanitizeOptionalAssetUrl(card.image),
+                href: sanitizeOptionalLinkUrl(card.href, '#'),
+              }))
+            : [],
+        } as SiteSettingsMap[K];
+        break;
+      }
+      case 'media': {
+        const mediaPayload = payload as SiteSettingsMap['media'];
+        normalizedPayload = {
+          ...mediaPayload,
+          youtubeEmbedUrl: normalizeYoutubeEmbedUrl(
+            mediaPayload.youtubeEmbedUrl
+          ),
+          gprPortalUrl: sanitizeSafeUrl(mediaPayload.gprPortalUrl, {
+            allowRelative: false,
+            allowHttp: true,
+            allowHash: false,
+            fallback: 'https://www.komdigi.go.id',
+          }),
+        } as SiteSettingsMap[K];
+        break;
+      }
+      case 'opd': {
+        const opdPayload = payload as SiteSettingsMap['opd'];
+        const nextCategories: SiteSettingsMap['opd']['categories'] = {};
+        for (const [catKey, catVal] of Object.entries(
+          opdPayload.categories || {}
+        )) {
+          nextCategories[catKey] = {
+            ...catVal,
+            groups: Array.isArray(catVal?.groups)
+              ? catVal.groups.map((grp) => ({
+                  ...grp,
+                  items: sanitizeOpdServiceCards(grp.items),
+                }))
+              : [],
+          };
+        }
+        normalizedPayload = {
+          ...opdPayload,
+          categories: nextCategories,
+        } as SiteSettingsMap[K];
+        break;
+      }
+      case 'partners': {
+        const partnersPayload = payload as SiteSettingsMap['partners'];
+        normalizedPayload = {
+          ...partnersPayload,
+          items: Array.isArray(partnersPayload.items)
+            ? partnersPayload.items.map((item) => ({
+                ...item,
+                image: sanitizeOptionalAssetUrl(item.image),
+                href: sanitizeOptionalLinkUrl(item.href, '#'),
+              }))
+            : [],
+        } as SiteSettingsMap[K];
+        break;
+      }
+      case 'headerFooter': {
+        const hfPayload = payload as SiteSettingsMap['headerFooter'];
+        normalizedPayload = {
+          ...hfPayload,
+          headerLogoUrl: sanitizeOptionalAssetUrl(hfPayload.headerLogoUrl),
+          footerLogoUrl: sanitizeOptionalAssetUrl(hfPayload.footerLogoUrl),
+          mapsUrl: sanitizeOptionalLinkUrl(hfPayload.mapsUrl, '#'),
+          managedByUrl: sanitizeOptionalLinkUrl(hfPayload.managedByUrl, '#'),
+          relatedLinks: Array.isArray(hfPayload.relatedLinks)
+            ? hfPayload.relatedLinks.map((link) => ({
+                ...link,
+                href: sanitizeOptionalLinkUrl(link.href, '#'),
+              }))
+            : [],
+          socialLinks: {
+            facebook: sanitizeOptionalLinkUrl(hfPayload.socialLinks?.facebook),
+            x: sanitizeOptionalLinkUrl(hfPayload.socialLinks?.x),
+            instagram: sanitizeOptionalLinkUrl(
+              hfPayload.socialLinks?.instagram
+            ),
+            youtube: sanitizeOptionalLinkUrl(hfPayload.socialLinks?.youtube),
+          },
+        } as SiteSettingsMap[K];
+        break;
+      }
     }
 
     await pool.query(
@@ -204,10 +365,7 @@ export async function updateSiteSectionAction<K extends SiteSectionKey>(
     console.error(`Error in updateSiteSectionAction (${sectionKey}):`, error);
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal menyimpan pengaturan beranda.',
+      error: 'Gagal menyimpan pengaturan beranda.',
     };
   }
 }
@@ -241,10 +399,7 @@ export async function resetSiteSectionAction<K extends SiteSectionKey>(
     console.error(`Error in resetSiteSectionAction (${sectionKey}):`, error);
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal mereset pengaturan ke bawaan.',
+      error: 'Gagal mereset pengaturan ke bawaan.',
     };
   }
 }
@@ -268,13 +423,16 @@ export async function uploadSiteImageAction(
       imageUrl,
     };
   } catch (error) {
+    if (isUploadValidationError(error)) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
     console.error('Error in uploadSiteImageAction:', error);
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal mengunggah berkas gambar.',
+      error: 'Gagal mengunggah berkas gambar.',
     };
   }
 }

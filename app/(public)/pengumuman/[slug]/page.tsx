@@ -3,6 +3,10 @@ import { ArrowLeft, Calendar, User, Eye } from 'lucide-react'
 import ShareButtons from '@/components/ShareButtons'
 import { getCurrentUser } from '@/lib/auth'
 import {
+  sanitizeRichTextHtml,
+  sanitizeSafeUrl,
+} from '@/lib/security/sanitize'
+import {
   getAnnouncementBySlug,
   getAnnouncements,
   getPengumumanDetailBySlug,
@@ -72,10 +76,19 @@ export default async function AnnouncementDetailPage({
     pdfUrl = pdfUrl.replace('https://portal.sukabumikota.go.id', '')
     // Jika format URL di database pakai http:// juga, bersihkan sekalian:
     pdfUrl = pdfUrl.replace('http://portal.sukabumikota.go.id', '')
+    pdfUrl =
+      sanitizeSafeUrl(pdfUrl, {
+        allowRelative: true,
+        allowHttp: true,
+        allowHash: false,
+        fallback: '',
+      }) || null
   }
 
   // 3. Bersihkan teks shortcode dari konten agar tidak muncul di layar
-  const cleanContent = announcement.content.replace(shortcodeRegex, '')
+  const cleanContent = sanitizeRichTextHtml(
+    announcement.content.replace(shortcodeRegex, '')
+  )
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white">

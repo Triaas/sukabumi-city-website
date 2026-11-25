@@ -4,7 +4,12 @@ import { revalidatePath } from 'next/cache';
 import pool from '@/lib/db/pool';
 import { requireRole } from '@/lib/auth';
 import { slugifyTitle } from '@/lib/berita/slug';
-import { saveTransparansiPdf } from '@/lib/upload';
+import { sanitizeSafeUrl } from '@/lib/security/sanitize';
+import {
+  deleteUploadedFileSafely,
+  isUploadValidationError,
+  saveTransparansiPdf,
+} from '@/lib/upload';
 
 export interface TransparansiRow {
   id: number;
@@ -241,10 +246,11 @@ export async function createTransparansiAction(
           : rawEffectiveDate;
 
     const pdfFileEntry = formData.get('pdf_file') || formData.get('attachment');
-    const existingPdfUrl = (
+    const existingPdfUrl = sanitizeSafeUrl(
       ((formData.get('existing_pdf_url') ||
-        formData.get('existing_attachment_url')) as string) || ''
-    ).trim();
+        formData.get('existing_attachment_url')) as string) || '',
+      { allowRelative: true, allowHttp: true, allowHash: false, fallback: '' }
+    );
 
     if (!title) {
       return {
@@ -315,13 +321,13 @@ export async function createTransparansiAction(
       pdf_url: finalPdfUrl,
     };
   } catch (error: unknown) {
+    if (isUploadValidationError(error)) {
+      return { success: false, error: error.message };
+    }
     console.error('Error in createTransparansiAction:', error);
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal menyimpan dokumen transparansi baru.',
+      error: 'Gagal menyimpan dokumen transparansi baru.',
     };
   }
 }
@@ -382,10 +388,11 @@ export async function updateTransparansiAction(
           : rawEffectiveDate;
 
     const pdfFileEntry = formData.get('pdf_file') || formData.get('attachment');
-    const existingPdfUrl = (
+    const existingPdfUrl = sanitizeSafeUrl(
       ((formData.get('existing_pdf_url') ||
-        formData.get('existing_attachment_url')) as string) || ''
-    ).trim();
+        formData.get('existing_attachment_url')) as string) || '',
+      { allowRelative: true, allowHttp: true, allowHash: false, fallback: '' }
+    );
 
     if (!title) {
       return {
@@ -464,13 +471,13 @@ export async function updateTransparansiAction(
       pdf_url: finalPdfUrl,
     };
   } catch (error: unknown) {
+    if (isUploadValidationError(error)) {
+      return { success: false, error: error.message };
+    }
     console.error('Error in updateTransparansiAction:', error);
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal memperbarui dokumen transparansi.',
+      error: 'Gagal memperbarui dokumen transparansi.',
     };
   }
 }
@@ -488,8 +495,8 @@ export async function deleteTransparansiAction(
       };
     }
 
-    const deleted = await pool.query(
-      'DELETE FROM public.transparansi WHERE id = $1 RETURNING id',
+    const deleted = await pool.query<{ id: number; pdf_url: string | null }>(
+      'DELETE FROM public.transparansi WHERE id = $1 RETURNING id, pdf_url',
       [numericId]
     );
 
@@ -499,6 +506,8 @@ export async function deleteTransparansiAction(
         error: 'Data dokumen transparansi tidak ditemukan atau sudah dihapus.',
       };
     }
+
+    await deleteUploadedFileSafely(deleted.rows[0]?.pdf_url);
 
     revalidateTransparansiPaths();
 
@@ -510,10 +519,7 @@ export async function deleteTransparansiAction(
     console.error('Error in deleteTransparansiAction:', error);
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal menghapus dokumen transparansi.',
+      error: 'Gagal menghapus dokumen transparansi.',
     };
   }
 }
@@ -561,10 +567,7 @@ export async function unpublishTransparansiAction(
     console.error('Error in unpublishTransparansiAction:', error);
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal menurunkan penayangan dokumen transparansi.',
+      error: 'Gagal menurunkan penayangan dokumen transparansi.',
     };
   }
 }

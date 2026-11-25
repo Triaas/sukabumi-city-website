@@ -4,36 +4,23 @@ import { useState, useTransition } from 'react';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { loginAction } from '@/lib/auth/actions';
 
-interface LoginFormProps {
-  nextPath: string;
-  isDevelopment: boolean;
-}
-
-interface DevQuickAccount {
+export interface DevQuickAccount {
   label: string;
   email: string;
   password: string;
 }
 
-const DEV_TEST_ACCOUNTS: DevQuickAccount[] = [
-  {
-    label: 'Super Admin',
-    email: 'superadmin@sukabumikota.go.id',
-    password: 'AdminSukabumi123!',
-  },
-  {
-    label: 'Admin Berita',
-    email: 'adminberita@sukabumikota.go.id',
-    password: 'BeritaSukabumi123!',
-  },
-  {
-    label: 'Reporter',
-    email: 'reporter@sukabumikota.go.id',
-    password: 'ReporterSukabumi123!',
-  },
-];
+interface LoginFormProps {
+  nextPath: string;
+  isDevelopment: boolean;
+  devAccounts?: DevQuickAccount[];
+}
 
-export default function LoginForm({ nextPath, isDevelopment }: LoginFormProps) {
+export default function LoginForm({
+  nextPath,
+  isDevelopment,
+  devAccounts = [],
+}: LoginFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -196,7 +183,7 @@ export default function LoginForm({ nextPath, isDevelopment }: LoginFormProps) {
         </p>
       </form>
 
-      {isDevelopment && (
+      {isDevelopment && devAccounts.length > 0 && (
         <div className="pt-5 border-t border-slate-200">
           <h2 className="text-xs font-bold text-[#172135] mb-1">
             Pengisi Cepat Akun Uji Coba (Mode Pengembangan)
@@ -205,7 +192,7 @@ export default function LoginForm({ nextPath, isDevelopment }: LoginFormProps) {
             Pilih peran di bawah untuk mengisi kredensial lokal secara otomatis.
           </p>
           <div className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-3 gap-2">
-            {DEV_TEST_ACCOUNTS.map((acc) => (
+            {devAccounts.map((acc) => (
               <button
                 key={acc.email}
                 type="button"

@@ -2,9 +2,27 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getCurrentUser, resolveSafeRedirectPath } from '@/lib/auth';
-import LoginForm from './LoginForm';
+import LoginForm, { type DevQuickAccount } from './LoginForm';
 
 export const dynamic = 'force-dynamic';
+
+const DEV_TEST_ACCOUNTS: DevQuickAccount[] = [
+  {
+    label: 'Super Admin',
+    email: 'superadmin@sukabumikota.go.id',
+    password: 'AdminSukabumi123!',
+  },
+  {
+    label: 'Admin Berita',
+    email: 'adminberita@sukabumikota.go.id',
+    password: 'BeritaSukabumi123!',
+  },
+  {
+    label: 'Reporter',
+    email: 'reporter@sukabumikota.go.id',
+    password: 'ReporterSukabumi123!',
+  },
+];
 
 export const metadata: Metadata = {
   title: 'Masuk Portal Pengelola | Pemerintah Kota Sukabumi',
@@ -58,7 +76,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               </div>
             </div>
 
-            <LoginForm nextPath={nextPath} isDevelopment={isDevelopment} />
+            <LoginForm
+              nextPath={nextPath}
+              isDevelopment={isDevelopment}
+              devAccounts={isDevelopment ? DEV_TEST_ACCOUNTS : []}
+            />
           </div>
         </div>
 

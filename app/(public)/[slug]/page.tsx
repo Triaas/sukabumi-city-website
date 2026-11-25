@@ -5,6 +5,11 @@ import MeaningCarousel from '@/components/MeaningCarousel'
 import NomenklaturTimeline from '@/components/NomenklaturTimeline'
 import ScrollSpyNav from '@/components/ScrollSpyNav'
 import { getProfilePageBySlug } from '@/lib/profile-pages/queries'
+import {
+  sanitizeCssBackgroundUrl,
+  sanitizeRichTextHtml,
+  sanitizeSafeUrl,
+} from '@/lib/security/sanitize'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,6 +57,25 @@ export default async function DetailPage({
     featuredPublication,
   } = page.extraData || {}
 
+  const safeHeroBgUrl = sanitizeCssBackgroundUrl(page.heroImage)
+  const safeContentHtml = sanitizeRichTextHtml(page.contentHtml)
+  const safeFeaturedLink = featuredPublication?.link
+    ? sanitizeSafeUrl(featuredPublication.link, {
+        allowRelative: true,
+        allowHttp: true,
+        allowHash: false,
+        fallback: '',
+      })
+    : ''
+  const safeFeaturedSrc = featuredPublication?.src
+    ? sanitizeSafeUrl(featuredPublication.src, {
+        allowRelative: true,
+        allowHttp: true,
+        allowHash: false,
+        fallback: '',
+      })
+    : ''
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* Hero Section */}
@@ -61,7 +85,11 @@ export default async function DetailPage({
             ? 'bg-contain bg-center'
             : 'bg-cover bg-center'
         }`}
-        style={{ backgroundImage: `url('${page.heroImage}')` }}
+        style={
+          safeHeroBgUrl
+            ? { backgroundImage: `url("${safeHeroBgUrl}")` }
+            : undefined
+        }
       >
         <div
           className={`absolute inset-0 z-0 ${
@@ -124,11 +152,11 @@ export default async function DetailPage({
               <div
                 id="sejarah-content"
                 className="profile-content prose prose-lg max-w-none scroll-mt-36 text-[#29364a] leading-relaxed text-base md:text-lg text-justify [&_img]:w-full [&_img]:max-w-md [&_img]:mx-auto [&_img]:h-auto [&_img]:rounded-xl [&_img]:shadow-sm"
-                dangerouslySetInnerHTML={{ __html: page.contentHtml }}
+                dangerouslySetInnerHTML={{ __html: safeContentHtml }}
               />
 
               {/* Publikasi Unggulan (contoh: Sukabumi Dalam Angka / BPS) */}
-              {featuredPublication?.src && (
+              {safeFeaturedSrc && featuredPublication && (
                 <figure
                   className={
                     featuredPublication.title
@@ -149,15 +177,15 @@ export default async function DetailPage({
                     </div>
                   )}
 
-                  {featuredPublication.link ? (
+                  {safeFeaturedLink ? (
                     <a
-                      href={featuredPublication.link}
+                      href={safeFeaturedLink}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="block w-fit mx-auto"
                     >
                       <img
-                        src={featuredPublication.src}
+                        src={safeFeaturedSrc}
                         alt={
                           featuredPublication.title ||
                           featuredPublication.caption ||
@@ -171,7 +199,7 @@ export default async function DetailPage({
                     </a>
                   ) : (
                     <img
-                      src={featuredPublication.src}
+                      src={safeFeaturedSrc}
                       alt={
                         featuredPublication.title ||
                         featuredPublication.caption ||
@@ -196,10 +224,10 @@ export default async function DetailPage({
                     </figcaption>
                   )}
 
-                  {featuredPublication.link && (
+                  {safeFeaturedLink && (
                     <div className="mt-4 flex justify-center">
                       <a
-                        href={featuredPublication.link}
+                        href={safeFeaturedLink}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex min-h-[40px] items-center justify-center gap-2 rounded-xl border border-[#159447] px-4 py-2 text-xs sm:text-sm font-medium text-[#159447] hover:bg-[#159447] hover:text-white transition-colors duration-200"

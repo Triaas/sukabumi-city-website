@@ -268,7 +268,7 @@ export default function WelcomeTab({
             <input
               id="upload-slogan-image"
               type="file"
-              accept="image/jpeg,image/png,image/webp,image/svg+xml"
+              accept="image/jpeg,image/png,image/webp"
               onChange={(e) => handleFileUpload('sloganImage', e)}
               className="sr-only"
             />

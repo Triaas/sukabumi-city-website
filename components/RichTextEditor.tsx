@@ -496,12 +496,22 @@ export default function RichTextEditor({
         if (!trimmed || trimmed === 'https://' || trimmed === 'http://') {
             editor.chain().focus().extendMarkRange('link').unsetLink().run()
         } else {
-            const finalUrl =
+            const hasExplicitScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed)
+            const isAllowedScheme =
                 /^https?:\/\//i.test(trimmed) ||
-                trimmed.startsWith('/') ||
-                trimmed.startsWith('#') ||
-                trimmed.startsWith('mailto:') ||
-                trimmed.startsWith('tel:')
+                /^mailto:/i.test(trimmed) ||
+                /^tel:/i.test(trimmed)
+            const isSafeRelative =
+                /^\/(?![\/\\])/.test(trimmed) || trimmed.startsWith('#')
+
+            if ((hasExplicitScheme && !isAllowedScheme) || trimmed.startsWith('//') || trimmed.startsWith('/\\')) {
+                editor.chain().focus().extendMarkRange('link').unsetLink().run()
+                setIsLinkModalOpen(false)
+                return
+            }
+
+            const finalUrl =
+                isAllowedScheme || isSafeRelative
                     ? trimmed
                     : `https://${trimmed}`
             editor
@@ -575,7 +585,7 @@ export default function RichTextEditor({
             return
         }
         const isSafeUrl =
-            /^https?:\/\//i.test(trimmed) || trimmed.startsWith('/')
+            /^https?:\/\//i.test(trimmed) || /^\/(?![\/\\])/.test(trimmed)
         if (!isSafeUrl) {
             setImageUploadError(
                 'URL gambar harus diawali dengan https://, http://, atau /.'
@@ -759,7 +769,7 @@ export default function RichTextEditor({
                                     <input
                                         ref={imageFileInputRef}
                                         type="file"
-                                        accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                                        accept="image/jpeg,image/png,image/webp"
                                         onChange={handleImageFileSelect}
                                         className="hidden"
                                     />
@@ -791,7 +801,7 @@ export default function RichTextEditor({
                                         )}
                                     </button>
                                     <p className="mt-1 text-[11px] text-slate-400 text-center">
-                                        Format JPG, PNG, WebP, atau SVG (maks. 5 MB)
+                                        Format JPG, PNG, atau WebP (maks. 5 MB)
                                     </p>
                                 </div>
                             )}

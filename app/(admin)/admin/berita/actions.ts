@@ -2,7 +2,15 @@
 
 import pool from '@/lib/db';
 import { requireRole } from '@/lib/auth';
-import { saveBeritaImage } from '@/lib/upload';
+import {
+  sanitizeRichTextHtml,
+  sanitizeSafeUrl,
+} from '@/lib/security/sanitize';
+import {
+  deleteUploadedFileSafely,
+  isUploadValidationError,
+  saveBeritaImage,
+} from '@/lib/upload';
 import { parseCustomPublishTimestamp } from '@/lib/utils/datetime';
 import { generateUniqueSlug } from '@/lib/berita/slug';
 import {
@@ -31,12 +39,19 @@ function isValidImagePath(url: string | null | undefined): url is string {
   if (!url || typeof url !== 'string') {
     return false;
   }
-  const trimmed = url.trim();
-  return (
-    trimmed.startsWith('/') ||
-    trimmed.startsWith('http://') ||
-    trimmed.startsWith('https://')
-  );
+  const safe = sanitizeSafeUrl(url, {
+    allowRelative: true,
+    allowHttp: true,
+    allowHash: false,
+    fallback: '',
+  });
+  return Boolean(safe);
+}
+
+function extractInlineUploadUrls(html: string | null | undefined): string[] {
+  if (!html) return [];
+  const matches = html.match(/\/uploads\/berita\/[a-zA-Z0-9._-]+/g) ?? [];
+  return [...new Set(matches)];
 }
 
 export async function createBeritaAction(
@@ -50,7 +65,8 @@ export async function createBeritaAction(
 
   try {
     const rawTitle = ((formData.get('title') as string) || '').trim();
-    const content = ((formData.get('content') as string) || '').trim();
+    const rawContent = ((formData.get('content') as string) || '').trim();
+    const content = sanitizeRichTextHtml(rawContent);
     const rawCategory = ((formData.get('category_id') as string) || '').trim();
     const rawCategories = formData
       .getAll('categories')
@@ -190,12 +206,14 @@ export async function createBeritaAction(
       try {
         imageUrl = await saveBeritaImage(imageEntry as File);
       } catch (uploadErr: unknown) {
+        if (!isUploadValidationError(uploadErr)) {
+          console.error('Error uploading berita image:', uploadErr);
+        }
         return {
           success: false,
-          error:
-            uploadErr instanceof Error
-              ? uploadErr.message
-              : 'Gagal mengunggah berkas gambar berita.',
+          error: isUploadValidationError(uploadErr)
+            ? uploadErr.message
+            : 'Gagal mengunggah berkas gambar berita.',
         };
       }
     } else if (hasStringImage) {
@@ -449,8 +467,14 @@ export async function deleteNewsAction(id: number | string): Promise<{
       return { success: false, error: 'ID berita tidak valid.' };
     }
 
+    let deletedImageUrl: string | null = null;
+    let deletedContent: string | null = null;
+
     if (sessionUser.role === 'REPORTER') {
-      const delRes = await pool.query(
+      const delRes = await pool.query<{
+        image_url: string | null;
+        content: string | null;
+      }>(
         `DELETE FROM public.berita
          WHERE id = $1
            AND status = 'DRAFT'
@@ -461,7 +485,8 @@ export async function deleteNewsAction(id: number | string): Promise<{
                AND author_role = 'REPORTER'
                AND LOWER(author_name) = LOWER($3)
              )
-           )`,
+           )
+         RETURNING image_url, content`,
         [numericId, sessionUser.id, sessionUser.name]
       );
 
@@ -472,9 +497,27 @@ export async function deleteNewsAction(id: number | string): Promise<{
             'Anda tidak memiliki izin untuk menghapus naskah ini atau status bukan Draf.',
         };
       }
+      deletedImageUrl = delRes.rows[0]?.image_url ?? null;
+      deletedContent = delRes.rows[0]?.content ?? null;
     } else {
-      await pool.query('DELETE FROM public.berita WHERE id = $1', [numericId]);
+      const delRes = await pool.query<{
+        image_url: string | null;
+        content: string | null;
+      }>(
+        'DELETE FROM public.berita WHERE id = $1 RETURNING image_url, content',
+        [numericId]
+      );
+      deletedImageUrl = delRes.rows[0]?.image_url ?? null;
+      deletedContent = delRes.rows[0]?.content ?? null;
     }
+
+    const filesToClean = [
+      deletedImageUrl,
+      ...extractInlineUploadUrls(deletedContent),
+    ];
+    await Promise.all(
+      filesToClean.map((fileUrl) => deleteUploadedFileSafely(fileUrl))
+    );
 
     revalidateBeritaPaths();
 
@@ -511,7 +554,8 @@ export async function updateBeritaAction(
     }
 
     const rawTitle = ((formData.get('title') as string) || '').trim();
-    const content = ((formData.get('content') as string) || '').trim();
+    const rawContent = ((formData.get('content') as string) || '').trim();
+    const content = sanitizeRichTextHtml(rawContent);
     const rawCategory = ((formData.get('category_id') as string) || '').trim();
     const rawCategories = formData
       .getAll('categories')
@@ -694,12 +738,14 @@ export async function updateBeritaAction(
       try {
         imageUrl = await saveBeritaImage(imageEntry as File);
       } catch (uploadErr: unknown) {
+        if (!isUploadValidationError(uploadErr)) {
+          console.error('Error uploading berita image:', uploadErr);
+        }
         return {
           success: false,
-          error:
-            uploadErr instanceof Error
-              ? uploadErr.message
-              : 'Gagal mengunggah berkas gambar berita.',
+          error: isUploadValidationError(uploadErr)
+            ? uploadErr.message
+            : 'Gagal mengunggah berkas gambar berita.',
         };
       }
     }

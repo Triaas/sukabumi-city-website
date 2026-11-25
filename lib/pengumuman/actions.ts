@@ -4,8 +4,14 @@ import { revalidatePath } from 'next/cache';
 import pool from '@/lib/db/pool';
 import { requireRole } from '@/lib/auth';
 import { slugifyTitle } from '@/lib/berita/slug';
+import {
+  sanitizeRichTextHtml,
+  sanitizeSafeUrl,
+} from '@/lib/security/sanitize';
 import { parseCustomPublishTimestamp } from '@/lib/utils/datetime';
 import {
+  deleteUploadedFileSafely,
+  isUploadValidationError,
   savePengumumanThumbnail,
   savePengumumanAttachment,
 } from '@/lib/upload';
@@ -212,7 +218,8 @@ export async function createPengumumanAction(
   await requireRole(['SUPER_ADMIN']);
   try {
     const rawTitle = ((formData.get('title') as string) || '').trim();
-    const content = ((formData.get('content') as string) || '').trim();
+    const rawContent = ((formData.get('content') as string) || '').trim();
+    const content = sanitizeRichTextHtml(rawContent);
     const nomorPengumuman =
       ((formData.get('nomor_pengumuman') as string) || '').trim() || null;
     const rawStatus = ((formData.get('status') as string) || 'Diterbitkan').trim();
@@ -223,14 +230,16 @@ export async function createPengumumanAction(
     const publishTime = ((formData.get('publish_time') as string) || '').trim();
 
     const thumbnailEntry = formData.get('thumbnail');
-    const existingThumbnailUrl = (
-      (formData.get('existing_thumbnail_url') as string) || ''
-    ).trim();
+    const existingThumbnailUrl = sanitizeSafeUrl(
+      (formData.get('existing_thumbnail_url') as string) || '',
+      { allowRelative: true, allowHttp: true, allowHash: false, fallback: '' }
+    );
 
     const attachmentEntry = formData.get('attachment');
-    const existingAttachmentUrl = (
-      (formData.get('existing_attachment_url') as string) || ''
-    ).trim();
+    const existingAttachmentUrl = sanitizeSafeUrl(
+      (formData.get('existing_attachment_url') as string) || '',
+      { allowRelative: true, allowHttp: true, allowHash: false, fallback: '' }
+    );
 
     if (!title) {
       return {
@@ -306,13 +315,13 @@ export async function createPengumumanAction(
       slug: insertResult.rows[0]?.slug,
     };
   } catch (error: unknown) {
+    if (isUploadValidationError(error)) {
+      return { success: false, error: error.message };
+    }
     console.error('Error in createPengumumanAction:', error);
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal menyimpan pengumuman baru.',
+      error: 'Gagal menyimpan pengumuman baru.',
     };
   }
 }
@@ -355,7 +364,8 @@ export async function updatePengumumanAction(
 
     const currentRow = existingCheck.rows[0];
     const rawTitle = ((formData.get('title') as string) || '').trim();
-    const content = ((formData.get('content') as string) || '').trim();
+    const rawContent = ((formData.get('content') as string) || '').trim();
+    const content = sanitizeRichTextHtml(rawContent);
     const nomorPengumumanRaw = formData.get('nomor_pengumuman');
     const nomorPengumuman =
       nomorPengumumanRaw !== null
@@ -369,14 +379,16 @@ export async function updatePengumumanAction(
     const publishTime = ((formData.get('publish_time') as string) || '').trim();
 
     const thumbnailEntry = formData.get('thumbnail');
-    const existingThumbnailUrl = (
-      (formData.get('existing_thumbnail_url') as string) || ''
-    ).trim();
+    const existingThumbnailUrl = sanitizeSafeUrl(
+      (formData.get('existing_thumbnail_url') as string) || '',
+      { allowRelative: true, allowHttp: true, allowHash: false, fallback: '' }
+    );
 
     const attachmentEntry = formData.get('attachment');
-    const existingAttachmentUrl = (
-      (formData.get('existing_attachment_url') as string) || ''
-    ).trim();
+    const existingAttachmentUrl = sanitizeSafeUrl(
+      (formData.get('existing_attachment_url') as string) || '',
+      { allowRelative: true, allowHttp: true, allowHash: false, fallback: '' }
+    );
 
     if (!title) {
       return {
@@ -459,13 +471,13 @@ export async function updatePengumumanAction(
       slug,
     };
   } catch (error: unknown) {
+    if (isUploadValidationError(error)) {
+      return { success: false, error: error.message };
+    }
     console.error('Error in updatePengumumanAction:', error);
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal memperbarui pengumuman.',
+      error: 'Gagal memperbarui pengumuman.',
     };
   }
 }
@@ -486,8 +498,12 @@ export async function deletePengumumanAction(
       };
     }
 
-    const deleted = await pool.query(
-      'DELETE FROM public.pengumuman WHERE id = $1 RETURNING id',
+    const deleted = await pool.query<{
+      id: number;
+      thumbnail_url: string | null;
+      attachment_url: string | null;
+    }>(
+      'DELETE FROM public.pengumuman WHERE id = $1 RETURNING id, thumbnail_url, attachment_url',
       [numericId]
     );
 
@@ -497,6 +513,12 @@ export async function deletePengumumanAction(
         error: 'Data pengumuman tidak ditemukan atau sudah dihapus.',
       };
     }
+
+    const deletedRow = deleted.rows[0];
+    await Promise.all([
+      deleteUploadedFileSafely(deletedRow?.thumbnail_url),
+      deleteUploadedFileSafely(deletedRow?.attachment_url),
+    ]);
 
     revalidatePengumumanPaths();
 
@@ -508,10 +530,7 @@ export async function deletePengumumanAction(
     console.error('Error in deletePengumumanAction:', error);
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal menghapus pengumuman.',
+      error: 'Gagal menghapus pengumuman.',
     };
   }
 }
@@ -564,10 +583,7 @@ export async function unpublishPengumumanAction(
     console.error('Error in unpublishPengumumanAction:', error);
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Gagal menurunkan penayangan pengumuman.',
+      error: 'Gagal menurunkan penayangan pengumuman.',
     };
   }
 }

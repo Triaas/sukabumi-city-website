@@ -16,6 +16,8 @@ import {
 import { useState, useEffect, useRef } from 'react'
 import { getAnnouncements, AnnouncementItem } from '@/lib/announcements'
 import { fetchNews } from '@/lib/news'
+import { normalizeYoutubeEmbedUrl } from '@/lib/site-settings/defaults'
+import { sanitizeSafeUrl } from '@/lib/security/sanitize'
 import type {
   SiteSettingsMap,
   HeroSettings,
@@ -263,14 +265,20 @@ function EventSlider() {
           ) : (
             <>
               {banners.map((banner, index) => {
+                const safeBannerHref = sanitizeSafeUrl(banner.href, {
+                  allowRelative: true,
+                  allowHttp: true,
+                  allowHash: false,
+                  fallback: '',
+                })
                 const hasValidLink = Boolean(
-                  banner.href && banner.href !== '#' && banner.href.trim() !== ''
+                  safeBannerHref && safeBannerHref !== '#'
                 )
 
                 return (
                   <a
                     key={banner.id}
-                    href={hasValidLink ? banner.href : '#'}
+                    href={hasValidLink ? safeBannerHref : '#'}
                     target={hasValidLink ? '_blank' : undefined}
                     rel={hasValidLink ? 'noopener noreferrer' : undefined}
                     onClick={(e) => {
@@ -556,7 +564,14 @@ function Opd({
   const [iframeLoading, setIframeLoading] = useState(false)
 
   const openIframeModal = (url: string, title: string) => {
-    setIframeUrl(url)
+    const safeUrl = sanitizeSafeUrl(url, {
+      allowRelative: true,
+      allowHttp: true,
+      allowHash: false,
+      fallback: '',
+    })
+    if (!safeUrl) return
+    setIframeUrl(safeUrl)
     setIframeTitle(title)
     setIframeLoading(true)
     onIframeToggle?.(true)
@@ -1597,10 +1612,17 @@ function Partners({ settings }: { settings: PartnersSettings }) {
       <div className="w-full relative">
         <div className="relative flex overflow-hidden w-full before:absolute before:left-0 before:top-0 before:z-10 before:h-full before:w-[50px] md:before:w-[200px] before:bg-gradient-to-r before:from-[#F8F9FA] before:to-transparent before:content-[''] after:absolute after:right-0 after:top-0 after:z-10 after:h-full after:w-[50px] md:after:w-[200px] after:bg-gradient-to-l after:from-[#F8F9FA] after:to-transparent after:content-['']">
           <div className="flex w-max animate-marquee items-center gap-16 md:gap-32 pr-16 md:pr-32">
-            {displayPartners.map((partner, idx) => (
+            {displayPartners.map((partner, idx) => {
+              const safePartnerHref = sanitizeSafeUrl(partner.href, {
+                allowRelative: true,
+                allowHttp: true,
+                allowHash: true,
+                fallback: '#',
+              })
+              return (
               <a
                 key={`${partner.id}-${idx}`}
-                href={partner.href}
+                href={safePartnerHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block transition-transform duration-500 hover:scale-110 flex-shrink-0"
@@ -1611,7 +1633,8 @@ function Partners({ settings }: { settings: PartnersSettings }) {
                   className="h-12 md:h-16 w-auto max-w-[150px] md:max-w-[200px] object-contain"
                 />
               </a>
-            ))}
+              )
+            })}
           </div>
         </div>
       </div>
@@ -1744,7 +1767,14 @@ function MediaSection({ settings }: { settings: MediaSettings }) {
                   </p>
                 </div>
                 <a
-                  href={settings.gprPortalUrl || 'https://www.komdigi.go.id'}
+                  href={
+                    sanitizeSafeUrl(settings.gprPortalUrl, {
+                      allowRelative: false,
+                      allowHttp: true,
+                      allowHash: false,
+                      fallback: 'https://www.komdigi.go.id',
+                    }) || 'https://www.komdigi.go.id'
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-2 sm:py-1.5 min-h-[44px] sm:min-h-0 text-xs font-semibold text-[#172135] transition-colors hover:border-[#159447] hover:text-[#159447]"
@@ -1789,7 +1819,7 @@ function MediaSection({ settings }: { settings: MediaSettings }) {
           <div className="group p-1.5 rounded-[22px] bg-slate-200/55 border border-slate-300/70 backdrop-blur-sm transition-all duration-300 hover:bg-[#159447]/10 hover:border-[#159447]/35 hover:shadow-lg flex flex-col">
             <div className="aspect-video w-full overflow-hidden rounded-2xl border border-slate-200/90 bg-slate-900 shadow-sm transition-all duration-300 group-hover:border-[#159447]/40">
               <iframe
-                src={settings.youtubeEmbedUrl}
+                src={normalizeYoutubeEmbedUrl(settings.youtubeEmbedUrl)}
                 title={settings.youtubeTitle || 'Profil Kota Sukabumi'}
                 className="h-full w-full border-0"
                 loading="lazy"

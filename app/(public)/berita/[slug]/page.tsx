@@ -3,6 +3,7 @@ import { ArrowLeft, Calendar, User, Eye, Image as ImageIcon } from 'lucide-react
 import ShareButtons from '@/components/ShareButtons'
 import { getCurrentUser } from '@/lib/auth'
 import { getNewsBySlug, getRelatedNews } from '@/lib/db'
+import { sanitizeRichTextHtml } from '@/lib/security/sanitize'
 import FallbackImage from '@/components/FallbackImage'
 
 export const dynamic = 'force-dynamic'
@@ -155,7 +156,7 @@ export default async function ArticlePage({
               {/* Content Typography dengan dangerouslySetInnerHTML */}
               <article
                 className="prose prose-lg prose-slate max-w-none text-[#29364a] leading-relaxed [&>p]:mb-6 [&_img]:rounded-xl [&_img]:my-8 [&>iframe]:w-full [&>iframe]:rounded-xl"
-                dangerouslySetInnerHTML={{ __html: cleanContent }}
+                dangerouslySetInnerHTML={{ __html: sanitizeRichTextHtml(cleanContent) }}
               />
 
               {/* Category Tags */}

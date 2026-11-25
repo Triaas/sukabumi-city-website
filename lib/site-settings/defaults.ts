@@ -10,51 +10,76 @@ import type {
   SiteSettingsMap,
 } from './types';
 
+const DEFAULT_YOUTUBE_EMBED_URL = 'https://www.youtube.com/embed/p2gcx5S5QJE';
+const YOUTUBE_VIDEO_ID_REGEX = /^[a-zA-Z0-9_-]{11}$/;
+
 export function normalizeYoutubeEmbedUrl(rawUrl: string): string {
   const trimmed = (rawUrl || '').trim();
-  if (!trimmed) return 'https://www.youtube.com/embed/p2gcx5S5QJE';
+  if (!trimmed) return DEFAULT_YOUTUBE_EMBED_URL;
 
-  if (trimmed.includes('youtube.com/embed/')) {
-    return trimmed;
-  }
+  const candidate = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed)
+    ? trimmed
+    : `https://${trimmed}`;
 
   try {
-    const parsed = new URL(trimmed);
-    const host = parsed.hostname.replace(/^www\./, '').toLowerCase();
-
-    if (host === 'youtu.be') {
-      const videoId = parsed.pathname.split('/').filter(Boolean)[0];
-      if (videoId) {
-        return `https://www.youtube.com/embed/${videoId}`;
-      }
+    const parsed = new URL(candidate);
+    const protocol = parsed.protocol.toLowerCase();
+    if (protocol !== 'https:' && protocol !== 'http:') {
+      return DEFAULT_YOUTUBE_EMBED_URL;
     }
 
-    if (host === 'youtube.com' || host === 'm.youtube.com') {
-      const vParam = parsed.searchParams.get('v');
-      if (vParam) {
+    const host = parsed.hostname.toLowerCase();
+
+    if (host === 'youtu.be') {
+      const videoId = parsed.pathname.split('/').filter(Boolean)[0] || '';
+      if (YOUTUBE_VIDEO_ID_REGEX.test(videoId)) {
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+      return DEFAULT_YOUTUBE_EMBED_URL;
+    }
+
+    if (
+      host === 'youtube.com' ||
+      host === 'www.youtube.com' ||
+      host === 'm.youtube.com'
+    ) {
+      const vParam = parsed.searchParams.get('v') || '';
+      if (YOUTUBE_VIDEO_ID_REGEX.test(vParam)) {
         return `https://www.youtube.com/embed/${vParam}`;
       }
 
       const pathParts = parsed.pathname.split('/').filter(Boolean);
       if (
-        (pathParts[0] === 'shorts' ||
-          pathParts[0] === 'embed' ||
+        (pathParts[0] === 'embed' ||
+          pathParts[0] === 'shorts' ||
           pathParts[0] === 'live') &&
-        pathParts[1]
+        pathParts[1] &&
+        YOUTUBE_VIDEO_ID_REGEX.test(pathParts[1])
       ) {
         return `https://www.youtube.com/embed/${pathParts[1]}`;
       }
+      return DEFAULT_YOUTUBE_EMBED_URL;
+    }
+
+    if (
+      host === 'youtube-nocookie.com' ||
+      host === 'www.youtube-nocookie.com'
+    ) {
+      const pathParts = parsed.pathname.split('/').filter(Boolean);
+      if (
+        pathParts[0] === 'embed' &&
+        pathParts[1] &&
+        YOUTUBE_VIDEO_ID_REGEX.test(pathParts[1])
+      ) {
+        return `https://www.youtube-nocookie.com/embed/${pathParts[1]}`;
+      }
+      return DEFAULT_YOUTUBE_EMBED_URL;
     }
   } catch {
-    const match = trimmed.match(
-      /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/
-    );
-    if (match?.[1]) {
-      return `https://www.youtube.com/embed/${match[1]}`;
-    }
+    return DEFAULT_YOUTUBE_EMBED_URL;
   }
 
-  return trimmed;
+  return DEFAULT_YOUTUBE_EMBED_URL;
 }
 
 export const DEFAULT_HERO_SETTINGS: HeroSettings = {

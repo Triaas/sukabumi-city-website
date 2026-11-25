@@ -277,7 +277,7 @@ export default function ProfileTab({
                       <input
                         id={`profile-card-${index}-image`}
                         type="file"
-                        accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                        accept="image/jpeg,image/png,image/webp"
                         onChange={(e) => handleCardImageUpload(index, e)}
                         className="sr-only"
                       />
