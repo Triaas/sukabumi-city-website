@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import {
   User,
   Mail,
-  Shield,
   KeyRound,
   Check,
   AlertCircle,
@@ -157,8 +156,8 @@ export default function ProfileSettingsClient({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 items-start">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 items-stretch">
+        <div className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-center gap-2.5 pb-4 mb-5 border-b border-slate-100">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-50 text-[#159447]">
               <User size={18} aria-hidden="true" />
@@ -200,7 +199,11 @@ export default function ProfileSettingsClient({
             </div>
           )}
 
-          <form onSubmit={handleProfileSubmit} className="space-y-4" noValidate>
+          <form
+            onSubmit={handleProfileSubmit}
+            className="flex flex-1 flex-col space-y-4"
+            noValidate
+          >
             <div>
               <label
                 htmlFor="fullName"
@@ -267,34 +270,13 @@ export default function ProfileSettingsClient({
                 />
               </div>
               <p className="mt-1.5 text-[11px] text-[#566276] leading-relaxed">
-                Email kedinasan bersifat tetap. Hubungi Super Admin jika
-                diperlukan perubahan.
+                {role === 'SUPER_ADMIN'
+                  ? 'Alamat email kedinasan dikelola secara terpusat. Anda dapat mengubahnya melalui menu Manajemen User.'
+                  : 'Email kedinasan bersifat tetap. Hubungi Super Admin jika diperlukan perubahan.'}
               </p>
             </div>
 
-            <div>
-              <label
-                htmlFor="role"
-                className="block text-xs font-semibold text-[#172135] mb-1.5"
-              >
-                Peran / Hak Akses
-              </label>
-              <div className="relative">
-                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-                  <Shield size={16} aria-hidden="true" />
-                </span>
-                <input
-                  id="role"
-                  type="text"
-                  value={roleLabel}
-                  disabled
-                  readOnly
-                  className="w-full min-h-[44px] cursor-not-allowed rounded-xl border border-slate-200 bg-slate-100 pl-10 pr-4 py-2.5 text-sm font-medium text-[#566276]"
-                />
-              </div>
-            </div>
-
-            <div className="pt-2 flex justify-end">
+            <div className="mt-auto pt-2 flex justify-end">
               <button
                 type="submit"
                 disabled={isProfilePending}
@@ -320,7 +302,7 @@ export default function ProfileSettingsClient({
           </form>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-center gap-2.5 pb-4 mb-5 border-b border-slate-100">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-50 text-[#159447]">
               <KeyRound size={18} aria-hidden="true" />
@@ -359,7 +341,11 @@ export default function ProfileSettingsClient({
             </div>
           )}
 
-          <form onSubmit={handlePasswordSubmit} className="space-y-4" noValidate>
+          <form
+            onSubmit={handlePasswordSubmit}
+            className="flex flex-1 flex-col space-y-4"
+            noValidate
+          >
             <div>
               <label
                 htmlFor="currentPassword"
@@ -568,7 +554,7 @@ export default function ProfileSettingsClient({
               </ul>
             </div>
 
-            <div className="pt-2 flex justify-end">
+            <div className="mt-auto pt-2 flex justify-end">
               <button
                 type="submit"
                 disabled={isPasswordPending}

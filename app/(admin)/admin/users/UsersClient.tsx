@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
+  Briefcase,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -135,6 +136,8 @@ export default function UsersClient({
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<RoleFilterValue>('ALL');
   const [statusFilter, setStatusFilter] = useState<StatusFilterValue>('ALL');
+  const [isRoleOpen, setIsRoleOpen] = useState(false);
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
   const [toast, setToast] = useState<{
@@ -226,6 +229,9 @@ export default function UsersClient({
         closeEditModal();
       } else if (isAddOpen) {
         closeAddModal();
+      } else if (isRoleOpen || isStatusOpen) {
+        setIsRoleOpen(false);
+        setIsStatusOpen(false);
       }
     };
 
@@ -238,6 +244,8 @@ export default function UsersClient({
     resettingUser,
     editingUser,
     isAddOpen,
+    isRoleOpen,
+    isStatusOpen,
   ]);
 
   const summaryCounts = useMemo(() => {
@@ -303,8 +311,30 @@ export default function UsersClient({
     setSearchTerm('');
     setRoleFilter('ALL');
     setStatusFilter('ALL');
+    setIsRoleOpen(false);
+    setIsStatusOpen(false);
     setCurrentPage(1);
   };
+
+  const roleFilterOptions: { label: string; value: RoleFilterValue }[] = [
+    { label: 'Semua Jabatan', value: 'ALL' },
+    { label: 'Super Admin', value: 'SUPER_ADMIN' },
+    { label: 'Admin Berita', value: 'ADMIN_BERITA' },
+    { label: 'Reporter', value: 'REPORTER' },
+  ];
+
+  const statusFilterOptions: { label: string; value: StatusFilterValue }[] = [
+    { label: 'Semua Status', value: 'ALL' },
+    { label: 'Aktif', value: 'ACTIVE' },
+    { label: 'Nonaktif', value: 'INACTIVE' },
+  ];
+
+  const currentRoleFilterOption =
+    roleFilterOptions.find((opt) => opt.value === roleFilter) ||
+    roleFilterOptions[0];
+  const currentStatusFilterOption =
+    statusFilterOptions.find((opt) => opt.value === statusFilter) ||
+    statusFilterOptions[0];
 
   const openAddModal = () => {
     setCreateName('');
@@ -653,116 +683,186 @@ export default function UsersClient({
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
-          <div className="md:col-span-2 lg:col-span-6">
-            <label
-              htmlFor="users-search-input"
-              className="block text-xs font-semibold text-[#172135] mb-1.5"
-            >
-              Cari Nama atau Email
-            </label>
-            <div className="relative">
-              <Search
-                size={16}
-                aria-hidden="true"
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#566276] pointer-events-none"
-              />
-              <input
-                id="users-search-input"
-                type="text"
-                placeholder="Ketik nama staf atau email kedinasan..."
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
+          <div className="relative flex-1 min-w-0 sm:min-w-[240px]">
+            <Search
+              size={16}
+              aria-hidden="true"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+            />
+            <input
+              id="users-search-input"
+              type="text"
+              placeholder="Cari nama staf atau email kedinasan..."
+              aria-label="Cari nama atau email"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full pl-9 pr-8 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 bg-white text-[#172135] placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#159447] focus:border-[#159447] transition-all motion-reduce:transition-none"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm('');
                   setCurrentPage(1);
                 }}
-                className="w-full min-h-[44px] pl-10 pr-11 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 bg-white text-[#172135] placeholder:text-slate-400 hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-[#159447]/25 focus:border-[#159447] transition-colors motion-reduce:transition-none"
-              />
-              {searchTerm && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchTerm('');
-                    setCurrentPage(1);
-                  }}
-                  aria-label="Bersihkan kata kunci pencarian"
-                  className="absolute right-0.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-lg flex items-center justify-center text-[#566276] hover:text-[#172135] hover:bg-slate-100 active:bg-slate-200/70 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#159447] motion-reduce:transition-none"
-                >
-                  <X size={15} aria-hidden="true" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className="lg:col-span-3">
-            <label
-              htmlFor="users-role-filter"
-              className="block text-xs font-semibold text-[#172135] mb-1.5"
-            >
-              Filter Jabatan
-            </label>
-            <div className="relative">
-              <select
-                id="users-role-filter"
-                value={roleFilter}
-                onChange={(e) => {
-                  setRoleFilter(e.target.value as RoleFilterValue);
-                  setCurrentPage(1);
-                }}
-                className="w-full min-h-[44px] appearance-none pl-3.5 pr-9 py-2 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm font-semibold text-[#172135] hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-[#159447]/25 focus:border-[#159447] cursor-pointer transition-colors motion-reduce:transition-none"
+                aria-label="Hapus pencarian"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
               >
-                <option value="ALL">Semua</option>
-                <option value="SUPER_ADMIN">Super Admin</option>
-                <option value="ADMIN_BERITA">Admin Berita</option>
-                <option value="REPORTER">Reporter</option>
-              </select>
-              <ChevronDown
-                size={15}
-                aria-hidden="true"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#566276] pointer-events-none"
-              />
-            </div>
+                <X size={14} aria-hidden="true" />
+              </button>
+            )}
           </div>
 
-          <div className="lg:col-span-3">
-            <label
-              htmlFor="users-status-filter"
-              className="block text-xs font-semibold text-[#172135] mb-1.5"
-            >
-              Filter Status
-            </label>
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <select
-                  id="users-status-filter"
-                  value={statusFilter}
-                  onChange={(e) => {
-                    setStatusFilter(e.target.value as StatusFilterValue);
-                    setCurrentPage(1);
-                  }}
-                  className="w-full min-h-[44px] appearance-none pl-3.5 pr-9 py-2 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm font-semibold text-[#172135] hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-[#159447]/25 focus:border-[#159447] cursor-pointer transition-colors motion-reduce:transition-none"
-                >
-                  <option value="ALL">Semua</option>
-                  <option value="ACTIVE">Aktif</option>
-                  <option value="INACTIVE">Nonaktif</option>
-                </select>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <div className="relative z-30">
+              <button
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded={isRoleOpen}
+                aria-label="Filter Jabatan"
+                onClick={() => {
+                  setIsRoleOpen((prev) => !prev);
+                  setIsStatusOpen(false);
+                }}
+                className="flex items-center justify-between gap-3 min-w-[160px] px-3.5 py-2 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:border-[#159447] hover:text-[#159447] transition-all cursor-pointer whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#159447] motion-reduce:transition-none"
+              >
+                <span className="flex items-center gap-2 truncate">
+                  <Briefcase
+                    size={14}
+                    className="shrink-0 text-slate-500"
+                    aria-hidden="true"
+                  />
+                  <span className="truncate">{currentRoleFilterOption.label}</span>
+                </span>
                 <ChevronDown
-                  size={15}
+                  size={14}
                   aria-hidden="true"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#566276] pointer-events-none"
+                  className={`shrink-0 transition-transform duration-200 motion-reduce:transition-none ${
+                    isRoleOpen ? 'rotate-180' : ''
+                  }`}
                 />
-              </div>
+              </button>
 
-              {hasActiveFilters && (
-                <button
-                  type="button"
-                  onClick={resetFilters}
-                  className="min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 active:bg-slate-200/70 text-xs font-semibold text-[#172135] transition-colors cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#159447] motion-reduce:transition-none"
-                >
-                  Reset
-                </button>
+              {isRoleOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-20"
+                    onClick={() => setIsRoleOpen(false)}
+                  />
+                  <div
+                    role="listbox"
+                    aria-label="Pilihan Jabatan"
+                    className="absolute left-0 top-full mt-1.5 w-48 bg-white border border-slate-200 rounded-xl shadow-xl flex flex-col py-1.5 z-30"
+                  >
+                    {roleFilterOptions.map((opt) => {
+                      const isSelected = roleFilter === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          role="option"
+                          aria-selected={isSelected}
+                          onClick={() => {
+                            setRoleFilter(opt.value);
+                            setCurrentPage(1);
+                            setIsRoleOpen(false);
+                          }}
+                          className={`text-left px-4 py-2.5 text-xs font-semibold transition-colors cursor-pointer ${
+                            isSelected
+                              ? 'text-[#159447] bg-[#f0fdf4] border-l-4 border-[#159447]'
+                              : 'text-slate-600 hover:bg-slate-50 border-l-4 border-transparent hover:border-slate-300'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
               )}
             </div>
+
+            <div className="relative z-30">
+              <button
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded={isStatusOpen}
+                aria-label="Filter Status"
+                onClick={() => {
+                  setIsStatusOpen((prev) => !prev);
+                  setIsRoleOpen(false);
+                }}
+                className="flex items-center justify-between gap-3 min-w-[140px] px-3.5 py-2 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:border-[#159447] hover:text-[#159447] transition-all cursor-pointer whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#159447] motion-reduce:transition-none"
+              >
+                <span className="flex items-center gap-2 truncate">
+                  <CheckCircle2
+                    size={14}
+                    className="shrink-0 text-slate-500"
+                    aria-hidden="true"
+                  />
+                  <span className="truncate">{currentStatusFilterOption.label}</span>
+                </span>
+                <ChevronDown
+                  size={14}
+                  aria-hidden="true"
+                  className={`shrink-0 transition-transform duration-200 motion-reduce:transition-none ${
+                    isStatusOpen ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+
+              {isStatusOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-20"
+                    onClick={() => setIsStatusOpen(false)}
+                  />
+                  <div
+                    role="listbox"
+                    aria-label="Pilihan Status"
+                    className="absolute left-0 top-full mt-1.5 w-44 bg-white border border-slate-200 rounded-xl shadow-xl flex flex-col py-1.5 z-30"
+                  >
+                    {statusFilterOptions.map((opt) => {
+                      const isSelected = statusFilter === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          role="option"
+                          aria-selected={isSelected}
+                          onClick={() => {
+                            setStatusFilter(opt.value);
+                            setCurrentPage(1);
+                            setIsStatusOpen(false);
+                          }}
+                          className={`text-left px-4 py-2.5 text-xs font-semibold transition-colors cursor-pointer ${
+                            isSelected
+                              ? 'text-[#159447] bg-[#f0fdf4] border-l-4 border-[#159447]'
+                              : 'text-slate-600 hover:bg-slate-50 border-l-4 border-transparent hover:border-slate-300'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="px-3 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#159447] motion-reduce:transition-none"
+              >
+                Reset
+              </button>
+            )}
           </div>
         </div>
       </div>
