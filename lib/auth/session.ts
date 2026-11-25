@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import pool from '@/lib/db/pool';
 import { isPasswordExpired } from './password';
 import {
-  getDefaultDashboardPath,
+  getRoleFallbackPath,
   type AuthUser,
   type UserRole,
 } from './types';
@@ -130,7 +130,7 @@ export async function requireAuth(options?: {
 export async function requireRole(allowedRoles: UserRole[]): Promise<AuthUser> {
   const user = await requireAuth();
   if (!allowedRoles.includes(user.role)) {
-    redirect(getDefaultDashboardPath(user.role));
+    redirect(getRoleFallbackPath(user.role));
   }
   return user;
 }

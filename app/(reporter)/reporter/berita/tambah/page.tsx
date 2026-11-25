@@ -1,42 +1,46 @@
-import { redirect } from 'next/navigation'
-import { getAvailableCategories, getNewsByUuid } from '@/lib/db'
-import type { BeritaEditData } from '@/lib/types/berita'
-import ReporterBeritaForm from './ReporterBeritaForm'
+import { redirect } from 'next/navigation';
+import { requireRole } from '@/lib/auth';
+import { getAvailableCategories, getNewsByUuid } from '@/lib/db';
+import type { BeritaEditData } from '@/lib/types/berita';
+import ReporterBeritaForm from './ReporterBeritaForm';
 
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
 
 interface ReporterTambahBeritaPageProps {
-    searchParams?: Promise<{
-        ref?: string
-    }>
+  searchParams?: Promise<{
+    ref?: string;
+  }>;
 }
 
 export default async function ReporterTambahBeritaPage({
-    searchParams,
+  searchParams,
 }: ReporterTambahBeritaPageProps) {
-    const resolvedParams = searchParams ? await searchParams : {}
-    const rawRef = resolvedParams.ref ? resolvedParams.ref.trim() : null
+  const user = await requireRole(['REPORTER', 'SUPER_ADMIN']);
+  const resolvedParams = searchParams ? await searchParams : {};
+  const rawRef = resolvedParams.ref ? resolvedParams.ref.trim() : null;
 
-    let initialData: BeritaEditData | null = null
+  let initialData: BeritaEditData | null = null;
 
-    if (rawRef) {
-        initialData = await getNewsByUuid(rawRef, {
-            role: 'REPORTER',
-            authorName: 'Budi Santoso',
-        })
-        if (!initialData || initialData.status !== 'DRAFT') {
-            redirect('/reporter/berita')
-        }
+  if (rawRef) {
+    initialData = await getNewsByUuid(rawRef, {
+      role: user.role,
+      authorId: user.id,
+      authorName: user.name,
+    });
+    if (!initialData || initialData.status !== 'DRAFT') {
+      redirect('/reporter/berita');
     }
+  }
 
-    const availableCategories = await getAvailableCategories()
+  const availableCategories = await getAvailableCategories();
 
-    return (
-        <ReporterBeritaForm
-            key={initialData?.uuid ?? 'new'}
-            initialData={initialData}
-            notFoundId={null}
-            availableCategories={availableCategories}
-        />
-    )
+  return (
+    <ReporterBeritaForm
+      key={initialData?.uuid ?? 'new'}
+      initialData={initialData}
+      notFoundId={null}
+      availableCategories={availableCategories}
+      currentUser={{ name: user.name, role: user.role }}
+    />
+  );
 }

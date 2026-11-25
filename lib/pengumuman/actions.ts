@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import pool from '@/lib/db/pool';
+import { requireRole } from '@/lib/auth';
 import { slugifyTitle } from '@/lib/berita/slug';
 import { parseCustomPublishTimestamp } from '@/lib/utils/datetime';
 import {
@@ -146,10 +147,15 @@ function revalidatePengumumanPaths() {
   revalidatePath('/');
 }
 
-/**
- * Mengambil seluruh daftar pengumuman dari `public.pengumuman` diurutkan berdasarkan `created_at DESC`.
- */
+function getNameInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'SA';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
 export async function getPengumumanList(): Promise<PengumumanItem[]> {
+  const user = await requireRole(['SUPER_ADMIN']);
   try {
     const result = await pool.query<PengumumanRow>(
       'SELECT * FROM public.pengumuman ORDER BY created_at DESC'
@@ -184,9 +190,9 @@ export async function getPengumumanList(): Promise<PengumumanItem[]> {
         date: formatIndoDateShort(sourceDate),
         time: formatWibTimeShort(sourceDate),
         author: {
-          name: 'Trias Firmansyah',
-          role: 'Admin',
-          avatar: 'TF',
+          name: user.name,
+          role: 'Super Admin',
+          avatar: getNameInitials(user.name),
           avatarBg: 'bg-[#dcfce7] text-[#16a34a]',
         },
       };
@@ -203,6 +209,7 @@ export async function getPengumumanList(): Promise<PengumumanItem[]> {
 export async function createPengumumanAction(
   formData: FormData
 ): Promise<PengumumanMutationResult> {
+  await requireRole(['SUPER_ADMIN']);
   try {
     const rawTitle = ((formData.get('title') as string) || '').trim();
     const content = ((formData.get('content') as string) || '').trim();
@@ -317,6 +324,7 @@ export async function updatePengumumanAction(
   idOrFormData: number | string | FormData,
   maybeFormData?: FormData
 ): Promise<PengumumanMutationResult> {
+  await requireRole(['SUPER_ADMIN']);
   try {
     const formData =
       idOrFormData instanceof FormData ? idOrFormData : maybeFormData;
@@ -468,6 +476,7 @@ export async function updatePengumumanAction(
 export async function deletePengumumanAction(
   id: number | string
 ): Promise<PengumumanMutationResult> {
+  await requireRole(['SUPER_ADMIN']);
   try {
     const numericId = Number(id);
     if (!Number.isFinite(numericId) || numericId <= 0) {
@@ -514,6 +523,7 @@ export async function deletePengumumanAction(
 export async function unpublishPengumumanAction(
   id: number | string
 ): Promise<PengumumanMutationResult> {
+  await requireRole(['SUPER_ADMIN']);
   try {
     const numericId = Number(id);
     if (!Number.isFinite(numericId) || numericId <= 0) {

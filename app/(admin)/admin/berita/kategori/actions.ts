@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { requireRole } from '@/lib/auth';
 import {
   createCategory,
   updateCategory,
@@ -21,12 +22,10 @@ function revalidateCategoryRoutes() {
   revalidatePath('/');
 }
 
-/**
- * Server Action untuk menambahkan kategori berita baru.
- */
 export async function createCategoryAction(
   formData: FormData
 ): Promise<CategoryMutationResult> {
+  await requireRole(['SUPER_ADMIN', 'ADMIN_BERITA']);
   const name = ((formData.get('name') as string) || '').trim();
   const result = await createCategory(name);
 
@@ -37,13 +36,11 @@ export async function createCategoryAction(
   return result;
 }
 
-/**
- * Server Action untuk memperbarui nama kategori berita berdasarkan ID.
- */
 export async function updateCategoryAction(
   id: number,
   formData: FormData
 ): Promise<CategoryMutationResult> {
+  await requireRole(['SUPER_ADMIN', 'ADMIN_BERITA']);
   const name = ((formData.get('name') as string) || '').trim();
   const result = await updateCategory(id, name);
 
@@ -54,12 +51,10 @@ export async function updateCategoryAction(
   return result;
 }
 
-/**
- * Server Action untuk menghapus kategori berita jika tidak digunakan oleh berita mana pun.
- */
 export async function deleteCategoryAction(
   id: number
 ): Promise<CategoryMutationResult> {
+  await requireRole(['SUPER_ADMIN', 'ADMIN_BERITA']);
   const result = await deleteCategory(id);
 
   if (result.success) {
@@ -69,23 +64,18 @@ export async function deleteCategoryAction(
   return result;
 }
 
-/**
- * Server Action untuk mengambil daftar berita yang masih terikat pada suatu kategori.
- */
 export async function getCategoryLinkedNewsAction(
   categoryId: number
 ): Promise<CategoryLinkedNewsItem[]> {
+  await requireRole(['SUPER_ADMIN', 'ADMIN_BERITA']);
   return getNewsByCategoryId(categoryId);
 }
 
-/**
- * Server Action untuk memindahkan seluruh berita dari satu kategori ke kategori tujuan
- * lalu menghapus kategori asalnya dalam satu transaksi.
- */
 export async function reassignAndDeleteCategoryAction(
   sourceCategoryId: number,
   targetCategoryId: number
 ): Promise<CategoryMutationResult> {
+  await requireRole(['SUPER_ADMIN', 'ADMIN_BERITA']);
   const result = await reassignAndDeleteCategory(
     sourceCategoryId,
     targetCategoryId

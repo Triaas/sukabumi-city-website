@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import pool from '@/lib/db/pool';
+import { requireRole } from '@/lib/auth';
 import { saveBannerImage } from '@/lib/upload';
 
 export interface BannerRow {
@@ -91,6 +92,7 @@ async function normalizeBannerOrder(
 }
 
 export async function getBannerList(): Promise<BannerItem[]> {
+  await requireRole(['SUPER_ADMIN']);
   try {
     await ensureEventBannersTable();
 
@@ -144,6 +146,7 @@ export async function getBannerList(): Promise<BannerItem[]> {
 export async function createBannerAction(
   formData: FormData
 ): Promise<BannerMutationResult> {
+  await requireRole(['SUPER_ADMIN']);
   try {
     await ensureEventBannersTable();
 
@@ -224,6 +227,7 @@ export async function updateBannerAction(
   formDataOrId: FormData | number,
   maybeFormData?: FormData
 ): Promise<BannerMutationResult> {
+  await requireRole(['SUPER_ADMIN']);
   try {
     await ensureEventBannersTable();
 
@@ -336,6 +340,7 @@ export async function updateBannerAction(
 export async function deleteBannerAction(
   id: number
 ): Promise<BannerMutationResult> {
+  await requireRole(['SUPER_ADMIN']);
   try {
     await ensureEventBannersTable();
 
@@ -383,6 +388,7 @@ export async function toggleBannerStatusAction(
   id: number,
   isActive: boolean
 ): Promise<BannerMutationResult> {
+  await requireRole(['SUPER_ADMIN']);
   try {
     await ensureEventBannersTable();
 

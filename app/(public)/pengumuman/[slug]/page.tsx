@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowLeft, Calendar, User, Eye } from 'lucide-react'
 import ShareButtons from '@/components/ShareButtons'
+import { getCurrentUser } from '@/lib/auth'
 import {
   getAnnouncementBySlug,
   getAnnouncements,
@@ -18,17 +19,28 @@ export default async function AnnouncementDetailPage({
 }) {
   const { slug } = await params
   const resolvedSearch = searchParams ? await searchParams : {}
-  const isPreview = resolvedSearch.preview === 'true'
+  const requestedPreview = resolvedSearch.preview === 'true'
+
+  let canPreview = false
+  if (requestedPreview) {
+    const user = await getCurrentUser()
+    canPreview = Boolean(
+      user &&
+        !user.mustChangePassword &&
+        !user.isPasswordExpired &&
+        user.role === 'SUPER_ADMIN'
+    )
+  }
 
   const [cmsAnnouncement, allAnnouncements] = await Promise.all([
-    getPengumumanDetailBySlug(slug, isPreview),
+    getPengumumanDetailBySlug(slug, canPreview),
     getAnnouncements(),
   ])
   const legacyAnnouncement = cmsAnnouncement
     ? null
     : await getAnnouncementBySlug(slug)
   const announcement = cmsAnnouncement ?? legacyAnnouncement
-  const isDraftPreview = isPreview && cmsAnnouncement?.status === 'DRAFT'
+  const isDraftPreview = canPreview && cmsAnnouncement?.status === 'DRAFT'
 
   const otherAnnouncements = allAnnouncements
     .filter((item) => item.slug !== slug)

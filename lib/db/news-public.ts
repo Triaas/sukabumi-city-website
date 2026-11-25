@@ -1,5 +1,9 @@
 import pool from './pool';
-import type { BeritaPublic, BeritaDetailPublic } from '../types/berita';
+import type {
+  BeritaPublic,
+  BeritaDetailPublic,
+  UserRole,
+} from '../types/berita';
 import {
   normalizeImageUrl,
   formatIndoDate,
@@ -7,67 +11,72 @@ import {
 } from '../utils/formatters';
 import { ensureBeritaCategoriesTable } from '../berita/category';
 
-// 1. Ambil Detail Berita Berdasarkan Slug
-//    Alur: Cari di tabel mandiri `public.berita` terlebih dahulu;
-//          jika tidak ditemukan (atau tabel belum dimigrasikan), fallback ke `wp_posts`.
-//          Jika `isPreview === true`, syarat status PUBLISHED & published_at <= NOW() diabaikan.
+export interface BeritaPreviewContext {
+  id: number;
+  name: string;
+  role: UserRole;
+}
+
 export async function getNewsBySlug(
   slug: string,
-  isPreview: boolean = false
+  previewContext?: BeritaPreviewContext | null
 ): Promise<BeritaDetailPublic | null> {
-  // Tahap A: Coba ambil dari tabel baru `public.berita`
   try {
     await ensureBeritaCategoriesTable();
 
-    const nativeQuery = isPreview
-      ? `
-        SELECT 
-          b.title::text AS title,
-          b.content::text AS content,
-          COALESCE(b.published_at, b.created_at) AS date,
-          b.image_url::text AS featured_image,
-          b.author_name::text AS author_name,
-          b.caption::text AS caption,
-          b.source_credit::text AS source_credit,
-          b.status::text AS status,
-          COALESCE(
-            (SELECT STRING_AGG(c2.name, ', ' ORDER BY bc.position ASC)
-             FROM public.berita_categories bc
-             INNER JOIN public.categories c2 ON bc.category_id = c2.id
-             WHERE bc.berita_id = b.id),
-            c.name::text
-          ) AS category
-        FROM public.berita b
-        LEFT JOIN public.categories c ON b.category_id = c.id
-        WHERE b.slug = $1
-        LIMIT 1
-      `
-      : `
-        SELECT 
-          b.title::text AS title,
-          b.content::text AS content,
-          COALESCE(b.published_at, b.created_at) AS date,
-          b.image_url::text AS featured_image,
-          b.author_name::text AS author_name,
-          b.caption::text AS caption,
-          b.source_credit::text AS source_credit,
-          b.status::text AS status,
-          COALESCE(
-            (SELECT STRING_AGG(c2.name, ', ' ORDER BY bc.position ASC)
-             FROM public.berita_categories bc
-             INNER JOIN public.categories c2 ON bc.category_id = c2.id
-             WHERE bc.berita_id = b.id),
-            c.name::text
-          ) AS category
-        FROM public.berita b
-        LEFT JOIN public.categories c ON b.category_id = c.id
-        WHERE b.slug = $1
-          AND b.status = 'PUBLISHED'
-          AND (b.published_at IS NULL OR b.published_at <= NOW())
-        LIMIT 1
-      `;
+    const params: unknown[] = [slug];
+    let visibilityCondition = `
+      AND b.status = 'PUBLISHED'
+      AND (b.published_at IS NULL OR b.published_at <= NOW())
+    `;
 
-    const { rows: nativeRows } = await pool.query(nativeQuery, [slug]);
+    if (previewContext) {
+      if (
+        previewContext.role === 'SUPER_ADMIN' ||
+        previewContext.role === 'ADMIN_BERITA'
+      ) {
+        visibilityCondition = '';
+      } else if (previewContext.role === 'REPORTER') {
+        params.push(previewContext.id, previewContext.name);
+        visibilityCondition = `
+          AND (
+            (b.status = 'PUBLISHED' AND (b.published_at IS NULL OR b.published_at <= NOW()))
+            OR b.author_id = $2
+            OR (
+              b.author_id IS NULL
+              AND b.author_role = 'REPORTER'
+              AND LOWER(b.author_name) = LOWER($3)
+            )
+          )
+        `;
+      }
+    }
+
+    const nativeQuery = `
+      SELECT 
+        b.title::text AS title,
+        b.content::text AS content,
+        COALESCE(b.published_at, b.created_at) AS date,
+        b.image_url::text AS featured_image,
+        b.author_name::text AS author_name,
+        b.caption::text AS caption,
+        b.source_credit::text AS source_credit,
+        b.status::text AS status,
+        COALESCE(
+          (SELECT STRING_AGG(c2.name, ', ' ORDER BY bc.position ASC)
+           FROM public.berita_categories bc
+           INNER JOIN public.categories c2 ON bc.category_id = c2.id
+           WHERE bc.berita_id = b.id),
+          c.name::text
+        ) AS category
+      FROM public.berita b
+      LEFT JOIN public.categories c ON b.category_id = c.id
+      WHERE b.slug = $1
+      ${visibilityCondition}
+      LIMIT 1
+    `;
+
+    const { rows: nativeRows } = await pool.query(nativeQuery, params);
 
     if (nativeRows.length > 0) {
       const news = nativeRows[0];

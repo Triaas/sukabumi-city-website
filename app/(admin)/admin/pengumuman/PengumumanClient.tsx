@@ -144,10 +144,12 @@ function formatTimeWithWib(timeStr: string): string {
 
 interface PengumumanClientProps {
     initialData: PengumumanItem[]
+    currentUserName: string
 }
 
 export default function PengumumanClient({
     initialData,
+    currentUserName,
 }: PengumumanClientProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
@@ -201,8 +203,8 @@ export default function PengumumanClient({
         content: '',
         publishDate: '',
         publishTime: '',
-        authorName: 'Trias Firmansyah',
-        authorRole: 'Admin',
+        authorName: currentUserName,
+        authorRole: 'Super Admin',
         status: 'Diterbitkan' as PengumumanItem['status'],
         attachment: null as string | null,
         thumbnailUrl: null as string | null,
@@ -464,8 +466,8 @@ export default function PengumumanClient({
             content: '',
             publishDate: now.date,
             publishTime: now.time,
-            authorName: 'Trias Firmansyah',
-            authorRole: 'Admin',
+            authorName: currentUserName,
+            authorRole: 'Super Admin',
             status: 'Diterbitkan',
             attachment: null,
             thumbnailUrl: null,
@@ -513,8 +515,8 @@ export default function PengumumanClient({
             content: item.content,
             publishDate: dateInput,
             publishTime: timeInput,
-            authorName: item.author.name || 'Trias Firmansyah',
-            authorRole: item.author.role || 'Admin',
+            authorName: item.author.name || currentUserName,
+            authorRole: item.author.role || 'Super Admin',
             status: item.status,
             attachment: initialAttachment,
             thumbnailUrl: initialThumbnailUrl,
@@ -1826,7 +1828,7 @@ export default function PengumumanClient({
                                     <div className="flex-1 min-w-0">
                                         <p className="text-xs font-bold text-[#172135] truncate">
                                             {formData.authorName ||
-                                                'Trias Firmansyah'}
+                                                currentUserName}
                                         </p>
                                         <p className="text-[11px] text-slate-500 mt-0.5">
                                             {formData.authorRole || 'Admin'}
@@ -2288,7 +2290,7 @@ export default function PengumumanClient({
                                     <div className="flex-1 min-w-0">
                                         <p className="text-xs font-bold text-[#172135] truncate">
                                             {formData.authorName ||
-                                                'Trias Firmansyah'}
+                                                currentUserName}
                                         </p>
                                         <p className="text-[11px] text-slate-500 mt-0.5">
                                             {formData.authorRole || 'Admin'}

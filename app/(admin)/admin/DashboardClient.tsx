@@ -112,10 +112,13 @@ const popularNews = [
 
 export default function DashboardClient({
   statsCounts,
+  userName,
+  userRole,
 }: {
   statsCounts: DashboardStatsCounts
+  userName: string
+  userRole: 'SUPER_ADMIN' | 'ADMIN_BERITA'
 }) {
-  const currentUserRole = 'SUPER_ADMIN' as 'SUPER_ADMIN' | 'ADMIN_BERITA' // Ubah untuk testing
   const [timeFilter, setTimeFilter] = useState<'7d' | '30d' | '1y'>('7d')
   const [activeIdx, setActiveIdx] = useState<number | null>(3)
 
@@ -185,7 +188,7 @@ export default function DashboardClient({
       {/* Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-[#172135] tracking-tight">
-          Selamat Datang Trias
+          Selamat Datang, {userName}
         </h1>
         <p className="mt-1 text-sm text-[#566276] leading-relaxed">
           Ringkasan performa portal dan tugas editorial Anda hari ini.
@@ -196,7 +199,7 @@ export default function DashboardClient({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {stats
           .filter(stat => {
-            if (currentUserRole === 'SUPER_ADMIN') return true
+            if (userRole === 'SUPER_ADMIN') return true
             return (
               stat.id === 'pengunjung bulan ini' ||
               stat.id === 'Berita diterbitkan' ||

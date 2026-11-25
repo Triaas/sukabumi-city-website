@@ -92,6 +92,8 @@ export interface BeritaAdminRow {
   categoryName: string;
   category_name: string;
   categories: string[];
+  authorId?: number | null;
+  author_id?: number | null;
   authorName: string;
   author_name: string;
   authorRole?: UserRole;
@@ -119,6 +121,7 @@ export interface BeritaEditData {
   image_url: string | null;
   caption: string | null;
   source_credit: string | null;
+  author_id?: number | null;
   author_name: string;
   author_role: UserRole;
   status: NewsStatus;

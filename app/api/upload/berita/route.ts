@@ -1,7 +1,16 @@
 import { NextResponse } from 'next/server';
+import { getCurrentUser } from '@/lib/auth';
 import { saveBeritaImage } from '@/lib/upload';
 
 export async function POST(request: Request) {
+  const user = await getCurrentUser();
+  if (!user || user.mustChangePassword || user.isPasswordExpired) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+
   try {
     const formData = await request.formData();
     const file = formData.get('image') ?? formData.get('file');
@@ -26,4 +35,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

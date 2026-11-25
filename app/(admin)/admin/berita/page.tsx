@@ -12,6 +12,7 @@ import {
     Tags,
     RotateCcw,
 } from 'lucide-react'
+import { requireRole } from '@/lib/auth'
 import { getAdminNewsList, getAvailableCategories } from '@/lib/db'
 import {
     getStatusLabel,
@@ -73,6 +74,7 @@ interface AdminBeritaPageProps {
 }
 
 export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageProps) {
+    const user = await requireRole(['SUPER_ADMIN', 'ADMIN_BERITA'])
     const resolvedParams = searchParams ? await searchParams : {}
     const searchQuery = (resolvedParams.q || '').trim()
     const selectedCategory = resolvedParams.category || 'Semua kategori'
@@ -85,7 +87,7 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
     const [allRows, availableCategories]: [BeritaAdminRow[], string[]] =
         await Promise.all([
             getAdminNewsList({
-                role: 'ADMIN_BERITA',
+                role: user.role,
             }),
             getAvailableCategories(),
         ])
@@ -233,7 +235,7 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                 selectedCategory={selectedCategory}
                 selectedStatus={selectedStatus}
                 availableCategories={availableCategories}
-                role="ADMIN_BERITA"
+                role={user.role}
                 placeholder="Cari judul berita atau nama penulis..."
                 showDateFilter={true}
                 selectedDateFilter={selectedDateFilter}
@@ -279,7 +281,7 @@ export default async function AdminBeritaPage({ searchParams }: AdminBeritaPageP
                                         STATUS_COLORS[row.status] ?? STATUS_COLORS.DRAFT
                                     const statusLabel = getStatusLabel(
                                         row.status,
-                                        'ADMIN_BERITA'
+                                        user.role
                                     )
                                     const displayDateSource =
                                         row.published_at || row.created_at

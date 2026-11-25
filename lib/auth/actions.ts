@@ -14,6 +14,7 @@ import {
   createSession,
   destroyCurrentSession,
   getCurrentUser,
+  requireAuth,
 } from './session';
 import {
   getDefaultDashboardPath,
@@ -249,13 +250,7 @@ export async function logoutAction(): Promise<void> {
 export async function updateOwnProfileAction(
   formData: FormData
 ): Promise<AuthActionResult> {
-  const user = await getCurrentUser();
-  if (!user) {
-    return {
-      success: false,
-      error: 'Sesi telah berakhir. Silakan masuk kembali.',
-    };
-  }
+  const user = await requireAuth();
 
   const name = ((formData.get('name') as string) || '').trim();
   if (!name) {
@@ -283,7 +278,9 @@ export async function updateOwnProfileAction(
     );
 
     revalidatePath('/admin', 'layout');
+    revalidatePath('/admin/profil');
     revalidatePath('/reporter', 'layout');
+    revalidatePath('/reporter/profil');
 
     return { success: true };
   } catch (error) {
@@ -298,13 +295,7 @@ export async function updateOwnProfileAction(
 export async function changeOwnPasswordAction(
   formData: FormData
 ): Promise<AuthActionResult> {
-  const user = await getCurrentUser();
-  if (!user) {
-    return {
-      success: false,
-      error: 'Sesi telah berakhir. Silakan masuk kembali.',
-    };
-  }
+  const user = await requireAuth();
 
   const currentPassword = (formData.get('current_password') as string) || '';
   const newPassword = (formData.get('new_password') as string) || '';

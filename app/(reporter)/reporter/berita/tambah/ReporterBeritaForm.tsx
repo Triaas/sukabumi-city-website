@@ -73,12 +73,17 @@ interface ReporterBeritaFormProps {
     initialData?: BeritaEditData | null
     notFoundId?: number | string | null
     availableCategories?: string[]
+    currentUser: {
+        name: string
+        role: UserRole
+    }
 }
 
 export default function ReporterBeritaForm({
     initialData = null,
     notFoundId = null,
     availableCategories = [...OFFICIAL_CATEGORIES],
+    currentUser,
 }: ReporterBeritaFormProps) {
     const router = useRouter()
     const isEditMode = Boolean(initialData)
@@ -89,9 +94,8 @@ export default function ReporterBeritaForm({
 
     const [title, setTitle] = useState(initialData?.title ?? '')
 
-    // Konteks Sesi Pengguna (Default Reporter)
-    const [currentUserRole] = useState<UserRole>('REPORTER')
-    const currentUserName = 'Budi Santoso'
+    const currentUserRole = currentUser.role
+    const currentUserName = currentUser.name
 
     const getNowWib = () => {
         const parts = new Intl.DateTimeFormat('en-GB', {

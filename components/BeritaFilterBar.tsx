@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Search, ChevronDown, X, Check, Tag, CheckCircle2, Calendar } from 'lucide-react'
 import { OFFICIAL_CATEGORIES } from '@/lib/constants/categories'
+import type { UserRole } from '@/lib/types/berita'
 
 interface BeritaFilterBarProps {
     basePath: string
@@ -12,7 +13,7 @@ interface BeritaFilterBarProps {
     selectedCategory: string
     selectedStatus: string
     availableCategories?: string[]
-    role?: 'ADMIN_BERITA' | 'REPORTER'
+    role?: UserRole
     placeholder?: string
     showDateFilter?: boolean
     selectedDateFilter?: string

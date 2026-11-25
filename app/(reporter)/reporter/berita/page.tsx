@@ -11,6 +11,7 @@ import {
     CheckCircle2,
     RotateCcw,
 } from 'lucide-react'
+import { requireRole } from '@/lib/auth'
 import { getAdminNewsList, getAvailableCategories } from '@/lib/db'
 import {
     getStatusLabel,
@@ -60,6 +61,7 @@ interface ReporterBeritaPageProps {
 export default async function ReporterBeritaPage({
     searchParams,
 }: ReporterBeritaPageProps) {
+    const user = await requireRole(['REPORTER', 'SUPER_ADMIN'])
     const resolvedParams = searchParams ? await searchParams : {}
     const searchQuery = (resolvedParams.q || '').trim()
     const selectedCategory = resolvedParams.category || 'Semua kategori'
@@ -68,10 +70,15 @@ export default async function ReporterBeritaPage({
 
     const [allRows, availableCategories]: [BeritaAdminRow[], string[]] =
         await Promise.all([
-            getAdminNewsList({
-                role: 'REPORTER',
-                authorName: 'Budi Santoso',
-            }),
+            getAdminNewsList(
+                user.role === 'REPORTER'
+                    ? {
+                          role: 'REPORTER',
+                          authorId: user.id,
+                          authorName: user.name,
+                      }
+                    : { role: 'REPORTER' }
+            ),
             getAvailableCategories(),
         ])
 
@@ -366,8 +373,6 @@ export default async function ReporterBeritaPage({
                                                         title={row.title}
                                                         disabled={!isDraft}
                                                         disabledTitle="Hanya naskah berstatus Draf yang dapat dihapus"
-                                                        role="REPORTER"
-                                                        authorName="Budi Santoso"
                                                     />
 
                                                     {/* 4. Unsubmit (Tarik Naskah): HANYA muncul jika status === 'SUBMITTED' */}

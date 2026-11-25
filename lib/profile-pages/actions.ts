@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import pool from '@/lib/db/pool';
+import { requireRole } from '@/lib/auth';
 import { saveProfileAssetImage } from '@/lib/upload';
 import { DEFAULT_PROFILE_PAGES } from './defaults';
 import {
@@ -21,6 +22,7 @@ export async function updateProfilePageAction(
   slug: string,
   payload: ProfilePageUpdatePayload
 ): Promise<{ success: boolean; data?: ProfilePageData; error?: string }> {
+  await requireRole(['SUPER_ADMIN']);
   try {
     if (!isValidProfilePageSlug(slug)) {
       return { success: false, error: 'Slug halaman profil tidak valid.' };
@@ -107,6 +109,7 @@ export async function updateProfilePageAction(
 export async function resetProfilePageAction(
   slug: string
 ): Promise<{ success: boolean; data?: ProfilePageData; error?: string }> {
+  await requireRole(['SUPER_ADMIN']);
   try {
     if (!isValidProfilePageSlug(slug)) {
       return { success: false, error: 'Slug halaman profil tidak valid.' };
@@ -175,6 +178,7 @@ export async function resetProfilePageAction(
 export async function uploadProfileImageAction(
   formData: FormData
 ): Promise<{ success: boolean; imageUrl?: string; error?: string }> {
+  await requireRole(['SUPER_ADMIN']);
   try {
     const fileEntry = formData.get('file');
     if (!(fileEntry instanceof File) || fileEntry.size === 0) {

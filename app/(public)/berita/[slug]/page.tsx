@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowLeft, Calendar, User, Eye, Image as ImageIcon } from 'lucide-react'
 import ShareButtons from '@/components/ShareButtons'
+import { getCurrentUser } from '@/lib/auth'
 import { getNewsBySlug, getRelatedNews } from '@/lib/db'
 import FallbackImage from '@/components/FallbackImage'
 
@@ -15,10 +16,27 @@ export default async function ArticlePage({
 }) {
   const { slug } = await params
   const resolvedSearchParams = searchParams ? await searchParams : {}
-  const isPreview = resolvedSearchParams.preview === 'true'
+  const requestedPreview = resolvedSearchParams.preview === 'true'
 
-  // Ambil data langsung dari database (longgarkan filter status jika mode preview aktif)
-  const article = await getNewsBySlug(slug, isPreview)
+  let previewContext: {
+    id: number
+    name: string
+    role: 'SUPER_ADMIN' | 'ADMIN_BERITA' | 'REPORTER'
+  } | null = null
+
+  if (requestedPreview) {
+    const user = await getCurrentUser()
+    if (user && !user.mustChangePassword && !user.isPasswordExpired) {
+      previewContext = {
+        id: user.id,
+        name: user.name,
+        role: user.role,
+      }
+    }
+  }
+
+  const isPreview = Boolean(previewContext)
+  const article = await getNewsBySlug(slug, previewContext)
 
   if (!article) {
     return (

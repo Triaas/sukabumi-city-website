@@ -1,6 +1,7 @@
 'use server'
 
 import pool from './db';
+import { getCurrentUser } from './auth';
 
 export interface AnnouncementItem {
     id: number;
@@ -128,10 +129,21 @@ export async function getPengumumanDetailBySlug(
     includeDraft = false
 ): Promise<PengumumanDetail | null> {
     try {
+        let canIncludeDraft = false;
+        if (includeDraft) {
+            const user = await getCurrentUser();
+            canIncludeDraft = Boolean(
+                user &&
+                    !user.mustChangePassword &&
+                    !user.isPasswordExpired &&
+                    user.role === 'SUPER_ADMIN'
+            );
+        }
+
         const { rows } = await pool.query(
             `SELECT title, content, status, thumbnail_url, attachment_url, published_at, created_at
        FROM public.pengumuman
-       WHERE slug = $1 ${includeDraft ? '' : "AND UPPER(status) IN ('PUBLISHED', 'PUBLISH') AND (published_at IS NULL OR published_at <= NOW())"}
+       WHERE slug = $1 ${canIncludeDraft ? '' : "AND UPPER(status) IN ('PUBLISHED', 'PUBLISH') AND (published_at IS NULL OR published_at <= NOW())"}
        LIMIT 1`,
             [slug]
         );

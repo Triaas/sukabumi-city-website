@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import pool from '@/lib/db/pool';
+import { requireRole } from '@/lib/auth';
 import { slugifyTitle } from '@/lib/berita/slug';
 import { saveTransparansiPdf } from '@/lib/upload';
 
@@ -163,6 +164,7 @@ function revalidateTransparansiPaths() {
 }
 
 export async function getTransparansiList(): Promise<TransparansiItem[]> {
+  await requireRole(['SUPER_ADMIN']);
   try {
     await ensureTransparansiTable();
     const result = await pool.query<TransparansiRow>(
@@ -215,6 +217,7 @@ export async function getTransparansiList(): Promise<TransparansiItem[]> {
 export async function createTransparansiAction(
   formData: FormData
 ): Promise<TransparansiMutationResult> {
+  await requireRole(['SUPER_ADMIN']);
   try {
     await ensureTransparansiTable();
 
@@ -327,6 +330,7 @@ export async function updateTransparansiAction(
   idOrFormData: number | string | FormData,
   maybeFormData?: FormData
 ): Promise<TransparansiMutationResult> {
+  await requireRole(['SUPER_ADMIN']);
   try {
     await ensureTransparansiTable();
 
@@ -474,6 +478,7 @@ export async function updateTransparansiAction(
 export async function deleteTransparansiAction(
   id: number | string
 ): Promise<TransparansiMutationResult> {
+  await requireRole(['SUPER_ADMIN']);
   try {
     const numericId = Number(id);
     if (!Number.isFinite(numericId) || numericId <= 0) {
@@ -516,6 +521,7 @@ export async function deleteTransparansiAction(
 export async function unpublishTransparansiAction(
   id: number | string
 ): Promise<TransparansiMutationResult> {
+  await requireRole(['SUPER_ADMIN']);
   try {
     const numericId = Number(id);
     if (!Number.isFinite(numericId) || numericId <= 0) {

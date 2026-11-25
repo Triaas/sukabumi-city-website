@@ -22,6 +22,12 @@ export function getDefaultDashboardPath(role: UserRole): string {
   return role === 'REPORTER' ? '/reporter/berita' : '/admin';
 }
 
+export function getRoleFallbackPath(role: UserRole): string {
+  if (role === 'REPORTER') return '/reporter/berita';
+  if (role === 'ADMIN_BERITA') return '/admin/berita';
+  return '/admin';
+}
+
 export function resolveSafeRedirectPath(
   nextPath: string | null | undefined,
   role: UserRole

@@ -8,30 +8,47 @@ import type {
 import { normalizeImageUrl } from '../utils/formatters';
 import { ensureBeritaCategoriesTable } from '../berita/category';
 
-// 1. Ambil Daftar Berita untuk Tabel Manajemen Admin & Reporter (public.berita)
 export async function getAdminNewsList(options?: {
   role?: UserRole;
+  authorId?: number;
   authorName?: string;
 }): Promise<BeritaAdminRow[]> {
   try {
     await ensureBeritaCategoriesTable();
 
     const isReporter = options?.role === 'REPORTER';
-    const hasAuthorFilter = isReporter && Boolean(options?.authorName?.trim());
+    const hasAuthorId =
+      isReporter && typeof options?.authorId === 'number' && Number.isFinite(options.authorId);
+    const trimmedAuthorName = (options?.authorName || '').trim();
 
     let whereClause = '';
-    const params: any[] = [];
+    const params: unknown[] = [];
 
     if (isReporter) {
-      if (hasAuthorFilter) {
-        whereClause = `WHERE b.author_role = 'REPORTER' AND b.author_name = $1`;
-        params.push(options!.authorName!.trim());
+      if (hasAuthorId) {
+        params.push(options!.authorId!);
+        if (trimmedAuthorName) {
+          params.push(trimmedAuthorName);
+          whereClause = `
+            WHERE (
+              b.author_id = $1
+              OR (
+                b.author_id IS NULL
+                AND b.author_role = 'REPORTER'
+                AND LOWER(b.author_name) = LOWER($2)
+              )
+            )
+          `;
+        } else {
+          whereClause = `WHERE b.author_id = $1`;
+        }
+      } else if (trimmedAuthorName) {
+        params.push(trimmedAuthorName);
+        whereClause = `WHERE b.author_role = 'REPORTER' AND LOWER(b.author_name) = LOWER($1)`;
       } else {
         whereClause = `WHERE b.author_role = 'REPORTER'`;
       }
     } else {
-      // Role Admin / Super Admin:
-      // Draf milik Reporter yang belum pernah terbit / baru di-unsubmit TIDAK ditampilkan di meja Admin.
       whereClause = `
         WHERE b.status IN ('SUBMITTED', 'PUBLISHED')
            OR (b.status = 'DRAFT' AND (b.author_role IN ('SUPER_ADMIN', 'ADMIN_BERITA') OR b.was_published = TRUE))
@@ -53,6 +70,7 @@ export async function getAdminNewsList(options?: {
         b.published_at,
         b.created_at,
         b.updated_at,
+        b.author_id,
         b.author_name,
         b.author_role,
         b.was_published,
@@ -86,6 +104,10 @@ export async function getAdminNewsList(options?: {
         .map((c: string) => c.trim())
         .filter(Boolean);
       const authorName = row.author_name || 'Diskominfo Kota Sukabumi';
+      const authorId =
+        row.author_id !== null && row.author_id !== undefined
+          ? Number(row.author_id)
+          : null;
       const publishedIso = row.published_at
         ? new Date(row.published_at).toISOString()
         : null;
@@ -112,6 +134,8 @@ export async function getAdminNewsList(options?: {
         categoryName,
         category_name: categoryName,
         categories: categoryList.length > 0 ? categoryList : [categoryName],
+        authorId,
+        author_id: authorId,
         authorName,
         author_name: authorName,
         authorRole: (row.author_role as UserRole) || 'REPORTER',
@@ -132,7 +156,6 @@ export async function getAdminNewsList(options?: {
   }
 }
 
-// 2. Ambil Data Tunggal Naskah Berdasarkan ID untuk Pre-fill Form Edit (public.berita)
 export async function getNewsById(id: number): Promise<BeritaEditData | null> {
   if (!Number.isFinite(id)) return null;
 
@@ -150,6 +173,7 @@ export async function getNewsById(id: number): Promise<BeritaEditData | null> {
         b.image_url,
         b.caption,
         b.source_credit,
+        b.author_id,
         b.author_name,
         b.author_role,
         b.status,
@@ -194,6 +218,10 @@ export async function getNewsById(id: number): Promise<BeritaEditData | null> {
       image_url: normalizedImg,
       caption: row.caption || null,
       source_credit: row.source_credit || null,
+      author_id:
+        row.author_id !== null && row.author_id !== undefined
+          ? Number(row.author_id)
+          : null,
       author_name: row.author_name || 'Diskominfo Kota Sukabumi',
       author_role: (row.author_role as UserRole) || 'REPORTER',
       status: (row.status as NewsStatus) || 'DRAFT',
@@ -210,10 +238,9 @@ export async function getNewsById(id: number): Promise<BeritaEditData | null> {
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// 3. Ambil Data Tunggal Naskah Berdasarkan UUID & Validasi Kepemilikan (Anti-IDOR)
 export async function getNewsByUuid(
   uuid: string,
-  options?: { role?: UserRole | string; authorName?: string }
+  options?: { role?: UserRole | string; authorId?: number; authorName?: string }
 ): Promise<BeritaEditData | null> {
   const trimmedUuid = (uuid || '').trim();
   if (!UUID_REGEX.test(trimmedUuid)) return null;
@@ -222,14 +249,37 @@ export async function getNewsByUuid(
     await ensureBeritaCategoriesTable();
 
     const isReporter = options?.role === 'REPORTER';
-    const params: any[] = [trimmedUuid];
+    const params: unknown[] = [trimmedUuid];
     let ownershipFilter = '';
 
     if (isReporter) {
+      const hasAuthorId =
+        typeof options?.authorId === 'number' && Number.isFinite(options.authorId);
       const authorName = (options?.authorName || '').trim();
-      if (!authorName) return null;
-      ownershipFilter = `AND b.author_role = 'REPORTER' AND LOWER(b.author_name) = LOWER($2)`;
-      params.push(authorName);
+
+      if (hasAuthorId) {
+        params.push(options!.authorId!);
+        if (authorName) {
+          params.push(authorName);
+          ownershipFilter = `
+            AND (
+              b.author_id = $2
+              OR (
+                b.author_id IS NULL
+                AND b.author_role = 'REPORTER'
+                AND LOWER(b.author_name) = LOWER($3)
+              )
+            )
+          `;
+        } else {
+          ownershipFilter = `AND b.author_id = $2`;
+        }
+      } else if (authorName) {
+        params.push(authorName);
+        ownershipFilter = `AND b.author_role = 'REPORTER' AND LOWER(b.author_name) = LOWER($2)`;
+      } else {
+        return null;
+      }
     }
 
     const query = `
@@ -243,6 +293,7 @@ export async function getNewsByUuid(
         b.image_url,
         b.caption,
         b.source_credit,
+        b.author_id,
         b.author_name,
         b.author_role,
         b.status,
@@ -288,6 +339,10 @@ export async function getNewsByUuid(
       image_url: normalizedImg,
       caption: row.caption || null,
       source_credit: row.source_credit || null,
+      author_id:
+        row.author_id !== null && row.author_id !== undefined
+          ? Number(row.author_id)
+          : null,
       author_name: row.author_name || 'Diskominfo Kota Sukabumi',
       author_role: (row.author_role as UserRole) || 'REPORTER',
       status: (row.status as NewsStatus) || 'DRAFT',
@@ -300,4 +355,3 @@ export async function getNewsByUuid(
     return null;
   }
 }
-

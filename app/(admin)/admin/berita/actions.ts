@@ -1,6 +1,7 @@
 'use server';
 
 import pool from '@/lib/db';
+import { requireRole } from '@/lib/auth';
 import { saveBeritaImage } from '@/lib/upload';
 import { parseCustomPublishTimestamp } from '@/lib/utils/datetime';
 import { generateUniqueSlug } from '@/lib/berita/slug';
@@ -26,9 +27,6 @@ export interface CreateBeritaResult {
   error?: string;
 }
 
-/**
- * Memvalidasi bahwa path gambar mengarah ke path lokal (`/`) atau protokol HTTP/HTTPS yang sah.
- */
 function isValidImagePath(url: string | null | undefined): url is string {
   if (!url || typeof url !== 'string') {
     return false;
@@ -41,12 +39,15 @@ function isValidImagePath(url: string | null | undefined): url is string {
   );
 }
 
-/**
- * Server Action untuk menyimpan atau menerbitkan berita baru ke tabel `public.berita`.
- */
 export async function createBeritaAction(
   formData: FormData
 ): Promise<CreateBeritaResult> {
+  const sessionUser = await requireRole([
+    'SUPER_ADMIN',
+    'ADMIN_BERITA',
+    'REPORTER',
+  ]);
+
   try {
     const rawTitle = ((formData.get('title') as string) || '').trim();
     const content = ((formData.get('content') as string) || '').trim();
@@ -59,25 +60,39 @@ export async function createBeritaAction(
       rawCategories.length > 0
         ? rawCategories
         : rawCategory
-          ? rawCategory.split(',').map((c) => c.trim()).filter(Boolean)
+          ? rawCategory
+              .split(',')
+              .map((c) => c.trim())
+              .filter(Boolean)
           : [];
     const caption = ((formData.get('caption') as string) || '').trim();
-    const sourceCredit = ((formData.get('source_credit') as string) || '').trim();
-    const actionType = ((formData.get('action_type') as BeritaActionType) ||
-      'DRAFT') as BeritaActionType;
+    const sourceCredit = (
+      (formData.get('source_credit') as string) || ''
+    ).trim();
+    const rawActionType =
+      ((formData.get('action_type') as BeritaActionType) ||
+        'DRAFT') as BeritaActionType;
+
+    // Identitas dan role diambil sepenuhnya dari sesi server, mengabaikan input FormData.
+    const authorId = sessionUser.id;
+    const authorName = sessionUser.name;
+    const userRole = sessionUser.role;
+    const actionType: BeritaActionType =
+      userRole === 'REPORTER' && rawActionType === 'PUBLISH'
+        ? 'SUBMIT'
+        : rawActionType;
     const isDraftAction = actionType === 'DRAFT';
     const title = rawTitle || (isDraftAction ? '(Draf Tanpa Judul)' : '');
-    const authorName =
-      ((formData.get('author_name') as string) || '').trim() ||
-      'Diskominfo Kota Sukabumi';
-    const userRole = ((formData.get('user_role') as UserRole) ||
-      'REPORTER') as UserRole;
-    const publishDateRaw = ((formData.get('publish_date') as string) || '').trim();
-    const publishTimeRaw = ((formData.get('publish_time') as string) || '').trim();
-    const imageEntry = formData.get('image');
 
-    // 1. Validasi seluruh field teks, kategori, dan jadwal TERLEBIH DAHULU
-    //    sebelum menyentuh penyimpanan berkas fisik (mencegah orphan file upload).
+    const publishDateRaw = (
+      (formData.get('publish_date') as string) || ''
+    ).trim();
+    const publishTimeRaw = (
+      (formData.get('publish_time') as string) || ''
+    ).trim();
+    const imageEntry =
+      formData.get('image') ?? formData.get('existing_image_url');
+
     if (!title) {
       return {
         success: false,
@@ -148,16 +163,13 @@ export async function createBeritaAction(
       }
     }
 
-    if (
-      categoryInputs.some((cat) => cat.length > 30 && !/^\d+$/.test(cat))
-    ) {
+    if (categoryInputs.some((cat) => cat.length > 30 && !/^\d+$/.test(cat))) {
       return {
         success: false,
         error: 'Nama kategori baru tidak boleh melebihi 30 karakter.',
       };
     }
 
-    // 2. Resolusi seluruh kategori ke tabel public.categories
     const categoryIds =
       categoryInputs.length > 0
         ? await resolveCategoryIds(categoryInputs, userRole)
@@ -173,7 +185,6 @@ export async function createBeritaAction(
     const resolvedCategoryIds = categoryIds ?? [];
     const categoryId = resolvedCategoryIds[0] ?? null;
 
-    // 3. Unggah gambar fisik HANYA setelah seluruh validasi lolos
     let imageUrl: string | null = null;
     if (hasFileUpload) {
       try {
@@ -198,7 +209,6 @@ export async function createBeritaAction(
       };
     }
 
-    // 4. Buat slug unik & tentukan status naskah
     const newSlug = await generateUniqueSlug(title);
     const { status, isPublishedNow, wasPublished } = resolveNextStatus({
       actionType,
@@ -206,12 +216,17 @@ export async function createBeritaAction(
       isUpdate: false,
     });
 
-    const customPublishedAt = parseCustomPublishTimestamp(
-      publishDateRaw,
-      publishTimeRaw
-    );
+    if (userRole === 'REPORTER' && status === 'PUBLISHED') {
+      return {
+        success: false,
+        error: 'Reporter tidak diizinkan menerbitkan berita secara langsung.',
+      };
+    }
 
-    // 5. Eksekusi INSERT (created_at selalu NOW(), customPublishedAt hanya untuk published_at)
+    const customPublishedAt = isAdmin
+      ? parseCustomPublishTimestamp(publishDateRaw, publishTimeRaw)
+      : null;
+
     const insertQuery = `
       INSERT INTO public.berita (
         title,
@@ -221,6 +236,7 @@ export async function createBeritaAction(
         caption,
         source_credit,
         category_id,
+        author_id,
         author_name,
         author_role,
         status,
@@ -240,8 +256,9 @@ export async function createBeritaAction(
         $8,
         $9,
         $10,
-        $11::boolean,
-        COALESCE($12::timestamptz, CASE WHEN $13::boolean THEN NOW() ELSE NULL END),
+        $11,
+        $12::boolean,
+        COALESCE($13::timestamptz, CASE WHEN $14::boolean THEN NOW() ELSE NULL END),
         NOW(),
         NOW()
       )
@@ -256,6 +273,7 @@ export async function createBeritaAction(
       caption,
       sourceCredit,
       categoryId,
+      authorId,
       authorName,
       userRole,
       status,
@@ -294,28 +312,66 @@ export async function createBeritaAction(
   }
 }
 
-/**
- * Server Action untuk menarik kembali naskah berstatus 'SUBMITTED' menjadi 'DRAFT' (Khusus Reporter).
- */
 export async function unsubmitNewsAction(id: number | string): Promise<{
   success: boolean;
   error?: string;
 }> {
+  const sessionUser = await requireRole([
+    'SUPER_ADMIN',
+    'ADMIN_BERITA',
+    'REPORTER',
+  ]);
+
   try {
     const numericId = Number(id);
     if (!Number.isFinite(numericId)) {
       return { success: false, error: 'ID berita tidak valid.' };
     }
 
-    await pool.query(
-      `UPDATE public.berita
-       SET status = 'DRAFT',
-           was_published = FALSE,
-           updated_at = NOW()
-       WHERE id = $1
-         AND status = 'SUBMITTED'`,
-      [numericId]
-    );
+    if (sessionUser.role === 'REPORTER') {
+      const updateRes = await pool.query(
+        `UPDATE public.berita
+         SET status = 'DRAFT',
+             was_published = FALSE,
+             updated_at = NOW()
+         WHERE id = $1
+           AND status = 'SUBMITTED'
+           AND (
+             author_id = $2
+             OR (
+               author_id IS NULL
+               AND author_role = 'REPORTER'
+               AND LOWER(author_name) = LOWER($3)
+             )
+           )`,
+        [numericId, sessionUser.id, sessionUser.name]
+      );
+
+      if ((updateRes.rowCount ?? 0) === 0) {
+        return {
+          success: false,
+          error:
+            'Anda tidak memiliki izin untuk menarik naskah ini atau status bukan Diserahkan.',
+        };
+      }
+    } else {
+      const updateRes = await pool.query(
+        `UPDATE public.berita
+         SET status = 'DRAFT',
+             was_published = FALSE,
+             updated_at = NOW()
+         WHERE id = $1
+           AND status = 'SUBMITTED'`,
+        [numericId]
+      );
+
+      if ((updateRes.rowCount ?? 0) === 0) {
+        return {
+          success: false,
+          error: 'Naskah berita tidak ditemukan atau status bukan Diserahkan.',
+        };
+      }
+    }
 
     revalidateBeritaPaths();
 
@@ -329,13 +385,12 @@ export async function unsubmitNewsAction(id: number | string): Promise<{
   }
 }
 
-/**
- * Server Action untuk menurunkan berita tayang ('PUBLISHED') dan mengosongkan `published_at`.
- */
 export async function unpublishNewsAction(id: number | string): Promise<{
   success: boolean;
   error?: string;
 }> {
+  await requireRole(['SUPER_ADMIN', 'ADMIN_BERITA']);
+
   try {
     const numericId = Number(id);
     if (!Number.isFinite(numericId)) {
@@ -346,6 +401,10 @@ export async function unpublishNewsAction(id: number | string): Promise<{
       'SELECT author_role FROM public.berita WHERE id = $1 LIMIT 1',
       [numericId]
     );
+
+    if ((checkRow.rowCount ?? 0) === 0) {
+      return { success: false, error: 'Data berita tidak ditemukan.' };
+    }
 
     const authorRole = (checkRow.rows[0]?.author_role as string) || 'REPORTER';
     const nextStatus = resolveUnpublishStatus(authorRole);
@@ -374,38 +433,36 @@ export async function unpublishNewsAction(id: number | string): Promise<{
   }
 }
 
-/**
- * Server Action untuk menghapus berita secara permanen dari database (`public.berita`).
- */
-export async function deleteNewsAction(
-  id: number | string,
-  options?: { role?: UserRole; authorName?: string }
-): Promise<{
+export async function deleteNewsAction(id: number | string): Promise<{
   success: boolean;
   error?: string;
 }> {
+  const sessionUser = await requireRole([
+    'SUPER_ADMIN',
+    'ADMIN_BERITA',
+    'REPORTER',
+  ]);
+
   try {
     const numericId = Number(id);
     if (!Number.isFinite(numericId)) {
       return { success: false, error: 'ID berita tidak valid.' };
     }
 
-    if (options?.role === 'REPORTER') {
-      const authorName = (options.authorName || '').trim();
-      if (!authorName) {
-        return {
-          success: false,
-          error: 'Identitas penulis tidak valid untuk menghapus berita.',
-        };
-      }
-
+    if (sessionUser.role === 'REPORTER') {
       const delRes = await pool.query(
         `DELETE FROM public.berita
          WHERE id = $1
-           AND author_role = 'REPORTER'
-           AND LOWER(author_name) = LOWER($2)
-           AND status = 'DRAFT'`,
-        [numericId, authorName]
+           AND status = 'DRAFT'
+           AND (
+             author_id = $2
+             OR (
+               author_id IS NULL
+               AND author_role = 'REPORTER'
+               AND LOWER(author_name) = LOWER($3)
+             )
+           )`,
+        [numericId, sessionUser.id, sessionUser.name]
       );
 
       if ((delRes.rowCount ?? 0) === 0) {
@@ -434,14 +491,16 @@ export async function deleteNewsAction(
 
 export const deleteBeritaAction = deleteNewsAction;
 
-/**
- * Server Action untuk memperbarui berita eksisting di tabel `public.berita`.
- * CATATAN PENTING: Kolom `author_name` dan `author_role` bersifat immutable (tidak boleh diubah saat UPDATE).
- */
 export async function updateBeritaAction(
   id: number,
   formData: FormData
 ): Promise<CreateBeritaResult> {
+  const sessionUser = await requireRole([
+    'SUPER_ADMIN',
+    'ADMIN_BERITA',
+    'REPORTER',
+  ]);
+
   try {
     const numericId = Number(id);
     if (!Number.isFinite(numericId)) {
@@ -462,23 +521,36 @@ export async function updateBeritaAction(
       rawCategories.length > 0
         ? rawCategories
         : rawCategory
-          ? rawCategory.split(',').map((c) => c.trim()).filter(Boolean)
+          ? rawCategory
+              .split(',')
+              .map((c) => c.trim())
+              .filter(Boolean)
           : [];
     const caption = ((formData.get('caption') as string) || '').trim();
-    const sourceCredit = ((formData.get('source_credit') as string) || '').trim();
-    const actionType = ((formData.get('action_type') as BeritaActionType) ||
-      'DRAFT') as BeritaActionType;
+    const sourceCredit = (
+      (formData.get('source_credit') as string) || ''
+    ).trim();
+    const rawActionType =
+      ((formData.get('action_type') as BeritaActionType) ||
+        'DRAFT') as BeritaActionType;
+
+    // Role dan identitas diambil 100% dari sesi server.
+    const userRole = sessionUser.role;
+    const actionType: BeritaActionType =
+      userRole === 'REPORTER' && rawActionType === 'PUBLISH'
+        ? 'SUBMIT'
+        : rawActionType;
     const isDraftAction = actionType === 'DRAFT';
     const title = rawTitle || (isDraftAction ? '(Draf Tanpa Judul)' : '');
-    const authorName = ((formData.get('author_name') as string) || '').trim();
-    const userRole = ((formData.get('user_role') as UserRole) ||
-      'REPORTER') as UserRole;
-    const publishDateRaw = ((formData.get('publish_date') as string) || '').trim();
-    const publishTimeRaw = ((formData.get('publish_time') as string) || '').trim();
+
+    const publishDateRaw = (
+      (formData.get('publish_date') as string) || ''
+    ).trim();
+    const publishTimeRaw = (
+      (formData.get('publish_time') as string) || ''
+    ).trim();
     const imageEntry = formData.get('image');
 
-    // 1. Validasi seluruh field teks, kategori, dan jadwal TERLEBIH DAHULU
-    //    sebelum menyentuh penyimpanan berkas fisik (mencegah orphan file upload).
     if (!title) {
       return {
         success: false,
@@ -531,10 +603,8 @@ export async function updateBeritaAction(
       }
     }
 
-    // 2. Ambil data naskah saat ini dari database untuk pengecekan status,
-    //    peran penulis asli, dan fallback gambar eksisting yang tepercaya.
     const currentCheck = await pool.query(
-      'SELECT uuid, slug, status, image_url, author_name, author_role, was_published FROM public.berita WHERE id = $1 LIMIT 1',
+      'SELECT uuid, slug, status, image_url, author_id, author_name, author_role, was_published FROM public.berita WHERE id = $1 LIMIT 1',
       [numericId]
     );
 
@@ -549,51 +619,61 @@ export async function updateBeritaAction(
     const currentUuid = String(currentRow.uuid || '');
     const currentSlug = currentRow.slug as string;
     const currentStatus = (currentRow.status as NewsStatus) || 'DRAFT';
+    const originalAuthorId =
+      currentRow.author_id !== null && currentRow.author_id !== undefined
+        ? Number(currentRow.author_id)
+        : null;
     const originalAuthorName = String(currentRow.author_name || '').trim();
-    const originalAuthorRole = (currentRow.author_role as UserRole) || 'REPORTER';
+    const originalAuthorRole =
+      (currentRow.author_role as UserRole) || 'REPORTER';
     const existingDbImageUrl =
       typeof currentRow.image_url === 'string'
         ? currentRow.image_url.trim()
         : null;
 
-    // Reporter hanya diizinkan mengedit naskah miliknya sendiri yang masih berstatus DRAFT
     if (userRole === 'REPORTER') {
-      if (
-        originalAuthorRole !== 'REPORTER' ||
-        !authorName ||
-        originalAuthorName.toLowerCase() !== authorName.toLowerCase()
-      ) {
+      const isOwner =
+        originalAuthorId !== null
+          ? originalAuthorId === sessionUser.id
+          : originalAuthorRole === 'REPORTER' &&
+            originalAuthorName.toLowerCase() ===
+              sessionUser.name.toLowerCase();
+
+      if (!isOwner) {
         return {
           success: false,
-          error: 'Anda tidak memiliki izin untuk mengedit naskah milik penulis lain.',
+          error:
+            'Anda tidak memiliki izin untuk mengedit naskah milik penulis lain.',
         };
       }
       if (currentStatus !== 'DRAFT') {
         return {
           success: false,
-          error: 'Hanya naskah berstatus Draf yang dapat diedit oleh Reporter.',
+          error:
+            'Hanya naskah berstatus Draf yang dapat diedit oleh Reporter.',
         };
       }
     }
 
     const hasFileUpload = imageEntry instanceof File && imageEntry.size > 0;
-    if (!isDraftAction && !hasFileUpload && !isValidImagePath(existingDbImageUrl)) {
+    if (
+      !isDraftAction &&
+      !hasFileUpload &&
+      !isValidImagePath(existingDbImageUrl)
+    ) {
       return {
         success: false,
         error: 'Gambar utama berita wajib diunggah.',
       };
     }
 
-    if (
-      categoryInputs.some((cat) => cat.length > 30 && !/^\d+$/.test(cat))
-    ) {
+    if (categoryInputs.some((cat) => cat.length > 30 && !/^\d+$/.test(cat))) {
       return {
         success: false,
         error: 'Nama kategori baru tidak boleh melebihi 30 karakter.',
       };
     }
 
-    // 3. Resolusi seluruh kategori ke tabel public.categories
     const categoryIds =
       categoryInputs.length > 0
         ? await resolveCategoryIds(categoryInputs, userRole)
@@ -609,8 +689,6 @@ export async function updateBeritaAction(
     const resolvedCategoryIds = categoryIds ?? [];
     const categoryId = resolvedCategoryIds[0] ?? null;
 
-    // 4. Unggah gambar baru HANYA setelah seluruh validasi lolos,
-    //    atau gunakan fallback langsung dari database (currentRow.image_url).
     let imageUrl: string | null = existingDbImageUrl;
     if (hasFileUpload) {
       try {
@@ -633,7 +711,6 @@ export async function updateBeritaAction(
       };
     }
 
-    // 5. Tentukan status berikutnya via fungsi murni resolveNextStatus
     const { status, isPublishedNow, wasPublished } = resolveNextStatus({
       actionType,
       userRole,
@@ -643,12 +720,17 @@ export async function updateBeritaAction(
       wasPublished: Boolean(currentRow.was_published),
     });
 
-    const customPublishedAt = parseCustomPublishTimestamp(
-      publishDateRaw,
-      publishTimeRaw
-    );
+    if (userRole === 'REPORTER' && status === 'PUBLISHED') {
+      return {
+        success: false,
+        error: 'Reporter tidak diizinkan menerbitkan berita secara langsung.',
+      };
+    }
 
-    // 6. Query UPDATE TIDAK mengubah author_name dan author_role
+    const customPublishedAt = isAdmin
+      ? parseCustomPublishTimestamp(publishDateRaw, publishTimeRaw)
+      : null;
+
     const isReporterRole = userRole === 'REPORTER';
     const updateQuery = `
       UPDATE public.berita
@@ -664,11 +746,15 @@ export async function updateBeritaAction(
         published_at = COALESCE($10::timestamptz, published_at, CASE WHEN $11::boolean THEN NOW() ELSE NULL END),
         updated_at = NOW()
       WHERE id = $1
-      ${isReporterRole ? "AND author_role = 'REPORTER' AND LOWER(author_name) = LOWER($12) AND status = 'DRAFT'" : ''}
+      ${
+        isReporterRole
+          ? `AND status = 'DRAFT' AND (author_id = $12 OR (author_id IS NULL AND author_role = 'REPORTER' AND LOWER(author_name) = LOWER($13)))`
+          : ''
+      }
       RETURNING id, uuid, slug
     `;
 
-    const updateParams: any[] = [
+    const updateParams: unknown[] = [
       numericId,
       title,
       content,
@@ -682,7 +768,7 @@ export async function updateBeritaAction(
       isPublishedNow,
     ];
     if (isReporterRole) {
-      updateParams.push(authorName);
+      updateParams.push(sessionUser.id, sessionUser.name);
     }
 
     const updated = await pool.query(updateQuery, updateParams);

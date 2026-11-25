@@ -93,12 +93,17 @@ interface AdminBeritaFormProps {
     initialData?: BeritaEditData | null
     notFoundId?: number | string | null
     availableCategories?: string[]
+    currentUser: {
+        name: string
+        role: UserRole
+    }
 }
 
 export default function AdminBeritaForm({
     initialData = null,
     notFoundId = null,
     availableCategories = [...OFFICIAL_CATEGORIES],
+    currentUser,
 }: AdminBeritaFormProps) {
     const router = useRouter()
     const isEditMode = Boolean(initialData)
@@ -109,9 +114,8 @@ export default function AdminBeritaForm({
 
     const [title, setTitle] = useState(initialData?.title ?? '')
 
-    // Konteks Sesi Pengguna (Default Admin)
-    const [currentUserRole] = useState<UserRole>('SUPER_ADMIN')
-    const currentUserName = 'Trias Firmansyah'
+    const currentUserRole = currentUser.role
+    const currentUserName = currentUser.name
 
     const getNowWib = () => extractWibParts()
     const [nowWib, setNowWib] = useState<{ date: string; time: string } | null>(null)
@@ -664,7 +668,7 @@ export default function AdminBeritaForm({
     const currentStatus = initialData?.status ?? 'DRAFT'
     const statusBadgeStyle = STATUS_COLORS[currentStatus] ?? STATUS_COLORS.DRAFT
     const statusBadgeText = isEditMode
-        ? `Status: ${getStatusLabel(currentStatus, 'ADMIN_BERITA')}`
+        ? `Status: ${getStatusLabel(currentStatus, currentUserRole)}`
         : 'Status: Draf Baru'
 
     return (

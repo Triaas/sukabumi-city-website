@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import pool from '@/lib/db/pool';
+import { requireRole } from '@/lib/auth';
 import { saveSiteAssetImage } from '@/lib/upload';
 import {
   DEFAULT_SITE_SETTINGS,
@@ -169,6 +170,7 @@ export async function updateSiteSectionAction<K extends SiteSectionKey>(
   sectionKey: K,
   payload: SiteSettingsMap[K]
 ): Promise<{ success: boolean; data?: SiteSettingsMap[K]; error?: string }> {
+  await requireRole(['SUPER_ADMIN']);
   try {
     if (!isValidSectionKey(sectionKey)) {
       return { success: false, error: 'Kategori pengaturan tidak valid.' };
@@ -213,6 +215,7 @@ export async function updateSiteSectionAction<K extends SiteSectionKey>(
 export async function resetSiteSectionAction<K extends SiteSectionKey>(
   sectionKey: K
 ): Promise<{ success: boolean; data?: SiteSettingsMap[K]; error?: string }> {
+  await requireRole(['SUPER_ADMIN']);
   try {
     if (!isValidSectionKey(sectionKey)) {
       return { success: false, error: 'Kategori pengaturan tidak valid.' };
@@ -249,6 +252,7 @@ export async function resetSiteSectionAction<K extends SiteSectionKey>(
 export async function uploadSiteImageAction(
   formData: FormData
 ): Promise<{ success: boolean; imageUrl?: string; error?: string }> {
+  await requireRole(['SUPER_ADMIN']);
   try {
     const fileEntry = formData.get('file');
     if (!(fileEntry instanceof File) || fileEntry.size === 0) {
