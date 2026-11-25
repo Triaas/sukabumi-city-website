@@ -315,18 +315,16 @@ export default function PengaturanClient({
         tabIndex={isSelected ? 0 : -1}
         onClick={() => requestTabChange(tab.id)}
         onKeyDown={(e) => handleTabKeyDown(e, orderIndex)}
-        className={`flex items-start gap-3 rounded-xl border p-3.5 text-left transition-all cursor-pointer min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#159447] focus-visible:ring-offset-2 ${
-          isSelected
+        className={`flex items-start gap-3 rounded-xl border p-3.5 text-left transition-all cursor-pointer min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#159447] focus-visible:ring-offset-2 ${isSelected
             ? 'border-[#159447] bg-[#159447] text-white shadow-sm'
             : 'border-slate-200 bg-slate-50/70 text-[#172135] hover:border-[#159447]/45 hover:bg-white'
-        }`}
+          }`}
       >
         <span
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-            isSelected
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${isSelected
               ? 'bg-white/15 text-white'
               : 'bg-white text-[#159447] border border-slate-200/90'
-          }`}
+            }`}
         >
           <Icon size={18} />
         </span>
@@ -336,17 +334,15 @@ export default function PengaturanClient({
               {tab.label}
             </span>
             <span
-              className={`text-[11px] font-semibold tabular-nums shrink-0 ${
-                isSelected ? 'text-white/90' : 'text-[#566276]'
-              }`}
+              className={`text-[11px] font-semibold tabular-nums shrink-0 ${isSelected ? 'text-white/90' : 'text-[#566276]'
+                }`}
             >
               {String(orderIndex + 1).padStart(2, '0')}
             </span>
           </span>
           <span
-            className={`mt-0.5 block text-xs leading-snug line-clamp-2 ${
-              isSelected ? 'text-white/85' : 'text-[#566276]'
-            }`}
+            className={`mt-0.5 block text-xs leading-snug line-clamp-2 ${isSelected ? 'text-white/85' : 'text-[#566276]'
+              }`}
           >
             {tab.description}
           </span>
@@ -363,7 +359,7 @@ export default function PengaturanClient({
             Pengaturan Beranda Pengunjung
           </h1>
           <p className="mt-1 text-sm text-[#566276] leading-relaxed">
-            Kelola konten halaman utama, foto pimpinan, tautan video, serta identitas Header dan Footer tanpa mengubah kode.
+            Kelola konten halaman utama, foto pimpinan, tautan video, serta identitas Header dan Footer.
           </p>
         </div>
         <a

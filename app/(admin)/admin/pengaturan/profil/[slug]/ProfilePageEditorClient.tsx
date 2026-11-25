@@ -1,7 +1,8 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   AlignLeft,
   ArrowLeft,
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react'
 import RichTextEditor from '@/components/RichTextEditor'
 import ToastNotification from '@/components/ToastNotification'
+import ConfirmSaveDraftModal from '@/components/ConfirmSaveDraftModal'
 import {
   resetProfilePageAction,
   updateProfilePageAction,
@@ -52,14 +54,30 @@ export default function ProfilePageEditorClient({
 }: {
   initialPage: ProfilePageData
 }) {
+  const router = useRouter()
+  const editorInteractedRef = useRef(false)
   const [formData, setFormData] = useState<ProfilePageData>(initialPage)
+  const [savedPage, setSavedPage] = useState<ProfilePageData>(initialPage)
   const [isSaving, setIsSaving] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
   const [isResetModalOpen, setIsResetModalOpen] = useState(false)
+  const [pendingHref, setPendingHref] = useState<string | null>(null)
+  const [isModalSaving, setIsModalSaving] = useState(false)
   const [toast, setToast] = useState<{
     type: 'success' | 'error'
     message: string
   } | null>(null)
+
+  const isDirty = useMemo(
+    () => JSON.stringify(formData) !== JSON.stringify(savedPage),
+    [formData, savedPage]
+  )
+
+  useEffect(() => {
+    editorInteractedRef.current = false
+    setFormData(initialPage)
+    setSavedPage(initialPage)
+  }, [initialPage])
 
   const showToast = useCallback(
     (type: 'success' | 'error', message: string) => {
@@ -71,6 +89,62 @@ export default function ProfilePageEditorClient({
   useEscapeClose(isResetModalOpen && !isResetting, () =>
     setIsResetModalOpen(false)
   )
+
+  useEscapeClose(pendingHref !== null && !isModalSaving, () =>
+    setPendingHref(null)
+  )
+
+  useEffect(() => {
+    if (!isDirty) return
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [isDirty])
+
+  useEffect(() => {
+    if (!isDirty) return
+    const handleDocumentClick = (e: MouseEvent) => {
+      if (
+        e.defaultPrevented ||
+        e.button !== 0 ||
+        e.metaKey ||
+        e.ctrlKey ||
+        e.shiftKey ||
+        e.altKey
+      ) {
+        return
+      }
+      const target = e.target as HTMLElement | null
+      const anchor = target?.closest('a[href]') as HTMLAnchorElement | null
+      if (!anchor) return
+      if (anchor.target && anchor.target !== '_self') return
+      if (anchor.hasAttribute('download')) return
+
+      const rawHref = anchor.getAttribute('href')
+      if (!rawHref || rawHref.startsWith('#')) return
+
+      try {
+        const url = new URL(anchor.href, window.location.origin)
+        if (url.origin !== window.location.origin) return
+        const nextPath = `${url.pathname}${url.search}${url.hash}`
+        const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`
+        if (nextPath === currentPath) return
+
+        e.preventDefault()
+        e.stopPropagation()
+        setPendingHref(nextPath)
+      } catch {
+        // Ignore malformed URLs
+      }
+    }
+
+    document.addEventListener('click', handleDocumentClick, true)
+    return () =>
+      document.removeEventListener('click', handleDocumentClick, true)
+  }, [isDirty])
 
   const updateExtraData = (patch: Partial<ProfilePageExtraData>) => {
     setFormData((prev) => ({
@@ -95,12 +169,10 @@ export default function ProfilePageEditorClient({
     []
   )
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
+  const saveChanges = async (): Promise<boolean> => {
     if (!formData.title.trim()) {
       showToast('error', 'Judul halaman tidak boleh kosong.')
-      return
+      return false
     }
 
     setIsSaving(true)
@@ -118,11 +190,20 @@ export default function ProfilePageEditorClient({
     setIsSaving(false)
 
     if (res.success && res.data) {
+      editorInteractedRef.current = false
       setFormData(res.data)
+      setSavedPage(res.data)
       showToast('success', `Halaman "${res.data.title}" berhasil disimpan.`)
+      return true
     } else {
       showToast('error', res.error || 'Gagal menyimpan perubahan halaman.')
+      return false
     }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await saveChanges()
   }
 
   const handleConfirmReset = async () => {
@@ -132,7 +213,9 @@ export default function ProfilePageEditorClient({
     setIsResetModalOpen(false)
 
     if (res.success && res.data) {
+      editorInteractedRef.current = false
       setFormData(res.data)
+      setSavedPage(res.data)
       showToast(
         'success',
         `Halaman "${res.data.title}" berhasil dikembalikan ke default.`
@@ -140,6 +223,26 @@ export default function ProfilePageEditorClient({
     } else {
       showToast('error', res.error || 'Gagal mereset halaman ke default.')
     }
+  }
+
+  const handleConfirmSaveAndProceed = async () => {
+    if (!pendingHref) return
+    const targetHref = pendingHref
+    setIsModalSaving(true)
+    const ok = await saveChanges()
+    setIsModalSaving(false)
+    setPendingHref(null)
+    if (ok) {
+      router.push(targetHref)
+    }
+  }
+
+  const handleDiscardAndProceed = () => {
+    if (!pendingHref) return
+    const targetHref = pendingHref
+    setFormData(savedPage)
+    setPendingHref(null)
+    router.push(targetHref)
   }
 
   return (
@@ -169,7 +272,7 @@ export default function ProfilePageEditorClient({
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-2xl font-bold text-[#172135] tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#172135] tracking-tight">
               Edit Halaman: {formData.title}
             </h1>
           </div>
@@ -301,12 +404,27 @@ export default function ProfilePageEditorClient({
               </div>
             </div>
 
-            <div className="p-4 sm:p-5">
+            <div
+              className="p-4 sm:p-5"
+              onPointerDownCapture={() => {
+                editorInteractedRef.current = true
+              }}
+              onKeyDownCapture={() => {
+                editorInteractedRef.current = true
+              }}
+              onFocusCapture={() => {
+                editorInteractedRef.current = true
+              }}
+            >
               <RichTextEditor
                 value={formData.contentHtml}
-                onChange={(html) =>
+                onChange={(html) => {
                   setFormData((prev) => ({ ...prev, contentHtml: html }))
-                }
+                  // Abaikan normalisasi HTML awal TipTap sebelum ada interaksi user
+                  if (!editorInteractedRef.current) {
+                    setSavedPage((prev) => ({ ...prev, contentHtml: html }))
+                  }
+                }}
                 enableExtendedTools
                 onUploadImage={handleEditorImageUpload}
                 minHeight="340px"
@@ -497,7 +615,7 @@ export default function ProfilePageEditorClient({
             <button
               type="submit"
               disabled={isSaving}
-              className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 bg-[#159447] hover:bg-[#0f7a36] active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-all shadow-sm cursor-pointer min-h-[48px]"
+              className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 bg-[#159447] hover:bg-[#12803d] active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-all shadow-sm cursor-pointer min-h-[48px]"
             >
               {isSaving ? (
                 <>
@@ -595,6 +713,17 @@ export default function ProfilePageEditorClient({
           </div>
         </div>
       )}
+
+      <ConfirmSaveDraftModal
+        isOpen={pendingHref !== null}
+        isSaving={isModalSaving}
+        isPublished={true}
+        onConfirmSaveDraft={handleConfirmSaveAndProceed}
+        onDiscard={handleDiscardAndProceed}
+        onCancel={() => {
+          if (!isModalSaving) setPendingHref(null)
+        }}
+      />
 
       <ToastNotification
         message={toast?.message}

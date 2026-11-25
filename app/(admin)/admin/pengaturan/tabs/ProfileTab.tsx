@@ -209,7 +209,7 @@ export default function ProfileTab({
           const detailSlug = extractProfileSlug(card.href)
           return (
             <div
-              key={index}
+              key={card.href}
               className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4"
             >
               <div className="flex items-center justify-between gap-2">
@@ -283,7 +283,7 @@ export default function ProfileTab({
                       />
                       <label
                         htmlFor={`profile-card-${index}-image`}
-                        className={`inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-lg bg-[#159447] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#0f7a36] transition-colors cursor-pointer min-h-[44px] ${
+                        className={`inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-lg bg-[#159447] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#12803d] transition-colors cursor-pointer min-h-[44px] ${
                           uploadingIndex === index
                             ? 'opacity-60 pointer-events-none'
                             : ''
