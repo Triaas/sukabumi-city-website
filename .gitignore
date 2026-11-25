@@ -25,3 +25,4 @@ public/wp-content/uploads/
 /playwright-report/
 /test-results/
 /playwright/.cache/
+/playwright/.auth/
