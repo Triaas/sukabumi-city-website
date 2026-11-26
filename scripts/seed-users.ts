@@ -155,8 +155,22 @@ async function main(): Promise<void> {
       }
     }
 
+    const backfillPath = path.join(
+      process.cwd(),
+      'migrations',
+      '005_backfill_legacy_berita_author_id.sql'
+    );
+    if (fs.existsSync(backfillPath)) {
+      const backfillSql = fs.readFileSync(backfillPath, 'utf-8');
+      const backfillRes = await client.query(backfillSql);
+      const updatedRows = Array.isArray(backfillRes)
+        ? (backfillRes[0]?.rowCount ?? 0)
+        : (backfillRes.rowCount ?? 0);
+      console.log(`[BACKFILL] Berita legacy terhubung ke author_id: ${updatedRows}`);
+    }
+
     await client.query('COMMIT');
-    console.log('Migrasi 004 dan seed pengguna awal selesai.');
+    console.log('Migrasi 004/005 dan seed pengguna awal selesai.');
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('Gagal menjalankan migrasi atau seed pengguna:', error);

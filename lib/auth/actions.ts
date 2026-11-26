@@ -4,6 +4,14 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import pool from '@/lib/db/pool';
 import {
+  buildAuthRateLimitKey,
+  getClientIpFromHeaders,
+  isRateLimited,
+  RATE_LIMIT_ERROR_MESSAGE,
+  recordFailedAttempt,
+  resetRateLimit,
+} from '@/lib/security/rate-limit';
+import {
   hashPassword,
   isPasswordExpired,
   isPasswordReused,
@@ -57,6 +65,15 @@ export async function loginAction(
     };
   }
 
+  const clientIp = await getClientIpFromHeaders();
+  const rateLimitKey = buildAuthRateLimitKey('login', clientIp, email);
+  if (isRateLimited(rateLimitKey)) {
+    return {
+      success: false,
+      error: RATE_LIMIT_ERROR_MESSAGE,
+    };
+  }
+
   let redirectTarget: string | null = null;
 
   try {
@@ -78,14 +95,17 @@ export async function loginAction(
     const user = rows[0];
     if (!user) {
       await verifyPassword(password, TIMING_SAFE_DUMMY_HASH);
+      recordFailedAttempt(rateLimitKey);
       return { success: false, error: GENERIC_LOGIN_ERROR };
     }
 
     const passwordMatches = await verifyPassword(password, user.password_hash);
     if (!passwordMatches || !user.is_active) {
+      recordFailedAttempt(rateLimitKey);
       return { success: false, error: GENERIC_LOGIN_ERROR };
     }
 
+    resetRateLimit(rateLimitKey);
     await createSession(Number(user.id), { rememberMe });
 
     const changedAt =
@@ -116,6 +136,19 @@ async function applyUserPasswordChange(
   newPassword: string,
   confirmPassword: string
 ): Promise<AuthActionResult> {
+  const clientIp = await getClientIpFromHeaders();
+  const rateLimitKey = buildAuthRateLimitKey(
+    'password-change',
+    clientIp,
+    userId
+  );
+  if (isRateLimited(rateLimitKey)) {
+    return {
+      success: false,
+      error: RATE_LIMIT_ERROR_MESSAGE,
+    };
+  }
+
   if (!currentPassword) {
     return { success: false, error: 'Kata sandi saat ini wajib diisi.' };
   }
@@ -164,6 +197,7 @@ async function applyUserPasswordChange(
     userRow.password_hash
   );
   if (!isCurrentValid) {
+    recordFailedAttempt(rateLimitKey);
     return {
       success: false,
       error: 'Kata sandi saat ini tidak sesuai.',
@@ -197,14 +231,21 @@ async function applyUserPasswordChange(
        VALUES ($1, $2, NOW())`,
       [userId, nextHash]
     );
+    await client.query(`DELETE FROM public.sessions WHERE user_id = $1`, [
+      userId,
+    ]);
     await client.query('COMMIT');
-    return { success: true };
   } catch (txError) {
     await client.query('ROLLBACK');
     throw txError;
   } finally {
     client.release();
   }
+
+  resetRateLimit(rateLimitKey);
+  await createSession(userId);
+
+  return { success: true };
 }
 
 export async function forceChangePasswordAction(

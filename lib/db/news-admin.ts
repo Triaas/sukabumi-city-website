@@ -11,47 +11,37 @@ import { ensureBeritaCategoriesTable } from '../berita/category';
 export async function getAdminNewsList(options?: {
   role?: UserRole;
   authorId?: number;
-  authorName?: string;
+  reporterViewOnly?: boolean;
 }): Promise<BeritaAdminRow[]> {
   try {
     await ensureBeritaCategoriesTable();
 
     const isReporter = options?.role === 'REPORTER';
     const hasAuthorId =
-      isReporter && typeof options?.authorId === 'number' && Number.isFinite(options.authorId);
-    const trimmedAuthorName = (options?.authorName || '').trim();
+      typeof options?.authorId === 'number' && Number.isFinite(options.authorId);
 
     let whereClause = '';
     const params: unknown[] = [];
 
     if (isReporter) {
-      if (hasAuthorId) {
-        params.push(options!.authorId!);
-        if (trimmedAuthorName) {
-          params.push(trimmedAuthorName);
-          whereClause = `
-            WHERE (
-              b.author_id = $1
-              OR (
-                b.author_id IS NULL
-                AND b.author_role = 'REPORTER'
-                AND LOWER(b.author_name) = LOWER($2)
-              )
-            )
-          `;
-        } else {
-          whereClause = `WHERE b.author_id = $1`;
-        }
-      } else if (trimmedAuthorName) {
-        params.push(trimmedAuthorName);
-        whereClause = `WHERE b.author_role = 'REPORTER' AND LOWER(b.author_name) = LOWER($1)`;
-      } else {
-        whereClause = `WHERE b.author_role = 'REPORTER'`;
+      if (!hasAuthorId) {
+        return [];
       }
+      params.push(options!.authorId!);
+      whereClause = `WHERE b.author_id = $1`;
+    } else if (options?.reporterViewOnly) {
+      whereClause = `WHERE b.author_role = 'REPORTER'`;
     } else {
       whereClause = `
         WHERE b.status IN ('SUBMITTED', 'PUBLISHED')
-           OR (b.status = 'DRAFT' AND (b.author_role IN ('SUPER_ADMIN', 'ADMIN_BERITA') OR b.was_published = TRUE))
+           OR (
+             b.status = 'DRAFT'
+             AND (
+               b.author_role IN ('SUPER_ADMIN', 'ADMIN_BERITA')
+               OR b.was_published = TRUE
+               OR b.author_id IS NULL
+             )
+           )
       `;
     }
 
@@ -240,7 +230,7 @@ const UUID_REGEX =
 
 export async function getNewsByUuid(
   uuid: string,
-  options?: { role?: UserRole | string; authorId?: number; authorName?: string }
+  options?: { role?: UserRole | string; authorId?: number }
 ): Promise<BeritaEditData | null> {
   const trimmedUuid = (uuid || '').trim();
   if (!UUID_REGEX.test(trimmedUuid)) return null;
@@ -255,31 +245,13 @@ export async function getNewsByUuid(
     if (isReporter) {
       const hasAuthorId =
         typeof options?.authorId === 'number' && Number.isFinite(options.authorId);
-      const authorName = (options?.authorName || '').trim();
 
-      if (hasAuthorId) {
-        params.push(options!.authorId!);
-        if (authorName) {
-          params.push(authorName);
-          ownershipFilter = `
-            AND (
-              b.author_id = $2
-              OR (
-                b.author_id IS NULL
-                AND b.author_role = 'REPORTER'
-                AND LOWER(b.author_name) = LOWER($3)
-              )
-            )
-          `;
-        } else {
-          ownershipFilter = `AND b.author_id = $2`;
-        }
-      } else if (authorName) {
-        params.push(authorName);
-        ownershipFilter = `AND b.author_role = 'REPORTER' AND LOWER(b.author_name) = LOWER($2)`;
-      } else {
+      if (!hasAuthorId) {
         return null;
       }
+
+      params.push(options!.authorId!);
+      ownershipFilter = `AND b.author_id = $2`;
     }
 
     const query = `

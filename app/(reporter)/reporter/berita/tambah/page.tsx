@@ -25,7 +25,6 @@ export default async function ReporterTambahBeritaPage({
     initialData = await getNewsByUuid(rawRef, {
       role: user.role,
       authorId: user.id,
-      authorName: user.name,
     });
     if (!initialData || initialData.status !== 'DRAFT') {
       redirect('/reporter/berita');

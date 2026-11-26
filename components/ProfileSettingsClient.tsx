@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   User,
@@ -270,9 +271,20 @@ export default function ProfileSettingsClient({
                 />
               </div>
               <p className="mt-1.5 text-[11px] text-[#566276] leading-relaxed">
-                {role === 'SUPER_ADMIN'
-                  ? 'Alamat email kedinasan dikelola secara terpusat. Anda dapat mengubahnya melalui menu Manajemen User.'
-                  : 'Email kedinasan bersifat tetap. Hubungi Super Admin jika diperlukan perubahan.'}
+                {role === 'SUPER_ADMIN' ? (
+                  <>
+                    Alamat email kedinasan dikelola secara terpusat. Ubah melalui menu{' '}
+                    <Link
+                      href="/admin/users"
+                      className="rounded-xs font-semibold text-[#12803d] underline underline-offset-2 transition-colors hover:text-[#0e6b32] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#159447] focus-visible:ring-offset-1"
+                    >
+                      Manajemen User
+                    </Link>
+                    .
+                  </>
+                ) : (
+                  'Email kedinasan bersifat tetap. Hubungi Super Admin jika diperlukan perubahan.'
+                )}
               </p>
             </div>
 

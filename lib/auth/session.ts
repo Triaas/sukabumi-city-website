@@ -41,6 +41,8 @@ export async function createSession(
     Date.now() + (rememberMe ? SEVEN_DAYS_MS : ONE_DAY_MS)
   );
 
+  await pool.query(`DELETE FROM public.sessions WHERE expires_at <= NOW()`);
+
   await pool.query(
     `INSERT INTO public.sessions (token_hash, user_id, expires_at)
      VALUES ($1, $2, $3)`,

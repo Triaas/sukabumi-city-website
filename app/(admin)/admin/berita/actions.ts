@@ -354,15 +354,8 @@ export async function unsubmitNewsAction(id: number | string): Promise<{
              updated_at = NOW()
          WHERE id = $1
            AND status = 'SUBMITTED'
-           AND (
-             author_id = $2
-             OR (
-               author_id IS NULL
-               AND author_role = 'REPORTER'
-               AND LOWER(author_name) = LOWER($3)
-             )
-           )`,
-        [numericId, sessionUser.id, sessionUser.name]
+           AND author_id = $2`,
+        [numericId, sessionUser.id]
       );
 
       if ((updateRes.rowCount ?? 0) === 0) {
@@ -478,16 +471,9 @@ export async function deleteNewsAction(id: number | string): Promise<{
         `DELETE FROM public.berita
          WHERE id = $1
            AND status = 'DRAFT'
-           AND (
-             author_id = $2
-             OR (
-               author_id IS NULL
-               AND author_role = 'REPORTER'
-               AND LOWER(author_name) = LOWER($3)
-             )
-           )
+           AND author_id = $2
          RETURNING image_url, content`,
-        [numericId, sessionUser.id, sessionUser.name]
+        [numericId, sessionUser.id]
       );
 
       if ((delRes.rowCount ?? 0) === 0) {
@@ -667,7 +653,6 @@ export async function updateBeritaAction(
       currentRow.author_id !== null && currentRow.author_id !== undefined
         ? Number(currentRow.author_id)
         : null;
-    const originalAuthorName = String(currentRow.author_name || '').trim();
     const originalAuthorRole =
       (currentRow.author_role as UserRole) || 'REPORTER';
     const existingDbImageUrl =
@@ -677,11 +662,7 @@ export async function updateBeritaAction(
 
     if (userRole === 'REPORTER') {
       const isOwner =
-        originalAuthorId !== null
-          ? originalAuthorId === sessionUser.id
-          : originalAuthorRole === 'REPORTER' &&
-            originalAuthorName.toLowerCase() ===
-              sessionUser.name.toLowerCase();
+        originalAuthorId !== null && originalAuthorId === sessionUser.id;
 
       if (!isOwner) {
         return {
@@ -792,11 +773,7 @@ export async function updateBeritaAction(
         published_at = COALESCE($10::timestamptz, published_at, CASE WHEN $11::boolean THEN NOW() ELSE NULL END),
         updated_at = NOW()
       WHERE id = $1
-      ${
-        isReporterRole
-          ? `AND status = 'DRAFT' AND (author_id = $12 OR (author_id IS NULL AND author_role = 'REPORTER' AND LOWER(author_name) = LOWER($13)))`
-          : ''
-      }
+      ${isReporterRole ? `AND status = 'DRAFT' AND author_id = $12` : ''}
       RETURNING id, uuid, slug
     `;
 
@@ -814,7 +791,7 @@ export async function updateBeritaAction(
       isPublishedNow,
     ];
     if (isReporterRole) {
-      updateParams.push(sessionUser.id, sessionUser.name);
+      updateParams.push(sessionUser.id);
     }
 
     const updated = await pool.query(updateQuery, updateParams);

@@ -75,9 +75,8 @@ export default async function ReporterBeritaPage({
                     ? {
                           role: 'REPORTER',
                           authorId: user.id,
-                          authorName: user.name,
                       }
-                    : { role: 'REPORTER' }
+                    : { role: user.role, reporterViewOnly: true }
             ),
             getAvailableCategories(),
         ])

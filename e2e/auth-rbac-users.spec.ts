@@ -145,8 +145,12 @@ test.describe('Autentikasi, RBAC, Wajib Ganti Sandi, dan Manajemen User', () => 
       await expect(
         createdDialog.getByRole('button', { name: 'Salin Info Login' })
       ).toBeVisible()
-      await createdDialog.getByRole('button', { name: 'Selesai' }).click()
-      await expect(createdDialog).toBeHidden()
+      await expect(async () => {
+        if (await createdDialog.isVisible()) {
+          await createdDialog.getByRole('button', { name: 'Selesai' }).click()
+        }
+        await expect(createdDialog).toBeHidden({ timeout: 2000 })
+      }).toPass({ timeout: 10000 })
 
       await expect(page.getByText(E2E_TEST_EMAIL)).toBeVisible()
 

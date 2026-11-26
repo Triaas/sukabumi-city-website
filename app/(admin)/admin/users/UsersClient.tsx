@@ -183,7 +183,7 @@ export default function UsersClient({
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const closeAddModal = () => {
-    if (isPending) return;
+    if (isPending && !createdSummary) return;
     setIsAddOpen(false);
     setCreatedSummary(null);
     setCreateError(null);
@@ -197,7 +197,7 @@ export default function UsersClient({
   };
 
   const closeResetModal = () => {
-    if (isPending) return;
+    if (isPending && !resetSummary) return;
     setResettingUser(null);
     setResetSummary(null);
     setResetError(null);
@@ -1178,7 +1178,7 @@ export default function UsersClient({
               </div>
               <button
                 type="button"
-                disabled={isPending}
+                disabled={isPending && !createdSummary}
                 onClick={closeAddModal}
                 aria-label="Tutup dialog tambah user"
                 className="w-11 h-11 rounded-xl flex items-center justify-center text-[#566276] hover:text-[#172135] hover:bg-slate-100 active:bg-slate-200/70 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#159447] motion-reduce:transition-none"
