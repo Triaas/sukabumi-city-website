@@ -1,4 +1,5 @@
 import { requireRole } from '@/lib/auth';
+import { getDashboardAnalytics } from '@/lib/analytics/ga4';
 import { getAdminNewsList } from '@/lib/db';
 import { getPengumumanList } from '@/lib/pengumuman/actions';
 import { getTransparansiList } from '@/lib/transparansi/actions';
@@ -10,11 +11,13 @@ export default async function AdminDashboardPage() {
   const user = await requireRole(['SUPER_ADMIN', 'ADMIN_BERITA']);
   const isSuperAdmin = user.role === 'SUPER_ADMIN';
 
-  const [beritaList, pengumumanList, transparansiList] = await Promise.all([
-    getAdminNewsList({ role: user.role }),
-    isSuperAdmin ? getPengumumanList() : Promise.resolve([]),
-    isSuperAdmin ? getTransparansiList() : Promise.resolve([]),
-  ]);
+  const [beritaList, pengumumanList, transparansiList, analytics] =
+    await Promise.all([
+      getAdminNewsList({ role: user.role }),
+      isSuperAdmin ? getPengumumanList() : Promise.resolve([]),
+      isSuperAdmin ? getTransparansiList() : Promise.resolve([]),
+      getDashboardAnalytics(),
+    ]);
 
   const statsCounts = {
     beritaPublished: beritaList.filter((item) => item.status === 'PUBLISHED')
@@ -34,6 +37,7 @@ export default async function AdminDashboardPage() {
   return (
     <DashboardClient
       statsCounts={statsCounts}
+      analytics={analytics}
       userName={user.name}
       userRole={user.role as 'SUPER_ADMIN' | 'ADMIN_BERITA'}
     />

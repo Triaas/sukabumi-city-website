@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Eye, FileText, Users, Megaphone, Clock3, FileCheck } from 'lucide-react'
+import type { AnalyticsRange, DashboardAnalyticsData } from '@/lib/analytics/ga4'
 
 export interface DashboardStatsCounts {
   beritaPublished: number
@@ -15,7 +16,7 @@ const stats = [
   {
     id: 'pengunjung bulan ini',
     label: 'Pengunjung Bulan Ini',
-    value: '1089',
+    value: '0',
     icon: Users,
     iconClass: 'bg-blue-50 text-blue-600',
   },
@@ -56,75 +57,25 @@ const stats = [
   },
 ]
 
-// Data kunjungan berdasarkan rentang waktu (timeFilter)
-const chartData = {
-  '7d': {
-    total: '13.440',
-    avg: '1.920 / hari',
-    max: 3000,
-    points: [
-      { date: '21 Okt', day: 'Senin', visitors: 1450 },
-      { date: '22 Okt', day: 'Selasa', visitors: 2120 },
-      { date: '23 Okt', day: 'Rabu', visitors: 1680 },
-      { date: '24 Okt', day: 'Kamis', visitors: 2740 },
-      { date: '25 Okt', day: 'Jumat', visitors: 2310 },
-      { date: '26 Okt', day: 'Sabtu', visitors: 1250 },
-      { date: '27 Okt', day: 'Minggu', visitors: 1890 },
-    ],
-  },
-  '30d': {
-    total: '54.200',
-    avg: '1.806 / hari',
-    max: 12000,
-    points: [
-      { date: '1 Okt', day: 'Pekan 1', visitors: 6500 },
-      { date: '5 Okt', day: 'Pekan 1', visitors: 7200 },
-      { date: '10 Okt', day: 'Pekan 2', visitors: 8100 },
-      { date: '15 Okt', day: 'Pekan 3', visitors: 9500 },
-      { date: '20 Okt', day: 'Pekan 3', visitors: 8800 },
-      { date: '25 Okt', day: 'Pekan 4', visitors: 10200 },
-      { date: '27 Okt', day: 'Hari Ini', visitors: 3900 },
-    ],
-  },
-  '1y': {
-    total: '652.800',
-    avg: '1.789 / hari',
-    max: 100000,
-    points: [
-      { date: 'Jan', day: '2026', visitors: 45000 },
-      { date: 'Mar', day: '2026', visitors: 58000 },
-      { date: 'Mei', day: '2026', visitors: 62000 },
-      { date: 'Jul', day: '2026', visitors: 71000 },
-      { date: 'Sep', day: '2026', visitors: 85000 },
-      { date: 'Okt', day: '2026', visitors: 54200 },
-      { date: 'Des', day: 'Proyeksi', visitors: 90000 },
-    ],
-  },
-}
-
-const popularNews = [
-  { title: 'Pemkot Sukabumi Luncurkan Layanan Perizinan Digital Terpadu', views: '1.200x dilihat' },
-  { title: 'Wali Kota Sukabumi Resmikan Revitalisasi Alun-Alun Kota', views: '980x dilihat' },
-  { title: 'Dishub Benahi Tata Kelola Parkir Untuk Mendukung Peningkatan PAD', views: '845x dilihat' },
-  { title: 'Peringatan Harhubnas Merupakan Momentum Untuk Memperkuat Peran Transportasi', views: '710x dilihat' },
-  { title: 'Pendaftaran Seleksi Calon Dewas dan Direksi BPR Kota Sukabumi Dibuka', views: '655x dilihat' },
-]
-
 export default function DashboardClient({
   statsCounts,
+  analytics,
   userName,
   userRole,
 }: {
   statsCounts: DashboardStatsCounts
+  analytics: DashboardAnalyticsData
   userName: string
   userRole: 'SUPER_ADMIN' | 'ADMIN_BERITA'
 }) {
-  const [timeFilter, setTimeFilter] = useState<'7d' | '30d' | '1y'>('7d')
+  const [timeFilter, setTimeFilter] = useState<AnalyticsRange>('7d')
   const [activeIdx, setActiveIdx] = useState<number | null>(3)
 
-  const activeData = chartData[timeFilter]
+  const activeData = analytics.chartData[timeFilter]
+  const popularNews = analytics.popularNews
 
   const statValueMap: Record<string, string> = {
+    'pengunjung bulan ini': analytics.monthlyVisitors.toLocaleString('id-ID'),
     'Berita diterbitkan': String(statsCounts.beritaPublished),
     'Peninjauan Berita': String(statsCounts.beritaReview),
     'Pengumuman diterbitkan': String(statsCounts.pengumumanPublished),
@@ -132,11 +83,7 @@ export default function DashboardClient({
     'Dokumen diterbitkan': String(statsCounts.dokumenPublished),
   }
 
-  useEffect(() => {
-    // TODO: Lakukan fetch data ke /api/analytics?range=${timeFilter} untuk meng-update array dailyVisits saat koneksi GA4 sudah terpasang.
-  }, [timeFilter])
-
-  const filterLabels: Record<'7d' | '30d' | '1y', { titleRange: string; totalRange: string }> = {
+  const filterLabels: Record<AnalyticsRange, { titleRange: string; totalRange: string }> = {
     '7d': { titleRange: '7 Hari Terakhir', totalRange: 'Total 7 Hari' },
     '30d': { titleRange: '30 Hari Terakhir', totalRange: 'Total 30 Hari' },
     '1y': { titleRange: '1 Tahun Terakhir', totalRange: 'Total 1 Tahun' },
@@ -432,7 +379,7 @@ export default function DashboardClient({
               })}
 
               {/* Tooltip Melayang saat Hover */}
-              {activeIdx !== null && (() => {
+              {activeIdx !== null && points[activeIdx] && (() => {
                 const pt = points[activeIdx]
                 const tooltipW = 120
                 const tooltipH = 46
